@@ -2,7 +2,7 @@
   "expo": {
     "name": "Scola",
     "slug": "scholarships",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "icon": "./assets/images/icon.png",
     "scheme": "scholarships",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.thusha2271.scholarships",
-      "versionCode": 5,
+      "versionCode": 6,
       "targetSdkVersion": 35
     },
     "web": {
