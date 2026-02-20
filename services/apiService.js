@@ -83,9 +83,12 @@ export const authAPI = {
     }),
 
   removeFavorite: (email, scholarshipId) =>
-    apiCall(`/Users/${encodeURIComponent(email)}/favorites/by-email/${scholarshipId}`, {
-      method: "DELETE",
-    }),
+    apiCall(
+      `/Users/${encodeURIComponent(email)}/favorites/by-email/${scholarshipId}`,
+      {
+        method: "DELETE",
+      },
+    ),
 
   // Email Management
   getEmailMessage: (email) =>

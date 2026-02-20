@@ -3,6 +3,7 @@
 ## ✅ Changes Made
 
 ### 1. **app.json** - Android Configuration Updated
+
 ```json
 {
   "android": {
@@ -17,12 +18,15 @@
 ```
 
 ### 2. **eas.json** - Build Configuration Enhanced
+
 Added Android-specific build settings:
+
 - Production and Release builds now use `gradleCommand: ":app:bundleRelease"`
 - Uses `image: "latest"` to get latest NDK (r27+) with 16 KB support
 - Configured for Google Play App Bundle (.aab) generation
 
 ### 3. **gradle.properties** - Created New Build Configuration
+
 ```properties
 android.ndkVersion=27.0.12158134          # NDK r27 = 16 KB support
 org.gradle.jvmargs=-Xmx4096m             # Build memory allocation
@@ -30,6 +34,7 @@ android.useMinimalKeepRules=true          # Optimize build
 ```
 
 ### 4. **package.json** - Build Scripts Added
+
 ```bash
 npm run build:android:16kb                # Build with 16 KB support (recommended)
 npm run build:android:release             # Standard release build
@@ -41,16 +46,20 @@ npm run submit:android                    # Submit to Google Play
 ## 🚀 What You Need to Do
 
 ### **Option A: Automatic Build (Recommended)**
+
 ```bash
 npm run build:android:16kb
 ```
+
 This single command:
+
 1. Clears previous builds
 2. Builds with NDK r27+ (16 KB support)
 3. Generates App Bundle for Play Store
 4. Targets API level 35 (Android 15+)
 
 ### **Option B: Manual EAS Build**
+
 ```bash
 eas build --platform android --profile release
 ```
@@ -62,6 +71,7 @@ eas build --platform android --profile release
 After the build completes (10-15 minutes):
 
 1. ✅ Check EAS build status
+
    ```bash
    eas build:list --platform android
    ```
@@ -83,30 +93,33 @@ After the build completes (10-15 minutes):
 
 ## 📊 Configuration Details
 
-| Setting | Value | Purpose |
-|---------|-------|---------|
-| Target SDK | 35 | Android 15+ compatibility |
-| Compile SDK | 35 | Build against latest Android |
-| Min SDK | 24 | Support Android 7.0+ |
-| NDK Version | r27.0.12158134 | 16 KB page size support |
-| Build Type | Release | Optimized for Play Store |
-| Output Format | App Bundle (.aab) | Google Play requirement |
+| Setting       | Value             | Purpose                      |
+| ------------- | ----------------- | ---------------------------- |
+| Target SDK    | 35                | Android 15+ compatibility    |
+| Compile SDK   | 35                | Build against latest Android |
+| Min SDK       | 24                | Support Android 7.0+         |
+| NDK Version   | r27.0.12158134    | 16 KB page size support      |
+| Build Type    | Release           | Optimized for Play Store     |
+| Output Format | App Bundle (.aab) | Google Play requirement      |
 
 ---
 
 ## 🔧 Troubleshooting
 
 ### Build Fails?
+
 ```bash
 npm run build:android:16kb               # Automatic cache clear
 ```
 
 ### Still Shows as Not Supporting 16 KB?
+
 1. Verify build uploaded to Google Play
 2. Wait 24-48 hours for processing
 3. Check that `targetSdkVersion: 35` is in the build manifest
 
 ### Version Code Error?
+
 - Auto-increment is enabled (versionCode will increase: 6 → 7 → 8)
 - This prevents Play Store conflicts
 
@@ -148,6 +161,7 @@ cat ANDROID_16KB_SETUP.md
 ## ✨ Result
 
 Your app will now:
+
 - ✅ Support 16 KB memory page sizes (Android 15+)
 - ✅ Pass Google Play validation
 - ✅ Be eligible for release past May 31, 2026

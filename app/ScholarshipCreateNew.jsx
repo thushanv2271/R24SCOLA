@@ -25,7 +25,7 @@ const verticalScale = (size) => (SCREEN_HEIGHT / 667) * size;
 const moderateScale = (size, factor = 0.5) =>
   Math.min(
     Math.max(size + (scale(size) - size) * factor, size * 0.8),
-    size * 1.5
+    size * 1.5,
   );
 
 const ScholarshipCreateNew = () => {
@@ -112,7 +112,9 @@ const ScholarshipCreateNew = () => {
       funding,
       type,
       level,
-      languageTests: languageTests ? languageTests.split(",").map((test) => test.trim()) : [],
+      languageTests: languageTests
+        ? languageTests.split(",").map((test) => test.trim())
+        : [],
       images: [], // Placeholder; could be extended to handle image uploads
       courseValue: funding, // Assuming funding can represent courseValue
       universityDetails,
@@ -133,7 +135,7 @@ const ScholarshipCreateNew = () => {
 
     try {
       await scholarshipAPI.createScholarship(scholarshipData);
-      
+
       // Reset form
       setTitle("");
       setCountry(null);
@@ -153,22 +155,22 @@ const ScholarshipCreateNew = () => {
         research: "",
         office: "",
       });
-      
-      Alert.alert(
-        "Success!",
-        "Scholarship created successfully",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              router.back();
-            },
+
+      Alert.alert("Success!", "Scholarship created successfully", [
+        {
+          text: "OK",
+          onPress: () => {
+            router.back();
           },
-        ]
-      );
+        },
+      ]);
     } catch (error) {
       console.error("API Error:", error);
-      Alert.alert("Error", error.message || "An error occurred while submitting. Please check your connection.");
+      Alert.alert(
+        "Error",
+        error.message ||
+          "An error occurred while submitting. Please check your connection.",
+      );
     }
   };
 
@@ -178,8 +180,15 @@ const ScholarshipCreateNew = () => {
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.iconButton} onPress={handleBackPress}>
-              <Ionicons name="arrow-back" size={moderateScale(24)} color="#a5a4a4" />
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleBackPress}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={moderateScale(24)}
+                color="#a5a4a4"
+              />
             </TouchableOpacity>
             <Image
               source={require("../assets/images/OPPORTUNITIES.png")}
@@ -241,7 +250,6 @@ const ScholarshipCreateNew = () => {
             <Dropdown
               style={styles.dropdown}
               placeholder="Select Study Level"
-
               data={levelOptions}
               labelField="label"
               valueField="value"
@@ -279,31 +287,41 @@ const ScholarshipCreateNew = () => {
               style={styles.input}
               placeholder="Name"
               value={departmentHead.name}
-              onChangeText={(text) => setDepartmentHead({ ...departmentHead, name: text })}
+              onChangeText={(text) =>
+                setDepartmentHead({ ...departmentHead, name: text })
+              }
             />
             <TextInput
               style={styles.input}
               placeholder="Position"
               value={departmentHead.position}
-              onChangeText={(text) => setDepartmentHead({ ...departmentHead, position: text })}
+              onChangeText={(text) =>
+                setDepartmentHead({ ...departmentHead, position: text })
+              }
             />
             <TextInput
               style={styles.input}
               placeholder="Email"
               value={departmentHead.email}
-              onChangeText={(text) => setDepartmentHead({ ...departmentHead, email: text })}
+              onChangeText={(text) =>
+                setDepartmentHead({ ...departmentHead, email: text })
+              }
             />
             <TextInput
               style={styles.input}
               placeholder="Research Interests"
               value={departmentHead.research}
-              onChangeText={(text) => setDepartmentHead({ ...departmentHead, research: text })}
+              onChangeText={(text) =>
+                setDepartmentHead({ ...departmentHead, research: text })
+              }
             />
             <TextInput
               style={styles.input}
               placeholder="Office"
               value={departmentHead.office}
-              onChangeText={(text) => setDepartmentHead({ ...departmentHead, office: text })}
+              onChangeText={(text) =>
+                setDepartmentHead({ ...departmentHead, office: text })
+              }
             />
 
             <View style={styles.buttonContainer}>

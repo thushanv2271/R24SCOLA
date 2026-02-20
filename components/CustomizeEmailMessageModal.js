@@ -25,7 +25,10 @@ const CustomizeEmailMessageModal = ({
   const handleSaveEmailMessage = async () => {
     try {
       setLoading(true);
-      const updatedData = await authAPI.updateEmailMessage(userEmail, emailMessage);
+      const updatedData = await authAPI.updateEmailMessage(
+        userEmail,
+        emailMessage,
+      );
       setEditedData(updatedData);
       setEmailMessage(updatedData?.scholarshipEmailMessage || emailMessage);
       onClose();

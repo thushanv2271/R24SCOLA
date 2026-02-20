@@ -5,17 +5,17 @@ export const sendScholarshipEmail = async (
   professorEmail,
   userEmail,
   scholarshipTitle,
-  professorDetails
+  professorDetails,
 ) => {
   try {
     // Fetch the user's custom email message
     const messageData = await authAPI.getEmailMessage(userEmail);
-    
+
     // Handle different response formats
     let customMessage = messageData?.scholarshipEmailMessage || messageData;
-    
+
     // If it's a string response wrapped in quotes, remove them
-    if (typeof customMessage === 'string') {
+    if (typeof customMessage === "string") {
       if (customMessage.startsWith('"') && customMessage.endsWith('"')) {
         customMessage = customMessage.slice(1, -1);
       }
@@ -36,7 +36,7 @@ export const sendScholarshipEmail = async (
 
     // Construct the mailto URL
     const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(
-      subject
+      subject,
     )}&body=${encodedBody}`;
 
     console.log("Mailto URL:", mailtoUrl);
@@ -47,7 +47,7 @@ export const sendScholarshipEmail = async (
     console.error("Error sending email:", error);
     Alert.alert(
       "Error",
-      "Unable to open the email client or fetch custom message."
+      "Unable to open the email client or fetch custom message.",
     );
   }
 };
