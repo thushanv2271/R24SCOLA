@@ -11,7 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { styles, getDynamicStyles } from "../app/styles/styles3";
+import { styles, getDynamicStyles } from "../app/styles/Styles3";
 import LoaderModal from "../components/LoaderModal";
 import { authAPI } from "../services/apiService";
 
@@ -56,7 +56,7 @@ export default function RegisterForm() {
       setIsModalVisible(true);
 
       setTimeout(() => {
-        router.push("login");
+        router.push("/Login");
         setIsModalVisible(false);
       }, 3000);
     } catch (error) {
@@ -136,7 +136,7 @@ export default function RegisterForm() {
               <Text style={styles.buttonText}>Create Account </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push("/login")}>
+            <TouchableOpacity onPress={() => router.push("/Login")}>
               <Text style={[styles.switchText, dynamicStyles.switchText]}>
                 Already have an account? Login
               </Text>
@@ -148,3 +148,4 @@ export default function RegisterForm() {
     </Formik>
   );
 }
+

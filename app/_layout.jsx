@@ -27,7 +27,7 @@ export default function RootLayout() {
       // Hide the splash screen
       SplashScreen.hideAsync().then(() => {
         // Redirect to the login page after the splash screen is hidden
-        router.replace("/instructions");
+        router.replace("/Instructions");
       });
     }
   }, [fontsLoaded]);
@@ -40,9 +40,9 @@ export default function RootLayout() {
     <AuthProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="tenHome" options={{ headerShown: false }} />
-          <Stack.Screen name="instructions" options={{ headerShown: false }} />
+          <Stack.Screen name="Login" options={{ headerShown: false }} />
+          <Stack.Screen name="TenHome" options={{ headerShown: false }} />
+          <Stack.Screen name="Instructions" options={{ headerShown: false }} />
           <Stack.Screen name="RegisterForm" options={{ headerShown: false }} />
           <Stack.Screen
             name="ComputerScience"
@@ -62,7 +62,7 @@ export default function RootLayout() {
           <Stack.Screen name="JobInside" options={{ headerShown: false }} />
           <Stack.Screen name="MEngineering" options={{ headerShown: false }} />
           <Stack.Screen name="Scholarships" options={{ headerShown: false }} />
-          <Stack.Screen name="Itjobs" options={{ headerShown: false }} />
+          <Stack.Screen name="ItJobs" options={{ headerShown: false }} />
           <Stack.Screen name="ScholarshipCreateNew" options={{ headerShown: false }} />
 
           <Stack.Screen name="HealthScience" options={{ headerShown: false }} />
@@ -87,10 +87,10 @@ export default function RootLayout() {
             name="MNaturalScience"
             options={{ headerShown: false }}
           />
-          <Stack.Screen name="Statictics" options={{ headerShown: false }} />
+          <Stack.Screen name="Statistics" options={{ headerShown: false }} />
           <Stack.Screen name="Info" options={{ headerShown: false }} />
-          <Stack.Screen name="PStatictics" options={{ headerShown: false }} />
-          <Stack.Screen name="MStatictics" options={{ headerShown: false }} />
+          <Stack.Screen name="PStatistics" options={{ headerShown: false }} />
+          <Stack.Screen name="MStatistics" options={{ headerShown: false }} />
           <Stack.Screen
             name="MComputerScience"
             options={{ headerShown: false }}
@@ -106,7 +106,7 @@ export default function RootLayout() {
 
           <Stack.Screen name="Profile" options={{ headerShown: false }} />
           <Stack.Screen
-            name="BachalorsInside"
+            name="BachelorsInside"
             options={{ headerShown: false }}
           />
           <Stack.Screen name="MastersInside" options={{ headerShown: false }} />
@@ -120,3 +120,4 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+

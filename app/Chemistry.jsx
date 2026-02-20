@@ -25,11 +25,11 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchScholarships } from "./service/ChemistryfetchScholarships";
-import { sendScholarshipEmail } from "./service/emailService";
+import { fetchScholarships } from "./service/ChemistryFetchScholarships";
+import { sendScholarshipEmail } from "./service/EmailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
-import LoaderModal from "../components/justmoment";
+import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
 
@@ -961,3 +961,4 @@ const styles = StyleSheet.create({
 });
 
 export default ScholarshipApp;
+

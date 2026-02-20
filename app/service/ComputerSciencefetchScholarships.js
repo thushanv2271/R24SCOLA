@@ -1,4 +1,4 @@
-// services/scholarshipService.js
+// services/ScholarshipService.js
 
 const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
 
@@ -13,4 +13,5 @@ export const fetchScholarships = async () => {
     throw new Error("Could not fetch scholarship data.");
   }
 };
+
 

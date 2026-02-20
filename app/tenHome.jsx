@@ -19,8 +19,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import LoaderModal from "../components/justmoment";
-import { getAllScholarships } from "../app/service/consolidatedScholarshipService";
+import LoaderModal from "../components/JustMoment";
+import { getAllScholarships } from "../app/service/ConsolidatedScholarshipService";
 
 const screenWidth = Dimensions.get("window").width;
 const screenheight = Dimensions.get("window").height / 3;
@@ -56,7 +56,7 @@ const TenHome = () => {
       try {
         const hasVisited = await AsyncStorage.getItem("hasVisitedTenHome");
         if (hasVisited === "true") {
-          router.replace("/login"); // Redirect to login page
+          router.replace("/Login"); // Redirect to login page
         } else {
           // Fetch scholarships and mark the page as visited
           fetchScholarships();
@@ -361,7 +361,7 @@ Best regards,
                 style={[styles.modalButton, styles.loginButton]}
                 onPress={() => {
                   setShowLoginModal(false);
-                  router.push("/login");
+                  router.push("/Login");
                 }}
               >
                 <Text style={styles.modalButtonText}>Login</Text>
@@ -641,3 +641,6 @@ const styles = StyleSheet.create({
 });
 
 export default TenHome;
+
+
+

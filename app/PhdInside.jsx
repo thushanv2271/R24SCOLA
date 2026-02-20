@@ -90,7 +90,7 @@ const PhDScholarshipApp = () => {
     {
       title: "Mathematics & Statistics",
       icon: "pie-chart",
-      route: "PStatictics",
+      route: "PStatistics",
       subcategories: [
         "Mathematical Modeling",
         "Stochastic Processes",

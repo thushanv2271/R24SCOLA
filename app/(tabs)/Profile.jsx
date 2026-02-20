@@ -14,7 +14,7 @@ import { AuthContext } from "../../components/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "./../../components/Header";
 import { useLocalSearchParams, router } from "expo-router";
-import LoaderModal from "../../components/justmoment";
+import LoaderModal from "../../components/JustMoment";
 
 const { width, height } = Dimensions.get("window");
 
@@ -62,7 +62,7 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace("/login");
+      router.replace("/Login");
     } catch (error) {
       console.error("Error during logout:", error);
       Alert.alert("Error", "Failed to log out. Please try again.");

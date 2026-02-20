@@ -92,7 +92,7 @@ const MastersScholarshipApp = () => {
     {
       title: "Mathematics & Statistics",
       icon: "pie-chart",
-      route: "MStatictics",
+      route: "MStatistics",
       subcategories: [
         "Mathematical Modeling",
         "Stochastic Processes",

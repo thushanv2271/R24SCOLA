@@ -14,7 +14,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Checkbox } from "react-native-paper";
-import { styles, getDynamicStyles } from "../app/styles/styles";
+import { styles, getDynamicStyles } from "../app/styles/Styles";
 import { AuthContext } from "../components/AuthContext";
 import { authAPI } from "../services/apiService";
 
@@ -208,3 +208,4 @@ export default function LoginForm() {
     </Formik>
   );
 }
+

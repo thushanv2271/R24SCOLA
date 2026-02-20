@@ -25,11 +25,11 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchScholarships } from "./service/ComputerSciencefetchScholarships";
-import { sendScholarshipEmail } from "./service/emailService";
+import { fetchScholarships } from "./service/ComputerScienceFetchScholarships";
+import { sendScholarshipEmail } from "./service/EmailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
-import LoaderModal from "../components/justmoment";
+import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
 
@@ -552,7 +552,7 @@ const ScholarshipApp = () => {
               </TouchableOpacity>
             </View>
             {/* <View style={styles.iconBackground}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push("favourites")}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push("Favourites")}>
             <Ionicons name="heart" size={24} color="#a5a4a4" />
           </TouchableOpacity>
       </View> */}
@@ -965,3 +965,4 @@ const styles = StyleSheet.create({
 });
 
 export default ScholarshipApp;
+

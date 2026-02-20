@@ -26,11 +26,11 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchScholarships } from "../service/scholarshipService";
-import { sendScholarshipEmail } from "../service/emailService";
+import { fetchScholarships } from "../service/ScholarshipService";
+import { sendScholarshipEmail } from "../service/EmailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../../components/AuthContext";
-import LoaderModal from "../../components/justmoment";
+import LoaderModal from "../../components/JustMoment";
 import BottomModal from "../../components/BottomModal";
 import NotificationModal from "../../components/NotificationModal";
 import { useNavigation } from "@react-navigation/native";

@@ -85,7 +85,7 @@ const ScholarshipApp = () => {
     {
       title: "Mathematics & Statistics",
       icon: "pie-chart",
-      route: "Statictics",
+      route: "Statistics",
       subcategories: [
         "Pure Mathematics",
         "Applied Mathematics",
@@ -302,3 +302,4 @@ const styles = StyleSheet.create({
 });
 
 export default ScholarshipApp;
+

@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
 import { AuthContext } from "../components/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
-import LoaderModal from "../components/justmoment";
+import LoaderModal from "../components/JustMoment";
 import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 
@@ -381,3 +381,4 @@ const styles = StyleSheet.create({
     height: verticalScale(50),
   },
 });
+

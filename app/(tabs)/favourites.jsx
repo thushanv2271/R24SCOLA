@@ -19,7 +19,7 @@ import {
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 import { AuthContext } from "../../components/AuthContext";
-import { sendScholarshipEmail } from "../service/emailService";
+import { sendScholarshipEmail } from "../service/EmailService";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -475,3 +475,4 @@ const FavoriteItemsList = () => {
 };
 
 export default FavoriteItemsList;
+

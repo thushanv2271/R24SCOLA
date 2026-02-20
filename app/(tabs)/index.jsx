@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import LoaderModal from "../../components/justmoment";
+import LoaderModal from "../../components/JustMoment";
 import NotificationModal from "../../components/NotificationModal";
 
 const { width, height } = Dimensions.get("window");
@@ -151,7 +151,7 @@ const ScholarshipHome = () => {
     { title: "Profile", icon: "person", screen: "Profile", params: { email } },
     { title: "Scholarships", icon: "school", screen: "Scholarships" },
     { title: "Jobs", icon: "briefcase", screen: "JobInside" },
-    { title: "Favourites", icon: "heart", screen: "favourites" },
+    { title: "Favourites", icon: "heart", screen: "Favourites" },
     { title: "Edit Mail", icon: "create", screen: "CustomMail" },
   ];
 
@@ -264,7 +264,7 @@ const ScholarshipHome = () => {
           screen: "ScholarshipCalculator",
         },
         { title: "Edit Mail", icon: "create", screen: "CustomMail" },
-        { title: "Favourites", icon: "heart", screen: "favourites" },
+        { title: "Favourites", icon: "heart", screen: "Favourites" },
         {
           title: "Explore Universities",
           icon: "school",
@@ -278,7 +278,7 @@ const ScholarshipHome = () => {
         {
           title: "Request for Bachelor's",
           icon: "school",
-          screen: "BachalorsInside",
+          screen: "BachelorsInside",
           color: "#1E88E5",
           description: "Start your undergraduate journey with funding support",
         },

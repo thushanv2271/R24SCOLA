@@ -1,7 +1,7 @@
-// DEPRECATED: Use consolidatedScholarshipService.js instead
+// DEPRECATED: Use ConsolidatedScholarshipService.js instead
 // This file is kept for backward compatibility
 
-import { getAllScholarships } from "./consolidatedScholarshipService";
+import { getAllScholarships } from "./ConsolidatedScholarshipService";
 
 export const fetchScholarships = async () => {
   try {
@@ -11,3 +11,4 @@ export const fetchScholarships = async () => {
     throw new Error("Could not fetch scholarship data.");
   }
 };
+

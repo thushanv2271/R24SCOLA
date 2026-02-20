@@ -38,7 +38,7 @@ const ScholarshipApp = () => {
     {
       title: "Computer Science",
       icon: "terminal",
-      route: "Itjobs",
+      route: "ItJobs",
       subcategories: [
         "Software Engineering",
         "Artificial Intelligence",
