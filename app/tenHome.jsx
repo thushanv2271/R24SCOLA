@@ -18,8 +18,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoaderModal from "../components/justmoment";
+import { getAllScholarships } from "../app/service/consolidatedScholarshipService";
 
 const screenWidth = Dimensions.get("window").width;
 const screenheight = Dimensions.get("window").height / 3;
@@ -72,12 +73,8 @@ const TenHome = () => {
   const fetchScholarships = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        "https://webapplication2-old-pond-3577.fly.dev/api/Scholarships"
-      );
-      if (!response.ok) throw new Error("Failed to fetch scholarships.");
-      const data = await response.json();
-      setScholarships(data);
+      const data = await getAllScholarships();
+      setScholarships(data || []);
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Could not fetch scholarship data.");

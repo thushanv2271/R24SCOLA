@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Checkbox } from "react-native-paper";
 import { styles, getDynamicStyles } from "../app/styles/styles";
 import { AuthContext } from "../components/AuthContext";
+import { authAPI } from "../services/apiService";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().required("username is required   "),
@@ -84,23 +85,12 @@ export default function LoginForm() {
   const handleLogin = async (values) => {
     try {
       setIsSubmitting(true); // Show loader
-      const userCheckResponse = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${values.email}`
-      );
-      if (!userCheckResponse.ok) throw new Error("User not found");
+      
+      // Check if user exists
+      await authAPI.checkUserExists(values.email);
 
-      const loginResponse = await fetch(
-        "https://webapplication2-old-pond-3577.fly.dev/api/Users/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-        }
-      );
-
-      if (!loginResponse.ok) throw new Error("Incorrect password");
-
-      const data = await loginResponse.json();
+      // Login user
+      const data = await authAPI.login(values);
       await login(data);
 
       // Set login status in AsyncStorage

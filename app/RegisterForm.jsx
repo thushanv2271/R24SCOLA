@@ -13,6 +13,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { styles, getDynamicStyles } from "../app/styles/styles3";
 import LoaderModal from '../components/LoaderModal';
+import { authAPI } from "../services/apiService";
 
 const RegisterSchema = Yup.object().shape({
   email: Yup.string().required("Required"), 
@@ -30,48 +31,36 @@ export default function RegisterForm() {
 
   const handleRegister = async (values, { setFieldError }) => {
     try {
-      const userCheckResponse = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${values.email}`
-      );
-
-      if (userCheckResponse.ok) {
-        setFieldError("email", "username already in use     ");
+      // Check if user already exists
+      try {
+        await authAPI.checkUserExists(values.email);
+        setFieldError("email", "username already in use");
         return;
-      }
-
-      const response = await fetch(
-        "https://webapplication2-old-pond-3577.fly.dev/api/Users/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: "",
-            email: values.email,
-            password: values.password,
-            age: 25, // Default age value
-            country: "United States", // Default country value
-            favoriteScholarshipIds: [],
-          }),
-        }
-      );
-
-      if (response.status === 201) {
-        setIsModalVisible(true);
-    
-        setTimeout(() => {
-          router.push("login");
-          setIsModalVisible(false);
-        }, 3000);
-      } else {
-        const data = await response.json();
-        if (response.status === 400 && data.message.includes("Email")) {
-          setFieldError("email", data.message);
-        } else {
-          throw new Error(data.message || "Registration failed    ");
+      } catch (error) {
+        // Expected to fail (user doesn't exist), continue with registration
+        if (!error.message.includes('404')) {
+          throw error;
         }
       }
+
+      // Register new user
+      await authAPI.register({
+        id: "",
+        email: values.email,
+        password: values.password,
+        age: 25,
+        country: "United States",
+        favoriteScholarshipIds: [],
+      });
+
+      setIsModalVisible(true);
+      
+      setTimeout(() => {
+        router.push("login");
+        setIsModalVisible(false);
+      }, 3000);
     } catch (error) {
-      alert(error.message);
+      alert(error.message || "Registration failed");
     }
   };
 

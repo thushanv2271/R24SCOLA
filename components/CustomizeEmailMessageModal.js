@@ -9,6 +9,7 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
+import { authAPI } from "../services/apiService";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,31 +25,13 @@ const CustomizeEmailMessageModal = ({
   const handleSaveEmailMessage = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          userEmail
-        )}/email-message`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            scholarshipEmailMessage: emailMessage,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const updatedData = await response.json();
-        setEditedData(updatedData);
-        setEmailMessage(updatedData.scholarshipEmailMessage || "");
-        onClose();
-        Alert.alert("Success", "Email message updated successfully");
-      } else {
-        throw new Error("Failed to update email message");
-      }
+      const updatedData = await authAPI.updateUser(userEmail, {
+        scholarshipEmailMessage: emailMessage,
+      });
+      setEditedData(updatedData);
+      setEmailMessage(updatedData.scholarshipEmailMessage || "");
+      onClose();
+      Alert.alert("Success", "Email message updated successfully");
     } catch (error) {
       console.error("Error updating email message:", error);
       Alert.alert("Error", "Failed to update email message");

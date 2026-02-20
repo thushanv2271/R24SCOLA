@@ -1,13 +1,11 @@
-// services/scholarshipService.js
+// DEPRECATED: Use consolidatedScholarshipService.js instead
+// This file is kept for backward compatibility
 
-const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
+import { getAllScholarships } from './consolidatedScholarshipService';
 
 export const fetchScholarships = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/Scholarships`);
-    if (!response.ok) throw new Error("Failed to fetch scholarships.");
-    const data = await response.json();
-    return data;
+    return await getAllScholarships();
   } catch (error) {
     console.error(error);
     throw new Error("Could not fetch scholarship data.");
