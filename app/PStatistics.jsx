@@ -140,9 +140,9 @@ const ScholarshipApp = () => {
   useEffect(() => {
     AsyncStorage.setItem(
       "favoriteScholarships",
-      JSON.stringify(favoriteScholarships)
+      JSON.stringify(favoriteScholarships),
     ).catch((error) =>
-      console.error("Error saving favorite scholarships:", error)
+      console.error("Error saving favorite scholarships:", error),
     );
   }, [favoriteScholarships]);
 
@@ -150,8 +150,8 @@ const ScholarshipApp = () => {
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
-        )}/favorites`
+          user.email,
+        )}/favorites`,
       );
       if (!response.ok) throw new Error("Failed to fetch favorites");
       const data = await response.json();
@@ -159,7 +159,7 @@ const ScholarshipApp = () => {
       setFavoriteScholarships(favoriteIds);
       await AsyncStorage.setItem(
         "favoriteScholarships",
-        JSON.stringify(favoriteIds)
+        JSON.stringify(favoriteIds),
       );
     } catch (error) {
       console.error("Error fetching favorites:", error);
@@ -185,7 +185,7 @@ const ScholarshipApp = () => {
 
       try {
         const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
+          user.email,
         )}/favorites/by-email`;
         const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
         const method = isFavorited ? "DELETE" : "POST";
@@ -199,22 +199,22 @@ const ScholarshipApp = () => {
 
         if (!response.ok) {
           throw new Error(
-            `Failed to ${isFavorited ? "remove" : "add"} favorite`
+            `Failed to ${isFavorited ? "remove" : "add"} favorite`,
           );
         }
       } catch (error) {
         console.error(
           `Error ${isFavorited ? "removing" : "adding"} favorite:`,
-          error
+          error,
         );
         setFavoriteScholarships(favoriteScholarships);
         Alert.alert(
           "Error",
-          `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`
+          `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
         );
       }
     }, 300),
-    [favoriteScholarships, user?.email]
+    [favoriteScholarships, user?.email],
   );
 
   const fetchData = async () => {
@@ -245,8 +245,8 @@ const ScholarshipApp = () => {
       try {
         const response = await fetch(
           `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.email
-          )}`
+            user.email,
+          )}`,
         );
         if (!response.ok) throw new Error("Failed to fetch user data");
       } catch (error) {
@@ -294,7 +294,7 @@ const ScholarshipApp = () => {
           professor?.email,
           user?.email, // Pass the current user's email
           item.title, // Pass the scholarship title
-          professor // Pass the professor details
+          professor, // Pass the professor details
         );
       };
 
@@ -465,7 +465,7 @@ const ScholarshipApp = () => {
     },
     (prevProps, nextProps) =>
       prevProps.item.id === nextProps.item.id &&
-      prevProps.item === nextProps.item
+      prevProps.item === nextProps.item,
   );
 
   const router = useRouter();
@@ -497,7 +497,7 @@ const ScholarshipApp = () => {
 
   const renderItem = useCallback(
     ({ item }) => <ScholarshipCard item={item} />,
-    [handleFavorite, favoriteScholarships]
+    [handleFavorite, favoriteScholarships],
   );
 
   return (
@@ -608,19 +608,19 @@ const ScholarshipApp = () => {
                   "Major",
                   majors,
                   selectedMajor,
-                  setSelectedMajor
+                  setSelectedMajor,
                 )}
                 {renderFilterOption(
                   "Country",
                   countries,
                   selectedCountry,
-                  setSelectedCountry
+                  setSelectedCountry,
                 )}
                 {renderFilterOption(
                   "Funding",
                   fundingTypes,
                   selectedFunding,
-                  setSelectedFunding
+                  setSelectedFunding,
                 )}
                 <TouchableOpacity
                   style={styles.filterbutton}
@@ -656,7 +656,7 @@ const ScholarshipApp = () => {
             keyExtractor={(item) => item.id.toString()}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
+              { useNativeDriver: true },
             )}
             scrollEventThrottle={16}
             refreshControl={
@@ -677,7 +677,7 @@ const ScholarshipApp = () => {
           keyExtractor={(item) => item.id.toString()}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
+            { useNativeDriver: true },
           )}
           scrollEventThrottle={16}
           refreshControl={
@@ -961,4 +961,3 @@ const styles = StyleSheet.create({
 });
 
 export default ScholarshipApp;
-

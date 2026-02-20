@@ -148,9 +148,9 @@ const ScholarshipApp = () => {
   useEffect(() => {
     AsyncStorage.setItem(
       "favoriteScholarships",
-      JSON.stringify(favoriteScholarships)
+      JSON.stringify(favoriteScholarships),
     ).catch((error) =>
-      console.error("Error saving favorite scholarships:", error)
+      console.error("Error saving favorite scholarships:", error),
     );
   }, [favoriteScholarships]);
 
@@ -158,8 +158,8 @@ const ScholarshipApp = () => {
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
-        )}/favorites`
+          user.email,
+        )}/favorites`,
       );
       if (!response.ok) throw new Error("Failed to fetch favorites");
       const data = await response.json();
@@ -167,7 +167,7 @@ const ScholarshipApp = () => {
       setFavoriteScholarships(favoriteIds);
       await AsyncStorage.setItem(
         "favoriteScholarships",
-        JSON.stringify(favoriteIds)
+        JSON.stringify(favoriteIds),
       );
     } catch (error) {
       console.error("Error fetching favorites:", error);
@@ -193,7 +193,7 @@ const ScholarshipApp = () => {
 
       try {
         const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
+          user.email,
         )}/favorites/by-email`;
         const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
         const method = isFavorited ? "DELETE" : "POST";
@@ -207,22 +207,22 @@ const ScholarshipApp = () => {
 
         if (!response.ok) {
           throw new Error(
-            `Failed to ${isFavorited ? "remove" : "add"} favorite`
+            `Failed to ${isFavorited ? "remove" : "add"} favorite`,
           );
         }
       } catch (error) {
         console.error(
           `Error ${isFavorited ? "removing" : "adding"} favorite:`,
-          error
+          error,
         );
         setFavoriteScholarships(favoriteScholarships);
         Alert.alert(
           "Error",
-          `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`
+          `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
         );
       }
     }, 300),
-    [favoriteScholarships, user?.email]
+    [favoriteScholarships, user?.email],
   );
 
   const handleReport = async (scholarshipId, description) => {
@@ -232,11 +232,11 @@ const ScholarshipApp = () => {
         {
           method: "POST",
           headers: {
-            "accept": "*/*",
+            accept: "*/*",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ description }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to submit report");
@@ -253,7 +253,8 @@ const ScholarshipApp = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      let url = "https://webapplication2-old-pond-3577.fly.dev/api/Scholarships";
+      let url =
+        "https://webapplication2-old-pond-3577.fly.dev/api/Scholarships";
       if (sortOrder) {
         const ascending = sortOrder === "Ascending" ? "true" : "false";
         url = `https://webapplication2-old-pond-3577.fly.dev/api/Scholarships/sortByDate?ascending=${ascending}`;
@@ -264,14 +265,18 @@ const ScholarshipApp = () => {
       });
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = errorData.errors?.ascending?.[0] || "Failed to fetch scholarships";
+        const errorMessage =
+          errorData.errors?.ascending?.[0] || "Failed to fetch scholarships";
         throw new Error(errorMessage);
       }
       const data = await response.json();
       setScholarships(data);
     } catch (error) {
       console.error("Error fetching scholarships:", error.message);
-      Alert.alert("Error", error.message || "Could not fetch scholarship data.");
+      Alert.alert(
+        "Error",
+        error.message || "Could not fetch scholarship data.",
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -292,8 +297,8 @@ const ScholarshipApp = () => {
       try {
         const response = await fetch(
           `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.email
-          )}`
+            user.email,
+          )}`,
         );
         if (!response.ok) throw new Error("Failed to fetch user data");
       } catch (error) {
@@ -331,7 +336,13 @@ const ScholarshipApp = () => {
   ]);
 
   const ScholarshipCard = React.memo(
-    ({ item, handleFavorite, favoriteScholarships, setSelectedScholarshipId, setShowReportModal }) => {
+    ({
+      item,
+      handleFavorite,
+      favoriteScholarships,
+      setSelectedScholarshipId,
+      setShowReportModal,
+    }) => {
       const [isCourseVisible, setIsCourseVisible] = useState(false);
       const [isUniversityVisible, setIsUniversityVisible] = useState(false);
       const [isProfessorsVisible, setIsProfessorsVisible] = useState(false);
@@ -342,7 +353,7 @@ const ScholarshipApp = () => {
           professor?.email,
           user?.email,
           item.title,
-          professor
+          professor,
         );
       };
 
@@ -541,7 +552,7 @@ const ScholarshipApp = () => {
     (prevProps, nextProps) =>
       prevProps.item.id === nextProps.item.id &&
       prevProps.item === nextProps.item &&
-      prevProps.favoriteScholarships === nextProps.favoriteScholarships
+      prevProps.favoriteScholarships === nextProps.favoriteScholarships,
   );
 
   const router = useRouter();
@@ -581,7 +592,12 @@ const ScholarshipApp = () => {
         setShowReportModal={setShowReportModal}
       />
     ),
-    [handleFavorite, favoriteScholarships, setSelectedScholarshipId, setShowReportModal]
+    [
+      handleFavorite,
+      favoriteScholarships,
+      setSelectedScholarshipId,
+      setShowReportModal,
+    ],
   );
 
   return (
@@ -659,31 +675,31 @@ const ScholarshipApp = () => {
                   <Ionicons name="close" size={30} color="gray" />
                 </TouchableOpacity>
                 <Text style={styles.modalTitle}>Filter Scholarships</Text>
-                    {renderFilterOption(
+                {renderFilterOption(
                   "Sort by Date",
                   sortOptions,
                   sortOrder,
-                  setSortOrder
+                  setSortOrder,
                 )}
                 {renderFilterOption(
                   "Major",
                   majors,
                   selectedMajor,
-                  setSelectedMajor
+                  setSelectedMajor,
                 )}
                 {renderFilterOption(
                   "Country",
                   countries,
                   selectedCountry,
-                  setSelectedCountry
+                  setSelectedCountry,
                 )}
                 {renderFilterOption(
                   "Funding",
                   fundingTypes,
                   selectedFunding,
-                  setSelectedFunding
+                  setSelectedFunding,
                 )}
-            
+
                 <TouchableOpacity
                   style={styles.filterbutton}
                   onPress={() => setShowFilterModal(false)}
@@ -728,9 +744,14 @@ const ScholarshipApp = () => {
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, reportMessage ? styles.submitButton : styles.disabledButton]}
+                style={[
+                  styles.button,
+                  reportMessage ? styles.submitButton : styles.disabledButton,
+                ]}
                 disabled={!reportMessage}
-                onPress={() => handleReport(selectedScholarshipId, reportMessage)}
+                onPress={() =>
+                  handleReport(selectedScholarshipId, reportMessage)
+                }
               >
                 <Text style={styles.buttonText}>Submit Report</Text>
               </TouchableOpacity>
@@ -761,7 +782,7 @@ const ScholarshipApp = () => {
             keyExtractor={(item) => item.id.toString()}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
+              { useNativeDriver: true },
             )}
             scrollEventThrottle={16}
             refreshControl={
@@ -783,7 +804,7 @@ const ScholarshipApp = () => {
           keyExtractor={(item) => item.id.toString()}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
+            { useNativeDriver: true },
           )}
           scrollEventThrottle={16}
           refreshControl={
