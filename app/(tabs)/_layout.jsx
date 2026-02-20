@@ -61,16 +61,6 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="Premium"
-        options={{
-          title: "Premium",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="star.fill" color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="Profile"
         options={{
           title: "Profile",

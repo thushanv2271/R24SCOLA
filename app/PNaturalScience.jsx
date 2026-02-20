@@ -26,7 +26,7 @@ import {
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "./service/ScholarshipService";
-import { sendScholarshipEmail } from "./service/EmailService";
+import { sendScholarshipEmail } from "./service/emailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
 import LoaderModal from "../components/JustMoment";
