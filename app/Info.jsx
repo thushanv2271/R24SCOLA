@@ -61,8 +61,6 @@ export default function ScholarshipGuide() {
 
       {/* Scholarship Application Guide */}
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-
-
         <View style={styles.guideContainer}>
           <Text style={styles.mainTitle}>
             Your Guide to Scholarship Success
@@ -71,23 +69,23 @@ export default function ScholarshipGuide() {
             Navigate the scholarship process with ease. Follow these 11 steps to
             maximize your chances of securing funding for your education.
           </Text>
-        {/* Video Placeholder */}
-        <Animated.View
-          style={styles.videoContainer}
-          entering={FadeInDown.delay(50)}
-        >
-          <TouchableOpacity onPress={handleVideoPress}>
-            <View style={styles.videoThumbnail}>
-              <Text style={styles.videoTitle}>How to Use This App</Text>
-              <Ionicons
-                name="play-circle"
-                size={height * 0.08}
-                color="#fff"
-                style={styles.playIcon}
-              />
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
+          {/* Video Placeholder */}
+          <Animated.View
+            style={styles.videoContainer}
+            entering={FadeInDown.delay(50)}
+          >
+            <TouchableOpacity onPress={handleVideoPress}>
+              <View style={styles.videoThumbnail}>
+                <Text style={styles.videoTitle}>How to Use This App</Text>
+                <Ionicons
+                  name="play-circle"
+                  size={height * 0.08}
+                  color="#fff"
+                  style={styles.playIcon}
+                />
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
           {/* Step 1: Create Account */}
           <Animated.View
             style={styles.stepSection}
@@ -134,8 +132,8 @@ export default function ScholarshipGuide() {
             <Text style={styles.stepTitle}>3. Check Eligibility</Text>
             <Text style={styles.stepSubTitle}>Match the Requirements</Text>
             <Text style={styles.stepDescription}>
-              Review criteria like GPA, major, or residency to ensure you qualify
-              before investing time in an application.
+              Review criteria like GPA, major, or residency to ensure you
+              qualify before investing time in an application.
             </Text>
             <Ionicons
               name="checkmark-circle"
@@ -174,8 +172,8 @@ export default function ScholarshipGuide() {
             </Text>
             <Text style={styles.stepSubTitle}>Find Tailored Opportunities</Text>
             <Text style={styles.stepDescription}>
-              Search for scholarships specific to your field of study to increase
-              relevance and your chances of success.
+              Search for scholarships specific to your field of study to
+              increase relevance and your chances of success.
             </Text>
             <Ionicons
               name="search"

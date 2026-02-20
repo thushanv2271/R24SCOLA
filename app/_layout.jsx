@@ -63,7 +63,10 @@ export default function RootLayout() {
           <Stack.Screen name="MEngineering" options={{ headerShown: false }} />
           <Stack.Screen name="Scholarships" options={{ headerShown: false }} />
           <Stack.Screen name="ItJobs" options={{ headerShown: false }} />
-          <Stack.Screen name="ScholarshipCreateNew" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="ScholarshipCreateNew"
+            options={{ headerShown: false }}
+          />
 
           <Stack.Screen name="HealthScience" options={{ headerShown: false }} />
           <Stack.Screen
@@ -120,4 +123,3 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
-

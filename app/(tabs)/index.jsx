@@ -84,7 +84,7 @@ const ScholarshipHome = () => {
     const fetchPaidStatus = async () => {
       try {
         const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${email}`
+          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${email}`,
         );
         const userData = await response.json();
         setPaidMember(userData.paidMember);
@@ -243,7 +243,6 @@ const ScholarshipHome = () => {
           </View>
         );
 
-
       default:
         return null;
     }
@@ -308,7 +307,6 @@ const ScholarshipHome = () => {
         style={[styles.headerContainer, { opacity: headerOpacity }]}
       >
         <View style={styles.headerRow}>
-       
           <Image
             source={require("../../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}
@@ -325,17 +323,13 @@ const ScholarshipHome = () => {
               <TouchableOpacity onPress={() => setShowNotificationModal(true)}>
                 <Ionicons name="notifications" size={25} color="#a5a4a4" />
               </TouchableOpacity>
-              
             </View>
 
-
-               <View style={styles.iconBackground}>
-                 <TouchableOpacity onPress={toggleSidebar}>
-            <Ionicons name="menu" size={30} color="#a5a4a4" />
-          </TouchableOpacity>
-              
+            <View style={styles.iconBackground}>
+              <TouchableOpacity onPress={toggleSidebar}>
+                <Ionicons name="menu" size={30} color="#a5a4a4" />
+              </TouchableOpacity>
             </View>
-         
           </View>
         </View>
       </Animated.View>
@@ -376,7 +370,7 @@ const ScholarshipHome = () => {
           }
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
+            { useNativeDriver: false },
           )}
           contentContainerStyle={{ paddingBottom: 20 }}
         />

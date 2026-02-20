@@ -31,9 +31,9 @@ export default function ProfileScreen() {
         try {
           const response = await fetch(
             `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-              user.email
+              user.email,
             )}`,
-            { method: "GET", headers: { Accept: "application/json" } }
+            { method: "GET", headers: { Accept: "application/json" } },
           );
           if (response.ok) {
             const data = await response.json();
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>  Personal Information</Text>
+            <Text style={styles.sectionTitle}> Personal Information</Text>
             <View style={styles.sectionContent}>
               <Text style={styles.label}>Username:</Text>
               <Text style={styles.value}>{user?.email}</Text>
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
 
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <Ionicons name="log-out-outline" size={24} color="#fff" />
-            <Text style={styles.logoutButtonText}>  Logout</Text>
+            <Text style={styles.logoutButtonText}> Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -58,7 +58,7 @@ const FavoriteItemsList = () => {
       try {
         await AsyncStorage.setItem(
           "requestedScholarships",
-          JSON.stringify([...requestedScholarships])
+          JSON.stringify([...requestedScholarships]),
         );
       } catch (error) {
         console.error("Failed to save requested scholarships:", error);
@@ -218,7 +218,7 @@ const FavoriteItemsList = () => {
           textBreakStrategy: "simple",
         },
       }),
-    [scale, screenWidth, screenHeight]
+    [scale, screenWidth, screenHeight],
   );
 
   const handleBackPress = () => {
@@ -229,8 +229,8 @@ const FavoriteItemsList = () => {
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
-          email
-        )}/favorites`
+          email,
+        )}/favorites`,
       );
       if (!response.ok) throw new Error("Failed to fetch favorites");
       const data = await response.json();
@@ -259,13 +259,13 @@ const FavoriteItemsList = () => {
     const scholarshipsToRequest = favoriteScholarships.filter(
       (scholarship) =>
         !requestedScholarships.has(scholarship.id) &&
-        scholarship.contactProfessors?.[0]?.email
+        scholarship.contactProfessors?.[0]?.email,
     );
 
     if (scholarshipsToRequest.length === 0) {
       Alert.alert(
         "Info",
-        "No new scholarships to request or missing professor emails."
+        "No new scholarships to request or missing professor emails.",
       );
       return;
     }
@@ -281,7 +281,7 @@ const FavoriteItemsList = () => {
         (scholarship, index) =>
           `${index + 1}. ${scholarship.title || "Untitled Scholarship"} (${
             scholarship.university || "Unknown University"
-          })`
+          })`,
       )
       .join("\n");
     const emailBody = `Request for the following scholarships:\n\n${scholarshipList}`;
@@ -293,13 +293,13 @@ const FavoriteItemsList = () => {
         user.email,
         "Scholarship Request for Multiple Favorites",
         { name: "Multiple Recipients" },
-        emailBody
+        emailBody,
       );
 
       // Mark all scholarships as requested
       const newRequested = new Set(requestedScholarships);
       scholarshipsToRequest.forEach((scholarship) =>
-        newRequested.add(scholarship.id)
+        newRequested.add(scholarship.id),
       );
       setRequestedScholarships(newRequested);
 
@@ -307,7 +307,7 @@ const FavoriteItemsList = () => {
         "Success",
         `${scholarshipsToRequest.length} scholarship${
           scholarshipsToRequest.length > 1 ? "s" : ""
-        } requested successfully!`
+        } requested successfully!`,
       );
     } catch (error) {
       console.error("Failed to send scholarship request email:", error);
@@ -321,7 +321,7 @@ const FavoriteItemsList = () => {
         setRefreshing(true);
         fetchFavoriteScholarships(user.email);
       }
-    }, [user, fetchFavoriteScholarships])
+    }, [user, fetchFavoriteScholarships]),
   );
 
   useEffect(() => {
@@ -345,7 +345,7 @@ const FavoriteItemsList = () => {
           professor.email,
           user.email,
           item.title,
-          professor
+          professor,
         );
         setRequestedScholarships((prev) => {
           const newSet = new Set(prev);
@@ -475,4 +475,3 @@ const FavoriteItemsList = () => {
 };
 
 export default FavoriteItemsList;
-

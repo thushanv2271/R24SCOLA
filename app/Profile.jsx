@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,12 +9,12 @@ import {
   ScrollView,
   TextInput,
   Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, router } from 'expo-router';
-import { fetchUserByEmail, updateUser } from '../services/userService';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams, router } from "expo-router";
+import { fetchUserByEmail, updateUser } from "../services/userService";
 
 export default function Profile() {
   const { email } = useLocalSearchParams(); // Get the email from query parameters
@@ -30,7 +30,7 @@ export default function Profile() {
         setUserData(data);
         setEditedData(data);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       } finally {
         setLoading(false);
       }
@@ -41,12 +41,16 @@ export default function Profile() {
   // Logout Function
   const handleLogout = async () => {
     try {
-      await AsyncStorage.multiRemove(['userEmail', 'userPassword', 'userToken']);
-      console.log('User logged out');
-      router.replace('/Login');
+      await AsyncStorage.multiRemove([
+        "userEmail",
+        "userPassword",
+        "userToken",
+      ]);
+      console.log("User logged out");
+      router.replace("/Login");
     } catch (error) {
-      console.error('Error during logout:', error);
-      Alert.alert('Error', 'Failed to log out. Please try again.');
+      console.error("Error during logout:", error);
+      Alert.alert("Error", "Failed to log out. Please try again.");
     }
   };
 
@@ -60,11 +64,11 @@ export default function Profile() {
 
   const validateInput = () => {
     if (isNaN(editedData.age) || editedData.age <= 0) {
-      Alert.alert('Invalid Input', 'Age must be a positive number.');
+      Alert.alert("Invalid Input", "Age must be a positive number.");
       return false;
     }
     if (!editedData.country.trim()) {
-      Alert.alert('Invalid Input', 'Country cannot be empty.');
+      Alert.alert("Invalid Input", "Country cannot be empty.");
       return false;
     }
     return true;
@@ -83,19 +87,19 @@ export default function Profile() {
 
   const handleSave = async () => {
     if (!validateInput()) return;
-  
+
     try {
       const userId = userData.id;
       const dataToSend = prepareDataForAPI();
-      const token = await AsyncStorage.getItem('userToken');
-      
+      const token = await AsyncStorage.getItem("userToken");
+
       const updatedData = await updateUser(userId, dataToSend, token);
       setUserData(updatedData || dataToSend);
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert("Success", "Profile updated successfully!");
     } catch (error) {
-      console.error('Error updating user data:', error);
-      Alert.alert('Error', error.message || 'Failed to update profile.');
+      console.error("Error updating user data:", error);
+      Alert.alert("Error", error.message || "Failed to update profile.");
     }
   };
 
@@ -110,67 +114,72 @@ export default function Profile() {
   const getFlagEmoji = (countryName) => {
     // Simple mapping of country names to ISO 3166-1 alpha-2 codes
     const countryCodes = {
-      'Algeria': 'DZ',
-      'Argentina': 'AR',
-      'Australia': 'AU',
-      'Austria': 'AT',
-      'Bangladesh': 'BD',
-      'Belgium': 'BE',
-      'Brazil': 'BR',
-      'Canada': 'CA',
-      'Chile': 'CL',
-      'China': 'CN',
-      'Colombia': 'CO',
-      'Cuba': 'CU',
-      'Czech Republic': 'CZ',
-      'Denmark': 'DK',
-      'Egypt': 'EG',
-      'Ethiopia': 'ET',
-      'Finland': 'FI',
-      'France': 'FR',
-      'Germany': 'DE',
-      'Ghana': 'GH',
-      'Greece': 'GR',
-      'Hungary': 'HU',
-      'India': 'IN',
-      'Indonesia': 'ID',
-      'Iran': 'IR',
-      'Iraq': 'IQ',
-      'Ireland': 'IE',
-      'Israel': 'IL',
-      'Italy': 'IT',
-      'Japan': 'JP',
-      'Kenya': 'KE',
-      'Malaysia': 'MY',
-      'Mexico': 'MX',
-      'Morocco': 'MA',
-      'Netherlands': 'NL',
-      'New Zealand': 'NZ',
-      'Nigeria': 'NG',
-      'Norway': 'NO',
-      'Pakistan': 'PK',
-      'Peru': 'PE',
-      'Poland': 'PL',
-      'Portugal': 'PT',
-      'Russia': 'RU',
-      'Saudi Arabia': 'SA',
-      'South Africa': 'ZA',
-      'South Korea': 'KR',
-      'Spain': 'ES',
-      'Sri Lanka': 'LK',
-      'Sweden': 'SE',
-      'Switzerland': 'CH',
-      'Thailand': 'TH',
-      'Turkey': 'TR',
-      'Ukraine': 'UA',
-      'United Kingdom': 'GB',
-      'United States': 'US',
-      'Venezuela': 'VE',
-      'Vietnam': 'VN',
+      Algeria: "DZ",
+      Argentina: "AR",
+      Australia: "AU",
+      Austria: "AT",
+      Bangladesh: "BD",
+      Belgium: "BE",
+      Brazil: "BR",
+      Canada: "CA",
+      Chile: "CL",
+      China: "CN",
+      Colombia: "CO",
+      Cuba: "CU",
+      "Czech Republic": "CZ",
+      Denmark: "DK",
+      Egypt: "EG",
+      Ethiopia: "ET",
+      Finland: "FI",
+      France: "FR",
+      Germany: "DE",
+      Ghana: "GH",
+      Greece: "GR",
+      Hungary: "HU",
+      India: "IN",
+      Indonesia: "ID",
+      Iran: "IR",
+      Iraq: "IQ",
+      Ireland: "IE",
+      Israel: "IL",
+      Italy: "IT",
+      Japan: "JP",
+      Kenya: "KE",
+      Malaysia: "MY",
+      Mexico: "MX",
+      Morocco: "MA",
+      Netherlands: "NL",
+      "New Zealand": "NZ",
+      Nigeria: "NG",
+      Norway: "NO",
+      Pakistan: "PK",
+      Peru: "PE",
+      Poland: "PL",
+      Portugal: "PT",
+      Russia: "RU",
+      "Saudi Arabia": "SA",
+      "South Africa": "ZA",
+      "South Korea": "KR",
+      Spain: "ES",
+      "Sri Lanka": "LK",
+      Sweden: "SE",
+      Switzerland: "CH",
+      Thailand: "TH",
+      Turkey: "TR",
+      Ukraine: "UA",
+      "United Kingdom": "GB",
+      "United States": "US",
+      Venezuela: "VE",
+      Vietnam: "VN",
     };
 
-    const countryCode = countryCodes[countryName] || '??'; // Default to '??' if country not found
-    return String.fromCodePoint(...countryCode.toUpperCase().split('').map(char => 0x1F1A5 + char.charCodeAt(0)));
+    const countryCode = countryCodes[countryName] || "??"; // Default to '??' if country not found
+    return String.fromCodePoint(
+      ...countryCode
+        .toUpperCase()
+        .split("")
+        .map((char) => 0x1f1a5 + char.charCodeAt(0)),
+    );
   };
 
   if (loading) {
@@ -207,7 +216,11 @@ export default function Profile() {
               {/* Profile Picture */}
               <View style={styles.profilePictureContainer}>
                 <Image
-                  source={{ uri: userData.profilePicture || 'https://img.freepik.com/free-psd/contact-icon-illustration-isolated_23-2151903337.jpg' }}
+                  source={{
+                    uri:
+                      userData.profilePicture ||
+                      "https://img.freepik.com/free-psd/contact-icon-illustration-isolated_23-2151903337.jpg",
+                  }}
                   style={styles.profilePicture}
                 />
               </View>
@@ -235,7 +248,9 @@ export default function Profile() {
                     <TextInput
                       style={styles.input}
                       value={String(editedData.age)}
-                      onChangeText={(text) => handleChange('age', parseInt(text, 10))}
+                      onChangeText={(text) =>
+                        handleChange("age", parseInt(text, 10))
+                      }
                       keyboardType="numeric"
                     />
                   ) : (
@@ -247,12 +262,14 @@ export default function Profile() {
                     <TextInput
                       style={styles.input}
                       value={editedData.country}
-                      onChangeText={(text) => handleChange('country', text)}
+                      onChangeText={(text) => handleChange("country", text)}
                     />
                   ) : (
                     <View style={styles.countryContainer}>
                       <Text style={styles.value}>{userData.country}</Text>
-                      <Text style={styles.flag}>{getFlagEmoji(userData.country)}</Text>
+                      <Text style={styles.flag}>
+                        {getFlagEmoji(userData.country)}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -260,7 +277,10 @@ export default function Profile() {
 
               {/* Save Button */}
               {isEditing && (
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSave}
+                >
                   <Text style={styles.saveButtonText}>Save Changes</Text>
                 </TouchableOpacity>
               )}
@@ -277,38 +297,38 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   scrollViewContent: {
     flexGrow: 1,
     padding: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'black',
+    fontWeight: "bold",
+    color: "black",
   },
   iconButton: {
     padding: 10,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
   },
   profilePictureContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   profilePicture: {
@@ -317,17 +337,17 @@ const styles = StyleSheet.create({
     borderRadius: 75,
   },
   infoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   name: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   title: {
     fontSize: 18,
-    color: '#666',
+    color: "#666",
     marginTop: 5,
   },
   bioContainer: {
@@ -335,16 +355,16 @@ const styles = StyleSheet.create({
   },
   bio: {
     fontSize: 16,
-    textAlign: 'center',
-    color: '#555',
+    textAlign: "center",
+    color: "#555",
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
+    fontWeight: "bold",
+    color: "black",
     marginBottom: 10,
   },
   sectionContent: {
@@ -352,23 +372,23 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginBottom: 5,
   },
   value: {
     fontSize: 18,
-    color: '#333',
+    color: "#333",
     marginBottom: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   noDataText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   input: {
     height: 40,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
@@ -376,29 +396,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   editButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     padding: 10,
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 5,
     marginBottom: 20,
   },
   editButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   saveButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     padding: 10,
-    backgroundColor: 'green',
+    backgroundColor: "green",
     borderRadius: 5,
   },
   saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   countryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   flag: {

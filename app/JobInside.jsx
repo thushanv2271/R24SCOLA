@@ -48,7 +48,6 @@ const ScholarshipApp = () => {
       description: "Jobs for tech innovators and digital pioneers",
       color: "#1E88E5",
     },
-
   ];
 
   return (
@@ -75,7 +74,7 @@ const ScholarshipApp = () => {
         style={styles.scrollView}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
+          { useNativeDriver: true },
         )}
         scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}

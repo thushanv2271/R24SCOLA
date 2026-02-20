@@ -1,27 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
-import Swiper from 'react-native-swiper';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
+import Swiper from "react-native-swiper";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const instructions = [
   {
     id: 1,
-    title: '  Welcome to Schola!',
-    description: 'Login to request scholarships and manage your applications.  ',
-    image: require('../assets/images/OPPORTUNITIES.png'),
+    title: "  Welcome to Schola!",
+    description:
+      "Login to request scholarships and manage your applications.  ",
+    image: require("../assets/images/OPPORTUNITIES.png"),
   },
   {
     id: 2,
-    title: '  Request a Scholarship',
-    description: 'Click the "Request Scholarship" button to start your application.  ',
-    image: require('../assets/images/OPPORTUNITIES.png'),
+    title: "  Request a Scholarship",
+    description:
+      'Click the "Request Scholarship" button to start your application.  ',
+    image: require("../assets/images/OPPORTUNITIES.png"),
   },
   {
     id: 3,
-    title: '  View Your Request',
-    description: 'Check your email template and send your request directly to the university.  ',
-    image: require('../assets/images/OPPORTUNITIES.png'),
+    title: "  View Your Request",
+    description:
+      "Check your email template and send your request directly to the university.  ",
+    image: require("../assets/images/OPPORTUNITIES.png"),
   },
 ];
 
@@ -31,12 +41,12 @@ const InstructionScreen = () => {
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
-      const hasLaunched = await AsyncStorage.getItem('hasLaunched');
+      const hasLaunched = await AsyncStorage.getItem("hasLaunched");
       if (!hasLaunched) {
         setShowInstructions(true);
-        await AsyncStorage.setItem('hasLaunched', 'true');
+        await AsyncStorage.setItem("hasLaunched", "true");
       } else {
-        router.replace('/TenHome');
+        router.replace("/TenHome");
       }
     };
     checkFirstLaunch();
@@ -48,7 +58,7 @@ const InstructionScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../assets/images/pngwing.png')}
+      source={require("../assets/images/pngwing.png")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -67,9 +77,9 @@ const InstructionScreen = () => {
             {index === instructions.length - 1 && (
               <TouchableOpacity
                 style={styles.button}
-                onPress={() => router.replace('/TenHome')}
+                onPress={() => router.replace("/TenHome")}
               >
-                <Text style={styles.buttonText}>  Get Started</Text>
+                <Text style={styles.buttonText}> Get Started</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -82,48 +92,48 @@ const InstructionScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   wrapper: {},
   slide: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.94)",
   },
   image: {
     width: 300,
     height: 200,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     marginTop: 20,
-    textAlign: 'center',
-    color: '#333',
+    textAlign: "center",
+    color: "#333",
   },
   description: {
     fontSize: 16,
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: '#666',
+    color: "#666",
     marginTop: 10,
     paddingHorizontal: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   dot: {
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     width: 10,
     height: 10,
     borderRadius: 24,
     margin: 3,
   },
   activeDot: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     width: 10,
     height: 10,
     borderRadius: 24,
