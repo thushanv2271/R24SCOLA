@@ -3,7 +3,7 @@
  * Handles all backend API calls with environment-based configuration
  */
 
-const API_BASE_URL = 'https://webapplication2-old-pond-3577.fly.dev/api';
+const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
 
 /**
  * Generic fetch wrapper with error handling
@@ -13,8 +13,8 @@ const apiCall = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
         ...options.headers,
       },
       ...options,
@@ -47,28 +47,28 @@ const apiCall = async (endpoint, options = {}) => {
  * Authentication APIs
  */
 export const authAPI = {
-  checkUserExists: (email) => 
-    apiCall(`/Users/${encodeURIComponent(email)}`, { method: 'GET' }),
-  
-  login: (credentials) => 
-    apiCall('/Users/login', {
-      method: 'POST',
+  checkUserExists: (email) =>
+    apiCall(`/Users/${encodeURIComponent(email)}`, { method: "GET" }),
+
+  login: (credentials) =>
+    apiCall("/Users/login", {
+      method: "POST",
       body: JSON.stringify(credentials),
     }),
-  
-  register: (userData) => 
-    apiCall('/Users/register', {
-      method: 'POST',
+
+  register: (userData) =>
+    apiCall("/Users/register", {
+      method: "POST",
       body: JSON.stringify(userData),
     }),
-  
-  getUserByEmail: (email) => 
-    apiCall(`/Users/${encodeURIComponent(email)}`, { method: 'GET' }),
-  
-  updateUser: (userId, userData, token) => 
+
+  getUserByEmail: (email) =>
+    apiCall(`/Users/${encodeURIComponent(email)}`, { method: "GET" }),
+
+  updateUser: (userId, userData, token) =>
     apiCall(`/Users/${userId}`, {
-      method: 'PUT',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      method: "PUT",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify(userData),
     }),
 };
@@ -77,47 +77,49 @@ export const authAPI = {
  * Scholarship APIs
  */
 export const scholarshipAPI = {
-  getAllScholarships: () => 
-    apiCall('/Scholarships', { method: 'GET' }),
-  
-  filterByMajor: (major) => 
-    apiCall(`/Scholarships/filterByMajor/${encodeURIComponent(major)}`, { method: 'GET' }),
-  
-  sortByDate: (ascending = true) => 
-    apiCall(`/Scholarships/sortByDate?ascending=${ascending}`, { method: 'GET' }),
-  
-  createScholarship: (scholarshipData) => 
-    apiCall('/Scholarships', {
-      method: 'POST',
+  getAllScholarships: () => apiCall("/Scholarships", { method: "GET" }),
+
+  filterByMajor: (major) =>
+    apiCall(`/Scholarships/filterByMajor/${encodeURIComponent(major)}`, {
+      method: "GET",
+    }),
+
+  sortByDate: (ascending = true) =>
+    apiCall(`/Scholarships/sortByDate?ascending=${ascending}`, {
+      method: "GET",
+    }),
+
+  createScholarship: (scholarshipData) =>
+    apiCall("/Scholarships", {
+      method: "POST",
       body: JSON.stringify(scholarshipData),
     }),
-  
-  getScholarshipById: (id) => 
-    apiCall(`/Scholarships/${id}`, { method: 'GET' }),
-  
-  updateScholarship: (id, scholarshipData) => 
+
+  getScholarshipById: (id) => apiCall(`/Scholarships/${id}`, { method: "GET" }),
+
+  updateScholarship: (id, scholarshipData) =>
     apiCall(`/Scholarships/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(scholarshipData),
     }),
-  
-  deleteScholarship: (id) => 
-    apiCall(`/Scholarships/${id}`, { method: 'DELETE' }),
+
+  deleteScholarship: (id) =>
+    apiCall(`/Scholarships/${id}`, { method: "DELETE" }),
 };
 
 /**
  * Payment APIs
  */
 export const paymentAPI = {
-  createPaymentIntent: (paymentData) => 
-    apiCall('/Payments/create-intent', {
-      method: 'POST',
+  createPaymentIntent: (paymentData) =>
+    apiCall("/Payments/create-intent", {
+      method: "POST",
       body: JSON.stringify(paymentData),
     }),
-  
-  processPayment: (paymentData) => 
-    apiCall('/Payments/process', {
-      method: 'POST',
+
+  processPayment: (paymentData) =>
+    apiCall("/Payments/process", {
+      method: "POST",
       body: JSON.stringify(paymentData),
     }),
 };

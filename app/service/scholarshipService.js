@@ -1,7 +1,7 @@
 // DEPRECATED: Use consolidatedScholarshipService.js instead
 // This file is kept for backward compatibility
 
-import { getAllScholarships } from './consolidatedScholarshipService';
+import { getAllScholarships } from "./consolidatedScholarshipService";
 
 export const fetchScholarships = async () => {
   try {

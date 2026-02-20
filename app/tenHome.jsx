@@ -144,11 +144,11 @@ Best regards,
 [Your Name]`;
 
     const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(
-      subject
+      subject,
     )}&body=${encodeURIComponent(body)}`;
 
     Linking.openURL(mailtoUrl).catch(() =>
-      Alert.alert("Error", "Unable to open the email client.")
+      Alert.alert("Error", "Unable to open the email client."),
     );
   };
 
@@ -400,7 +400,7 @@ Best regards,
             }
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
+              { useNativeDriver: true },
             )}
             scrollEventThrottle={16}
           />

@@ -12,11 +12,11 @@ import { useRouter } from "expo-router";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { styles, getDynamicStyles } from "../app/styles/styles3";
-import LoaderModal from '../components/LoaderModal';
+import LoaderModal from "../components/LoaderModal";
 import { authAPI } from "../services/apiService";
 
 const RegisterSchema = Yup.object().shape({
-  email: Yup.string().required("Required"), 
+  email: Yup.string().required("Required"),
   password: Yup.string().required("Required  ").min(6, "Too short   "),
   confirmPassword: Yup.string()
     .required("Required  ")
@@ -38,7 +38,7 @@ export default function RegisterForm() {
         return;
       } catch (error) {
         // Expected to fail (user doesn't exist), continue with registration
-        if (!error.message.includes('404')) {
+        if (!error.message.includes("404")) {
           throw error;
         }
       }
@@ -54,7 +54,7 @@ export default function RegisterForm() {
       });
 
       setIsModalVisible(true);
-      
+
       setTimeout(() => {
         router.push("login");
         setIsModalVisible(false);
@@ -82,13 +82,19 @@ export default function RegisterForm() {
         errors,
         touched,
       }) => (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContainer}
+        >
           <View style={[styles.container, dynamicStyles.container]}>
             <Image
               source={require("../assets/images/OPPORTUNITIES.png")}
               style={styles.logo}
             />
-            <Text style={[styles.title, dynamicStyles.title]}>  Create Account   </Text>
+            <Text style={[styles.title, dynamicStyles.title]}>
+              {" "}
+              Create Account{" "}
+            </Text>
 
             <TextInput
               style={[styles.input, dynamicStyles.input]}

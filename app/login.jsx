@@ -85,7 +85,7 @@ export default function LoginForm() {
   const handleLogin = async (values) => {
     try {
       setIsSubmitting(true); // Show loader
-      
+
       // Check if user exists
       await authAPI.checkUserExists(values.email);
 
