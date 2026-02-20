@@ -71,6 +71,33 @@ export const authAPI = {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify(userData),
     }),
+
+  // Favorite Management
+  getFavorites: (email) =>
+    apiCall(`/Users/${encodeURIComponent(email)}/favorites`, { method: "GET" }),
+
+  addFavorite: (email, scholarshipId) =>
+    apiCall(`/Users/${encodeURIComponent(email)}/favorites/by-email`, {
+      method: "POST",
+      body: JSON.stringify(scholarshipId),
+    }),
+
+  removeFavorite: (email, scholarshipId) =>
+    apiCall(`/Users/${encodeURIComponent(email)}/favorites/by-email/${scholarshipId}`, {
+      method: "DELETE",
+    }),
+
+  // Email Management
+  getEmailMessage: (email) =>
+    apiCall(`/Users/${encodeURIComponent(email)}/email-message`, {
+      method: "GET",
+    }),
+
+  updateEmailMessage: (email, message) =>
+    apiCall(`/Users/${encodeURIComponent(email)}/email-message`, {
+      method: "PUT",
+      body: JSON.stringify({ scholarshipEmailMessage: message }),
+    }),
 };
 
 /**

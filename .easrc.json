@@ -1,0 +1,15 @@
+# EAS Build Configuration for Android 16 KB Page Size Support
+#
+# This file ensures that your app builds correctly with 16 KB page size support
+# Required for Google Play submission on Android 15+ (API level 35+)
+
+# Build environment variables for EAS
+ GRADLE_BUILD_HEAP_SIZE=2048m
+ANDROID_GRADLE_PLUGIN_VERSION=8.2.0
+ANDROID_NDK_VERSION=27.0.12158134
+
+# ABI Filters - Include all architectures for maximum compatibility
+ANDROID_ABI_FILTERS=armeabi-v7a,arm64-v8a,x86,x86_64
+
+# Build type
+BUILD_TYPE=release

@@ -25,13 +25,14 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchScholarships } from "./service/StatesticsfetchScholarships";
+import { getAllScholarships } from "./service/consolidatedScholarshipService";
 import { sendScholarshipEmail } from "./service/emailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
 import LoaderModal from "../components/justmoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
+import { authAPI } from "../services/apiService";
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -148,13 +149,7 @@ const ScholarshipApp = () => {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
-        )}/favorites`
-      );
-      if (!response.ok) throw new Error("Failed to fetch favorites");
-      const data = await response.json();
+      const data = await authAPI.getFavorites(user.email);
       const favoriteIds = data.map((s) => s.id);
       setFavoriteScholarships(favoriteIds);
       await AsyncStorage.setItem(
@@ -184,23 +179,10 @@ const ScholarshipApp = () => {
       setFavoriteScholarships(updatedFavorites);
 
       try {
-        const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
-        )}/favorites/by-email`;
-        const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
-        const method = isFavorited ? "DELETE" : "POST";
-        const body = isFavorited ? null : JSON.stringify(id);
-
-        const response = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body,
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to ${isFavorited ? "remove" : "add"} favorite`
-          );
+        if (isFavorited) {
+          await authAPI.removeFavorite(user.email, id);
+        } else {
+          await authAPI.addFavorite(user.email, id);
         }
       } catch (error) {
         console.error(
@@ -220,8 +202,8 @@ const ScholarshipApp = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await fetchScholarships();
-      setScholarships(data);
+      const data = await getAllScholarships();
+      setScholarships(data || []);
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Could not fetch scholarship data.");
@@ -243,13 +225,9 @@ const ScholarshipApp = () => {
         return;
       }
       try {
-        const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.email
-          )}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch user data");
+        await authAPI.getUserByEmail(user.email);
       } catch (error) {
+        console.error("Error checking paid status:", error);
       } finally {
         setCheckingPaid(false);
       }

@@ -17,6 +17,7 @@ import { Provider as PaperProvider } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { scholarshipAPI } from "../services/apiService";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const scale = (size) => (SCREEN_WIDTH / 375) * size;
@@ -131,41 +132,43 @@ const ScholarshipCreateNew = () => {
     };
 
     try {
-      const response = await fetch("https://webapplication2-old-pond-3577.fly.dev/api/Scholarships", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(scholarshipData),
+      await scholarshipAPI.createScholarship(scholarshipData);
+      
+      // Reset form
+      setTitle("");
+      setCountry(null);
+      setUniversity("");
+      setMajor(null);
+      setFunding("");
+      setType(null);
+      setLevel(null);
+      setLanguageTests("");
+      setUniversityDetails("");
+      setQualifications("");
+      setUniversityWebsite("");
+      setDepartmentHead({
+        name: "",
+        position: "",
+        email: "",
+        research: "",
+        office: "",
       });
-
-      if (response.status === 200) {
-        Alert.alert("Success", "Scholarship created successfully!");
-        // Reset form
-        setTitle("");
-        setCountry(null);
-        setUniversity("");
-        setMajor(null);
-        setFunding("");
-        setType(null);
-        setLevel(null);
-        setLanguageTests("");
-        setUniversityDetails("");
-        setQualifications("");
-        setUniversityWebsite("");
-        setDepartmentHead({
-          name: "",
-          position: "",
-          email: "",
-          research: "",
-          office: "",
-        });
-      } else {
-        Alert.alert("Error", "Failed to create scholarship. Please try again.");
-      }
+      
+      Alert.alert(
+        "Success!",
+        "Scholarship created successfully",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.back();
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.error("API Error:", error);
-      Alert.alert("Error", "An error occurred while submitting. Please check your connection.");
+      Alert.alert("Error", error.message || "An error occurred while submitting. Please check your connection.");
     }
   };
 

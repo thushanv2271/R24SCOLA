@@ -1,4 +1,5 @@
 import { Linking, Alert } from "react-native";
+import { authAPI } from "../../services/apiService";
 
 export const sendScholarshipEmail = async (
   professorEmail,
@@ -8,30 +9,19 @@ export const sendScholarshipEmail = async (
 ) => {
   try {
     // Fetch the user's custom email message
-    const response = await fetch(
-      `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-        userEmail
-      )}/email-message`,
-      {
-        method: "GET",
-        headers: { Accept: "application/json" },
+    const messageData = await authAPI.getEmailMessage(userEmail);
+    
+    // Handle different response formats
+    let customMessage = messageData?.scholarshipEmailMessage || messageData;
+    
+    // If it's a string response wrapped in quotes, remove them
+    if (typeof customMessage === 'string') {
+      if (customMessage.startsWith('"') && customMessage.endsWith('"')) {
+        customMessage = customMessage.slice(1, -1);
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch email message");
+      // Replace literal \n with actual newlines
+      customMessage = customMessage.replace(/\\n/g, "\n");
     }
-
-    // Get the custom message as plain text
-    let customMessage = await response.text();
-
-    // Remove surrounding double quotes if they exist
-    if (customMessage.startsWith('"') && customMessage.endsWith('"')) {
-      customMessage = customMessage.slice(1, -1);
-    }
-
-    // Replace literal \n with actual newlines
-    customMessage = customMessage.replace(/\\n/g, "\n");
 
     const recipient = professorEmail;
     const subject = `Scholarship request: ${scholarshipTitle}`;

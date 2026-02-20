@@ -4,7 +4,7 @@
  * Replaces 20+ duplicate service files with a single dynamic service
  */
 
-import { scholarshipAPI } from "./apiService";
+import { scholarshipAPI } from "../../services/apiService";
 
 // Major categories supported
 const MAJORS = {

@@ -9,7 +9,12 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "build:android:release": "eas build --platform android --profile release",
+    "build:android:preview": "eas build --platform android --profile preview",
+    "build:android:dev": "eas build --platform android --profile development",
+    "submit:android": "eas submit --platform android --latest",
+    "build:android:16kb": "echo 'Building with 16 KB page size support...' && eas build --platform android --profile release --clear"
   },
   "jest": {
     "preset": "jest-expo"
