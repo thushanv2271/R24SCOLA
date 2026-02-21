@@ -62,7 +62,7 @@ export default function RootLayout() {
           <Stack.Screen name="JobInside" options={{ headerShown: false }} />
           <Stack.Screen name="MEngineering" options={{ headerShown: false }} />
           <Stack.Screen name="Scholarships" options={{ headerShown: false }} />
-          <Stack.Screen name="ItJobs" options={{ headerShown: false }} />
+          <Stack.Screen name="Itjobs" options={{ headerShown: false }} />
           <Stack.Screen
             name="ScholarshipCreateNew"
             options={{ headerShown: false }}
