@@ -52,3 +52,55 @@ export const sendScholarshipEmail = async (
     };
   }
 };
+
+export const sendJobEmail = async (
+  companyEmail,
+  username,
+  jobTitle,
+  companyDetails,
+) => {
+  try {
+    // Fetch the user's custom job email message
+    const messageData = await authAPI.getJobEmailMessage(username);
+
+    // Handle different response formats
+    let customMessage = messageData?.jobEmailMessage || messageData;
+
+    // If it's a string response wrapped in quotes, remove them
+    if (typeof customMessage === "string") {
+      if (customMessage.startsWith('"') && customMessage.endsWith('"')) {
+        customMessage = customMessage.slice(1, -1);
+      }
+      // Replace literal \n with actual newlines
+      customMessage = customMessage.replace(/\\n/g, "\n");
+    }
+
+    const recipient = companyEmail;
+    const subject = `Job Application: ${jobTitle}`;
+
+    // Construct the email body with \n for line breaks
+    const body =
+      `Dear ${companyDetails?.name || "Hiring Manager"},\n\n` +
+      `${customMessage}\n\n`;
+
+    // Encode the body for the mailto URL
+    const encodedBody = encodeURIComponent(body);
+
+    // Construct the mailto URL
+    const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodedBody}`;
+
+    console.log("Job Email URL:", mailtoUrl);
+    console.log("Decoded body for debugging:", decodeURIComponent(encodedBody));
+
+    await Linking.openURL(mailtoUrl);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending job email:", error);
+    return {
+      success: false,
+      error: "Unable to open the email client or fetch custom message.",
+    };
+  }
+};

@@ -46,7 +46,9 @@ export default function CustomMail() {
   const [loading, setLoading] = useState(true);
   const [editedData, setEditedData] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
+  const [jobModalVisible, setJobModalVisible] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
+  const [jobEmailMessage, setJobEmailMessage] = useState("");
   const navigation = useNavigation();
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
@@ -86,6 +88,7 @@ export default function CustomMail() {
         setEditedData(data);
         // Convert <br> to \n when setting emailMessage for TextInput
         setEmailMessage(convertToNewlines(data.scholarshipEmailMessage));
+        setJobEmailMessage(convertToNewlines(data.jobEmailMessage));
       } catch (error) {
         console.error("Error fetching user details:", error);
         showAlert("Error", "Failed to load user details", "error");
@@ -125,6 +128,38 @@ export default function CustomMail() {
     } catch (error) {
       console.error("Error updating email message:", error);
       showAlert("Error", "Failed to update email message", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveJobEmailMessage = async () => {
+    if (!user?.username) return;
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
+          user.username,
+        )}/job-email-message`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ jobEmailMessage: jobEmailMessage }),
+        },
+      );
+      if (!response.ok) throw new Error("Failed to update job email message");
+      const updatedData = await response.json();
+      console.log("Saved job email message:", updatedData.jobEmailMessage);
+      setEditedData(updatedData);
+      setJobEmailMessage(convertToNewlines(updatedData.jobEmailMessage));
+      setJobModalVisible(false);
+      showAlert("Success", "Job email message updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating job email message:", error);
+      showAlert("Error", "Failed to update job email message", "error");
     } finally {
       setLoading(false);
     }
@@ -193,7 +228,35 @@ export default function CustomMail() {
               color="#fff"
             />
             <Text style={styles.customizeButtonText}>
-              Customize Email Message
+              Customize Scholarship Email
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.section}>
+            <View style={styles.sectionContent}>
+              <Text style={styles.label}>Job Email Message:</Text>
+              {formatMessage(editedData.jobEmailMessage).map(
+                (line, index) => (
+                  <Text key={index} style={styles.value}>
+                    {line}
+                  </Text>
+                ),
+              )}
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.customizeButton, styles.jobButton]}
+            onPress={() => setJobModalVisible(true)}
+          >
+            <Ionicons
+              name="briefcase-outline"
+              size={moderateScale(24)}
+              color="#fff"
+            />
+            <Text style={styles.customizeButtonText}>
+              Customize Job Email
             </Text>
           </TouchableOpacity>
         </View>
@@ -208,12 +271,12 @@ export default function CustomMail() {
         <SafeAreaView style={styles.modalOverlay}>
           <ScrollView contentContainerStyle={styles.modalScrollViewContent}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Customize Email Message</Text>
+              <Text style={styles.modalTitle}>Customize Scholarship Email</Text>
               <TextInput
                 style={styles.modalInput}
                 value={emailMessage}
                 onChangeText={setEmailMessage}
-                placeholder="Enter your custom email message"
+                placeholder="Enter your custom scholarship email message"
                 multiline
                 numberOfLines={10}
               />
@@ -235,6 +298,44 @@ export default function CustomMail() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={jobModalVisible}
+        onRequestClose={() => setJobModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <ScrollView contentContainerStyle={styles.modalScrollViewContent}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Customize Job Email</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={jobEmailMessage}
+                onChangeText={setJobEmailMessage}
+                placeholder="Enter your custom job email message"
+                multiline
+                numberOfLines={10}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setJobModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.saveButton]}
+                  onPress={handleSaveJobEmailMessage}
+                >
+                  <Text style={styles.modalButtonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
       <AlertModal
         visible={alertConfig.visible}
         title={alertConfig.title}
@@ -299,6 +400,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+  },
+  jobButton: {
+    backgroundColor: "#10b981",
   },
   customizeButtonText: {
     color: "#fff",

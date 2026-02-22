@@ -25,7 +25,7 @@ import {
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "./service/itjobsfetch";
-import { sendScholarshipEmail } from "./service/emailService";
+import { sendJobEmail } from "./service/emailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
 import LoaderModal from "../components/JustMoment";
@@ -112,7 +112,7 @@ const ScholarshipApp = () => {
     extrapolate: "clamp",
   });
 
-  const [favoriteScholarships, setFavoriteScholarships] = useState([]);
+  const [favoriteJobs, setFavoriteJobs] = useState([]);
 
   useEffect(() => {
     if (showFilterModal) {
@@ -132,8 +132,8 @@ const ScholarshipApp = () => {
 
   useEffect(() => {
     const loadFavorites = async () => {
-      const favorites = await AsyncStorage.getItem("favoriteScholarships");
-      if (favorites) setFavoriteScholarships(JSON.parse(favorites));
+      const favorites = await AsyncStorage.getItem("favoriteJobs");
+      if (favorites) setFavoriteJobs(JSON.parse(favorites));
     };
     loadFavorites();
 
@@ -141,29 +141,26 @@ const ScholarshipApp = () => {
   }, [user]);
 
   useEffect(() => {
-    AsyncStorage.setItem(
-      "favoriteScholarships",
-      JSON.stringify(favoriteScholarships)
-    ).catch((error) =>
-      console.error("Error saving favorite scholarships:", error)
+    AsyncStorage.setItem("favoriteJobs", JSON.stringify(favoriteJobs)).catch(
+      (error) => console.error("Error saving favorite jobs:", error)
     );
-  }, [favoriteScholarships]);
+  }, [favoriteJobs]);
 
   const fetchFavorites = async () => {
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
           user.username
-        )}/favorites`
+        )}/job-favorites`
       );
-      if (!response.ok) throw new Error("Failed to fetch favorites");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to fetch favorites");
+      }
       const data = await response.json();
       const favoriteIds = data.map((s) => s.id);
-      setFavoriteScholarships(favoriteIds);
-      await AsyncStorage.setItem(
-        "favoriteScholarships",
-        JSON.stringify(favoriteIds)
-      );
+      setFavoriteJobs(favoriteIds);
+      await AsyncStorage.setItem("favoriteJobs", JSON.stringify(favoriteIds));
     } catch (error) {
       console.error("Error fetching favorites:", error);
     }
@@ -179,17 +176,17 @@ const ScholarshipApp = () => {
 
   const handleFavorite = useCallback(
     debounce(async (id) => {
-      const isFavorited = favoriteScholarships.includes(id);
+      const isFavorited = favoriteJobs.includes(id);
       const updatedFavorites = isFavorited
-        ? favoriteScholarships.filter((favId) => favId !== id)
-        : [...favoriteScholarships, id];
+        ? favoriteJobs.filter((favId) => favId !== id)
+        : [...favoriteJobs, id];
 
-      setFavoriteScholarships(updatedFavorites);
+      setFavoriteJobs(updatedFavorites);
 
       try {
         const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
           user.username
-        )}/favorites/by-username`;
+        )}/job-favorites/by-username`;
         const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
         const method = isFavorited ? "DELETE" : "POST";
         const body = isFavorited ? null : JSON.stringify(id);
@@ -201,8 +198,10 @@ const ScholarshipApp = () => {
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
           throw new Error(
-            `Failed to ${isFavorited ? "remove" : "add"} favorite`
+            errorText ||
+              `Failed to ${isFavorited ? "remove" : "add"} favorite`
           );
         }
       } catch (error) {
@@ -210,15 +209,16 @@ const ScholarshipApp = () => {
           `Error ${isFavorited ? "removing" : "adding"} favorite:`,
           error
         );
-        setFavoriteScholarships(favoriteScholarships);
+        setFavoriteJobs(favoriteJobs);
         showAlert(
           "Error",
-          `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
+          error?.message ||
+            `Could not ${isFavorited ? "remove" : "add"} favorite job.`,
           "error"
         );
       }
     }, 300),
-    [favoriteScholarships, user?.username]
+    [favoriteJobs, user?.username]
   );
 
   const fetchData = async () => {
@@ -294,7 +294,7 @@ const ScholarshipApp = () => {
 
       const handleRequestScholarship = async () => {
         const professor = item.contactProfessors?.[0];
-        const result = await sendScholarshipEmail(
+        const result = await sendJobEmail(
           professor?.email,
           user?.username,
           item.title,
@@ -333,12 +333,10 @@ const ScholarshipApp = () => {
                 style={styles.likeButton}
               >
                 <FontAwesome
-                  name={
-                    favoriteScholarships.includes(item.id) ? "heart" : "heart-o"
-                  }
+                  name={favoriteJobs.includes(item.id) ? "heart" : "heart-o"}
                   size={25}
                   color={
-                    favoriteScholarships.includes(item.id) ? "red" : "black"
+                    favoriteJobs.includes(item.id) ? "red" : "black"
                   }
                 />
               </TouchableOpacity>
@@ -430,7 +428,7 @@ const ScholarshipApp = () => {
 
   const renderItem = useCallback(
     ({ item }) => <ScholarshipCard item={item} />,
-    [handleFavorite, favoriteScholarships]
+    [handleFavorite, favoriteJobs]
   );
 
   return (

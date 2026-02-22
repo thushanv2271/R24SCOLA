@@ -27,7 +27,13 @@ const apiCall = async (endpoint, options = {}) => {
         // Try to parse as JSON first
         try {
           const parsed = JSON.parse(errorData);
-          errorMessage = parsed.message || parsed.title || errorMessage;
+          if (parsed?.errors && typeof parsed.errors === "object") {
+            const firstKey = Object.keys(parsed.errors)[0];
+            const firstError = parsed.errors[firstKey]?.[0];
+            errorMessage = firstError || parsed.title || parsed.message || errorMessage;
+          } else {
+            errorMessage = parsed.message || parsed.title || errorMessage;
+          }
         } catch (e) {
           // If not JSON, use the text directly (remove quotes if present)
           errorMessage = errorData.replace(/^"+|"+$/g, "") || errorMessage;
@@ -104,6 +110,26 @@ export const authAPI = {
       },
     ),
 
+  // Job Favorite Management
+  getJobFavorites: (username) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/job-favorites`, {
+      method: "GET",
+    }),
+
+  addJobFavorite: (username, jobId) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/job-favorites/by-username`, {
+      method: "POST",
+      body: JSON.stringify(jobId),
+    }),
+
+  removeJobFavorite: (username, jobId) =>
+    apiCall(
+      `/Users/${encodeURIComponent(username)}/job-favorites/by-username/${jobId}`,
+      {
+        method: "DELETE",
+      },
+    ),
+
   // Email Management
   getEmailMessage: (username) =>
     apiCall(`/Users/${encodeURIComponent(username)}/email-message`, {
@@ -114,6 +140,18 @@ export const authAPI = {
     apiCall(`/Users/${encodeURIComponent(username)}/email-message`, {
       method: "PUT",
       body: JSON.stringify({ scholarshipEmailMessage: message }),
+    }),
+
+  // Job Email Management
+  getJobEmailMessage: (username) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/job-email-message`, {
+      method: "GET",
+    }),
+
+  updateJobEmailMessage: (username, message) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/job-email-message`, {
+      method: "PUT",
+      body: JSON.stringify({ jobEmailMessage: message }),
     }),
 };
 

@@ -62,6 +62,7 @@ export default function RegisterForm() {
         age: 25,
         country: "United States",
         favoriteScholarshipIds: [],
+        favoriteJobIds: [],
       });
 
       setIsModalVisible(true);

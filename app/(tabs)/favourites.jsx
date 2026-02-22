@@ -18,7 +18,7 @@ import {
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 import { AuthContext } from "../../components/AuthContext";
-import { sendScholarshipEmail } from "../service/emailService";
+import { sendScholarshipEmail, sendJobEmail } from "../service/emailService";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -27,8 +27,11 @@ import AlertModal from "../../components/AlertModal";
 const FavoriteItemsList = () => {
   const { user, refreshFavorites } = useContext(AuthContext);
   const [favoriteScholarships, setFavoriteScholarships] = useState([]);
+  const [favoriteJobs, setFavoriteJobs] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("scholarships"); // "scholarships" or "jobs"
   const [refreshing, setRefreshing] = useState(false);
   const [requestedScholarships, setRequestedScholarships] = useState(new Set());
+  const [requestedJobs, setRequestedJobs] = useState(new Set());
   const router = useRouter();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const navigation = useNavigation();
@@ -68,7 +71,22 @@ const FavoriteItemsList = () => {
         );
       }
     };
+
+    const loadRequestedJobs = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("requestedJobs");
+        if (storedData) {
+          const parsedData = new Set(JSON.parse(storedData));
+          setRequestedJobs(parsedData);
+        }
+      } catch (error) {
+        console.error("Failed to load requested jobs:", error);
+        showAlert("Error", "Could not load requested jobs data.", "error");
+      }
+    };
+
     loadRequestedScholarships();
+    loadRequestedJobs();
   }, []);
 
   // Save requested scholarships to AsyncStorage whenever it changes
@@ -90,6 +108,22 @@ const FavoriteItemsList = () => {
     };
     saveRequestedScholarships();
   }, [requestedScholarships]);
+
+  // Save requested jobs to AsyncStorage whenever it changes
+  useEffect(() => {
+    const saveRequestedJobs = async () => {
+      try {
+        await AsyncStorage.setItem(
+          "requestedJobs",
+          JSON.stringify([...requestedJobs]),
+        );
+      } catch (error) {
+        console.error("Failed to save requested jobs:", error);
+        showAlert("Error", "Could not save requested jobs data.", "error");
+      }
+    };
+    saveRequestedJobs();
+  }, [requestedJobs]);
 
   const styles = useMemo(
     () =>
@@ -240,6 +274,44 @@ const FavoriteItemsList = () => {
           marginTop: screenHeight * 0.2,
           textBreakStrategy: "simple",
         },
+        tabContainer: {
+          flexDirection: "row",
+          backgroundColor: "#fff",
+          borderRadius: scale(30),
+          padding: scale(4),
+          marginTop: scale(10),
+          marginBottom: scale(10),
+          elevation: 2,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        tabButton: {
+          flex: 1,
+          paddingVertical: scale(10),
+          paddingHorizontal: scale(20),
+          borderRadius: scale(26),
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        tabButtonActive: {
+          backgroundColor: "#004aad",
+        },
+        tabButtonInactive: {
+          backgroundColor: "transparent",
+        },
+        tabText: {
+          fontFamily: "Poppins_600SemiBold",
+          fontSize: scale(14),
+          fontWeight: "600",
+        },
+        tabTextActive: {
+          color: "#fff",
+        },
+        tabTextInactive: {
+          color: "#666",
+        },
       }),
     [scale, screenWidth, screenHeight],
   );
@@ -265,10 +337,31 @@ const FavoriteItemsList = () => {
     }
   }, []);
 
+  const fetchFavoriteJobs = useCallback(async (username) => {
+    try {
+      const response = await fetch(
+        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
+          username,
+        )}/job-favorites`,
+      );
+      if (!response.ok) throw new Error("Failed to fetch job favorites");
+      const data = await response.json();
+      setFavoriteJobs(data);
+    } catch (error) {
+      showAlert("Error", "Could not fetch favorite jobs.", "error");
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
     if (user?.username) {
-      await fetchFavoriteScholarships(user.username);
+      if (selectedTab === "scholarships") {
+        await fetchFavoriteScholarships(user.username);
+      } else {
+        await fetchFavoriteJobs(user.username);
+      }
     }
   };
 
@@ -340,25 +433,95 @@ const FavoriteItemsList = () => {
     }
   };
 
+  const handleRequestAllJobs = async () => {
+    if (!user?.username) {
+      showAlert("Error", "Please log in to request jobs.", "error");
+      return;
+    }
+
+    // Filter out already requested jobs and those without valid contact emails
+    const jobsToRequest = favoriteJobs.filter(
+      (job) =>
+        !requestedJobs.has(job.id) && job.contactProfessors?.[0]?.email,
+    );
+
+    if (jobsToRequest.length === 0) {
+      showAlert(
+        "Info",
+        "No new jobs to request or missing contact emails.",
+        "info",
+      );
+      return;
+    }
+
+    // Collect all contact emails
+    const contactEmails = jobsToRequest
+      .map((job) => job.contactProfessors[0].email)
+      .join(",");
+
+    // Create email body with all job details
+    const jobList = jobsToRequest
+      .map(
+        (job, index) =>
+          `${index + 1}. ${job.title || "Untitled Job"} (${
+            job.university || "Unknown Organization"
+          })`,
+      )
+      .join("\n");
+    const emailBody = `Request for the following jobs:\n\n${jobList}`;
+
+    try {
+      // Send single email to all contact emails
+      await sendJobEmail(
+        contactEmails,
+        user.username,
+        "Job Request for Multiple Favorites",
+        { name: "Multiple Recipients" },
+        emailBody,
+      );
+
+      // Mark all jobs as requested
+      const newRequested = new Set(requestedJobs);
+      jobsToRequest.forEach((job) => newRequested.add(job.id));
+      setRequestedJobs(newRequested);
+
+      showAlert(
+        "Success",
+        `${jobsToRequest.length} job${jobsToRequest.length > 1 ? "s" : ""} requested successfully!`,
+        "success",
+      );
+    } catch (error) {
+      console.error("Failed to send job request email:", error);
+      showAlert("Error", "Failed to send job request email.", "error");
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       if (user?.username) {
         setRefreshing(true);
         fetchFavoriteScholarships(user.username);
+        fetchFavoriteJobs(user.username);
       }
-    }, [user, fetchFavoriteScholarships]),
+    }, [user, fetchFavoriteScholarships, fetchFavoriteJobs]),
   );
 
   useEffect(() => {
-    if (user?.username) fetchFavoriteScholarships(user.username);
-  }, [refreshFavorites, user, fetchFavoriteScholarships]);
+    if (user?.username) {
+      fetchFavoriteScholarships(user.username);
+      fetchFavoriteJobs(user.username);
+    }
+  }, [refreshFavorites, user, fetchFavoriteScholarships, fetchFavoriteJobs]);
 
   const renderItem = ({ item }) => {
     const imageUrl =
       item.images && item.images.length > 0 ? item.images[0] : null;
-    const isRequested = requestedScholarships.has(item.id);
+    const isJob = selectedTab === "jobs";
+    const isRequested = isJob
+      ? requestedJobs.has(item.id)
+      : requestedScholarships.has(item.id);
 
-    const handleRequestScholarship = async () => {
+    const handleRequestItem = async () => {
       const professor = item.contactProfessors?.[0];
       if (!professor?.email || !user?.username) {
         showAlert("Error", "Missing email information.", "error");
@@ -366,24 +529,43 @@ const FavoriteItemsList = () => {
       }
 
       try {
-        await sendScholarshipEmail(
-          professor.email,
-          user.username,
-          item.title,
-          professor,
-        );
-        setRequestedScholarships((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(item.id);
-          return newSet;
-        });
-        showAlert(
-          "Success",
-          "Scholarship request sent successfully!",
-          "success",
-        );
+        if (isJob) {
+          await sendJobEmail(
+            professor.email,
+            user.username,
+            item.title,
+            professor,
+          );
+          setRequestedJobs((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(item.id);
+            return newSet;
+          });
+          showAlert("Success", "Job request sent successfully!", "success");
+        } else {
+          await sendScholarshipEmail(
+            professor.email,
+            user.username,
+            item.title,
+            professor,
+          );
+          setRequestedScholarships((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(item.id);
+            return newSet;
+          });
+          showAlert(
+            "Success",
+            "Scholarship request sent successfully!",
+            "success",
+          );
+        }
       } catch (error) {
-        showAlert("Error", "Failed to send scholarship request.", "error");
+        showAlert(
+          "Error",
+          `Failed to send ${isJob ? "job" : "scholarship"} request.`,
+          "error",
+        );
       }
     };
 
@@ -411,10 +593,10 @@ const FavoriteItemsList = () => {
           </View>
           <View style={{ flex: 1, paddingLeft: scale(12) }}>
             <Text style={styles.cardTitle}>
-              {item.title || "Untitled Scholarship"}
+              {item.title || `Untitled ${isJob ? "Job" : "Scholarship"}`}
             </Text>
             <Text style={styles.cardSubtitle}>
-              {item.university || "Unknown University"}
+              {item.university || `Unknown ${isJob ? "Organization" : "University"}`}
             </Text>
           </View>
         </View>
@@ -422,10 +604,10 @@ const FavoriteItemsList = () => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, isRequested && styles.buttonRequested]}
-            onPress={handleRequestScholarship}
+            onPress={handleRequestItem}
           >
             <Text style={styles.buttonText}>
-              {isRequested ? "Requested" : "Request Scholarship"}
+              {isRequested ? "Requested" : `Request ${isJob ? "Job" : "Scholarship"}`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -436,15 +618,34 @@ const FavoriteItemsList = () => {
   if (!user || !user.username) {
     return (
       <View style={styles.container}>
+        <AlertModal
+          visible={alertConfig.visible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          type={alertConfig.type}
+          actions={alertConfig.actions}
+          onClose={closeAlert}
+        />
         <Text style={styles.emptyText}>
-          Please log in to view your favorite scholarships.
+          Please log in to view your favorites.
         </Text>
       </View>
     );
   }
 
+  const currentData = selectedTab === "scholarships" ? favoriteScholarships : favoriteJobs;
+  const handleRequestAll = selectedTab === "scholarships" ? handleRequestAllScholarships : handleRequestAllJobs;
+
   return (
     <View style={styles.container}>
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions}
+        onClose={closeAlert}
+      />
       <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.headerRow}>
@@ -462,15 +663,59 @@ const FavoriteItemsList = () => {
             <Ionicons name="create" size={25} color="#a5a4a4" />
           </TouchableOpacity>
         </View>
+
+        {/* Tab Selector */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              selectedTab === "scholarships"
+                ? styles.tabButtonActive
+                : styles.tabButtonInactive,
+            ]}
+            onPress={() => setSelectedTab("scholarships")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === "scholarships"
+                  ? styles.tabTextActive
+                  : styles.tabTextInactive,
+              ]}
+            >
+              Scholarships
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              selectedTab === "jobs"
+                ? styles.tabButtonActive
+                : styles.tabButtonInactive,
+            ]}
+            onPress={() => setSelectedTab("jobs")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === "jobs"
+                  ? styles.tabTextActive
+                  : styles.tabTextInactive,
+              ]}
+            >
+              Jobs
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
-          onPress={handleRequestAllScholarships}
-          disabled={favoriteScholarships.length === 0}
+          onPress={handleRequestAll}
+          disabled={currentData.length === 0}
         >
           <Text
             style={[
               styles.requestAllText,
-              favoriteScholarships.length === 0 &&
-                styles.requestAllTextDisabled,
+              currentData.length === 0 && styles.requestAllTextDisabled,
             ]}
           >
             Request All
@@ -479,11 +724,11 @@ const FavoriteItemsList = () => {
       </View>
 
       <FlatList
-        data={favoriteScholarships}
+        data={currentData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{
-          paddingTop: scale(120),
+          paddingTop: scale(170),
           paddingBottom: scale(20),
         }}
         refreshControl={
@@ -495,7 +740,9 @@ const FavoriteItemsList = () => {
         }
         ListEmptyComponent={() => (
           <Text style={styles.emptyText}>
-            {refreshing ? "Refreshing..." : "No favorite scholarships yet."}
+            {refreshing
+              ? "Refreshing..."
+              : `No favorite ${selectedTab === "scholarships" ? "scholarships" : "jobs"} yet.`}
           </Text>
         )}
       />
