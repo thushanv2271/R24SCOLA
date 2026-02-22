@@ -58,12 +58,13 @@ export default function LoginForm() {
         // If remember me was true, get the credentials
         if (rememberMeValue) {
           const savedUsername = await AsyncStorage.getItem("username");
+          const savedPassword = await AsyncStorage.getItem("userPassword");
 
           if (savedUsername) {
             // Set initial values for the form
             setInitialValues({
               username: savedUsername,
-              password: "",
+              password: savedPassword || "",
             });
           }
         }
@@ -100,6 +101,7 @@ export default function LoginForm() {
       // Save credentials if remember me is checked (only after successful login)
       if (rememberMe) {
         await AsyncStorage.setItem("username", normalizedUsername);
+        await AsyncStorage.setItem("userPassword", values.password);
         await AsyncStorage.setItem("rememberMe", "true");
       } else {
         // Clear saved credentials if remember me is unchecked
