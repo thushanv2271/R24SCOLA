@@ -43,9 +43,19 @@ const ScholarshipApp = () => {
   const [scholarships, setScholarships] = useState([]);
   const { user, logout } = useContext(AuthContext);
   const [checkingPaid, setCheckingPaid] = useState(true);
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
-  const showAlert = (title, message, type = "info", actions = []) => { setAlertConfig({ visible: true, title, message, type, actions }); };
-  const closeAlert = () => { setAlertConfig({ ...alertConfig, visible: false }); };
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
   const [selectedMajor, setSelectedMajor] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedFunding, setSelectedFunding] = useState("");
@@ -215,7 +225,7 @@ const ScholarshipApp = () => {
         showAlert(
           "Error",
           `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
-          "error"
+          "error",
         );
       }
     }, 300),

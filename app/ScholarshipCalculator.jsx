@@ -484,7 +484,11 @@ const ScholarshipPossibilityCalculator = () => {
 
   const fetchPastResults = async () => {
     if (!user?.username) {
-      showAlert("Error", "Please login to view your calculation history", "error");
+      showAlert(
+        "Error",
+        "Please login to view your calculation history",
+        "error",
+      );
       return;
     }
 

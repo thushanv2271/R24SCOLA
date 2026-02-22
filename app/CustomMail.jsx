@@ -48,7 +48,13 @@ export default function CustomMail() {
   const [modalVisible, setModalVisible] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
   const navigation = useNavigation();
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -234,7 +240,11 @@ export default function CustomMail() {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        actions={
+          alertConfig.actions.length > 0
+            ? alertConfig.actions
+            : [{ text: "OK", onPress: closeAlert }]
+        }
         onClose={closeAlert}
       />
     </SafeAreaView>

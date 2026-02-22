@@ -46,9 +46,9 @@ export const sendScholarshipEmail = async (
     return { success: true };
   } catch (error) {
     console.error("Error sending email:", error);
-    return { 
-      success: false, 
-      error: "Unable to open the email client or fetch custom message." 
+    return {
+      success: false,
+      error: "Unable to open the email client or fetch custom message.",
     };
   }
 };

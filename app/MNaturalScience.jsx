@@ -54,7 +54,13 @@ const ScholarshipApp = () => {
   const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterModalY = useRef(new Animated.Value(screenHeight)).current;
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -220,7 +226,7 @@ const ScholarshipApp = () => {
         showAlert(
           "Error",
           `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
-          "error"
+          "error",
         );
       }
     }, 300),
@@ -704,23 +710,19 @@ const ScholarshipApp = () => {
       )}
 
       <AlertModal
-
         visible={alertConfig.visible}
-
         title={alertConfig.title}
-
         message={alertConfig.message}
-
         type={alertConfig.type}
-
-        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
-
+        actions={
+          alertConfig.actions.length > 0
+            ? alertConfig.actions
+            : [{ text: "OK", onPress: closeAlert }]
+        }
         onClose={closeAlert}
-
       />
-
-      </SafeAreaView>
-    );
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({

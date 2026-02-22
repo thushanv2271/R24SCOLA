@@ -42,7 +42,13 @@ const TenHome = () => {
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
   const router = useRouter();
   const { username } = useLocalSearchParams();
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -419,7 +425,11 @@ Best regards,
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        actions={
+          alertConfig.actions.length > 0
+            ? alertConfig.actions
+            : [{ text: "OK", onPress: closeAlert }]
+        }
         onClose={closeAlert}
       />
     </SafeAreaView>

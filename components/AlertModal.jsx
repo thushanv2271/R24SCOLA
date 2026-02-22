@@ -13,7 +13,14 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const AlertModal = ({ visible, title, message, type = "info", onClose, actions = [] }) => {
+const AlertModal = ({
+  visible,
+  title,
+  message,
+  type = "info",
+  onClose,
+  actions = [],
+}) => {
   const scaleValue = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -46,9 +53,10 @@ const AlertModal = ({ visible, title, message, type = "info", onClose, actions =
   const iconConfig = getIconConfig();
 
   // Default actions if none provided
-  const defaultActions = actions.length > 0 
-    ? actions 
-    : [{ text: "OK", onPress: onClose, primary: true }];
+  const defaultActions =
+    actions.length > 0
+      ? actions
+      : [{ text: "OK", onPress: onClose, primary: true }];
 
   return (
     <Modal
@@ -67,8 +75,17 @@ const AlertModal = ({ visible, title, message, type = "info", onClose, actions =
           ]}
         >
           {/* Icon */}
-          <View style={[styles.iconContainer, { backgroundColor: iconConfig.bgColor }]}>
-            <MaterialIcons name={iconConfig.name} size={48} color={iconConfig.color} />
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: iconConfig.bgColor },
+            ]}
+          >
+            <MaterialIcons
+              name={iconConfig.name}
+              size={48}
+              color={iconConfig.color}
+            />
           </View>
 
           {/* Title */}
@@ -95,8 +112,8 @@ const AlertModal = ({ visible, title, message, type = "info", onClose, actions =
                     action.primary
                       ? ["#4a90e2", "#357abd"]
                       : action.destructive
-                      ? ["#ef4444", "#dc2626"]
-                      : ["#9ca3af", "#6b7280"]
+                        ? ["#ef4444", "#dc2626"]
+                        : ["#9ca3af", "#6b7280"]
                   }
                   style={styles.actionButtonGradient}
                 >

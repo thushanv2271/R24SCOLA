@@ -48,7 +48,13 @@ const ScholarshipCreateNew = () => {
     office: "",
   });
   const router = useRouter();
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -180,7 +186,7 @@ const ScholarshipCreateNew = () => {
         "Error",
         error.message ||
           "An error occurred while submitting. Please check your connection.",
-        "error"
+        "error",
       );
     }
   };
@@ -348,7 +354,11 @@ const ScholarshipCreateNew = () => {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        actions={
+          alertConfig.actions.length > 0
+            ? alertConfig.actions
+            : [{ text: "OK", onPress: closeAlert }]
+        }
         onClose={closeAlert}
       />
     </PaperProvider>

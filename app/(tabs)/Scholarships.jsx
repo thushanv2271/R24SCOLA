@@ -61,7 +61,13 @@ const ScholarshipApp = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterModalY = useRef(new Animated.Value(screenHeight)).current;
   const navigation = useNavigation();
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -228,7 +234,7 @@ const ScholarshipApp = () => {
         showAlert(
           "Error",
           `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
-          "error"
+          "error",
         );
       }
     }, 300),
@@ -286,7 +292,7 @@ const ScholarshipApp = () => {
       showAlert(
         "Error",
         error.message || "Could not fetch scholarship data.",
-        "error"
+        "error",
       );
     } finally {
       setLoading(false);
@@ -835,7 +841,11 @@ const ScholarshipApp = () => {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        actions={
+          alertConfig.actions.length > 0
+            ? alertConfig.actions
+            : [{ text: "OK", onPress: closeAlert }]
+        }
         onClose={closeAlert}
       />
     </SafeAreaView>

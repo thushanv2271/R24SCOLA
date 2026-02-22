@@ -22,7 +22,13 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
   const [editedData, setEditedData] = useState({}); // State to hold edited user data
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -292,7 +298,7 @@ export default function Profile() {
             </>
           ) : (
             <Text style={styles.noDataText}>No user data found.</Text>
-)}
+          )}
         </View>
       </ScrollView>
       <AlertModal
@@ -300,7 +306,11 @@ export default function Profile() {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        actions={
+          alertConfig.actions.length > 0
+            ? alertConfig.actions
+            : [{ text: "OK", onPress: closeAlert }]
+        }
         onClose={closeAlert}
       />
     </SafeAreaView>

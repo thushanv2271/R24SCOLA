@@ -34,7 +34,13 @@ const FavoriteItemsList = () => {
   const navigation = useNavigation();
   const scaleFactor = screenWidth / 375;
   const scale = (size) => Math.min(size * scaleFactor, size * 1.5);
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
 
   const showAlert = (title, message, type = "info", actions = []) => {
     setAlertConfig({ visible: true, title, message, type, actions });
@@ -55,7 +61,11 @@ const FavoriteItemsList = () => {
         }
       } catch (error) {
         console.error("Failed to load requested scholarships:", error);
-        showAlert("Error", "Could not load requested scholarships data.", "error");
+        showAlert(
+          "Error",
+          "Could not load requested scholarships data.",
+          "error",
+        );
       }
     };
     loadRequestedScholarships();
@@ -71,7 +81,11 @@ const FavoriteItemsList = () => {
         );
       } catch (error) {
         console.error("Failed to save requested scholarships:", error);
-        showAlert("Error", "Could not save requested scholarships data.", "error");
+        showAlert(
+          "Error",
+          "Could not save requested scholarships data.",
+          "error",
+        );
       }
     };
     saveRequestedScholarships();
@@ -275,7 +289,7 @@ const FavoriteItemsList = () => {
       showAlert(
         "Info",
         "No new scholarships to request or missing professor emails.",
-        "info"
+        "info",
       );
       return;
     }
@@ -318,7 +332,7 @@ const FavoriteItemsList = () => {
         `${scholarshipsToRequest.length} scholarship${
           scholarshipsToRequest.length > 1 ? "s" : ""
         } requested successfully!`,
-        "success"
+        "success",
       );
     } catch (error) {
       console.error("Failed to send scholarship request email:", error);
@@ -363,7 +377,11 @@ const FavoriteItemsList = () => {
           newSet.add(item.id);
           return newSet;
         });
-        showAlert("Success", "Scholarship request sent successfully!", "success");
+        showAlert(
+          "Success",
+          "Scholarship request sent successfully!",
+          "success",
+        );
       } catch (error) {
         showAlert("Error", "Failed to send scholarship request.", "error");
       }
