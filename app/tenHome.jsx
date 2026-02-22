@@ -320,7 +320,7 @@ Best regards,
             <TouchableOpacity
               style={styles.button}
               onPress={() => {
-                  if (isLoggedIn) {
+                if (isLoggedIn) {
                   sendScholarshipEmail(item.contactProfessors[0].email);
                 } else {
                   setShowLoginModal(true);
@@ -401,28 +401,28 @@ Best regards,
             const visibleScholarships = filteredScholarships.slice(0, 5);
             return (
               <>
-          <Text style={styles.resultCount}>
-            Results: {visibleScholarships.length}
-          </Text>
-          <AnimatedFlatList
-            data={visibleScholarships}
-            renderItem={({ item }) => <ScholarshipCard item={item} />}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContainer}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                colors={["#007bff"]}
-                tintColor="#007bff"
-              />
-            }
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true },
-            )}
-            scrollEventThrottle={16}
-          />
+                <Text style={styles.resultCount}>
+                  Results: {visibleScholarships.length}
+                </Text>
+                <AnimatedFlatList
+                  data={visibleScholarships}
+                  renderItem={({ item }) => <ScholarshipCard item={item} />}
+                  keyExtractor={(item) => item.id.toString()}
+                  contentContainerStyle={styles.listContainer}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={handleRefresh}
+                      colors={["#007bff"]}
+                      tintColor="#007bff"
+                    />
+                  }
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true },
+                  )}
+                  scrollEventThrottle={16}
+                />
               </>
             );
           })()}
