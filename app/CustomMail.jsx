@@ -49,6 +49,7 @@ export default function CustomMail() {
   const [jobModalVisible, setJobModalVisible] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
   const [jobEmailMessage, setJobEmailMessage] = useState("");
+  const [selectedTab, setSelectedTab] = useState("scholarships");
   const navigation = useNavigation();
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
@@ -205,30 +206,45 @@ export default function CustomMail() {
       </Animated.View>
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.card}>
-          <View style={styles.section}>
-            <View style={styles.sectionContent}>
-              <Text style={styles.label}>Scholarship Email Message:</Text>
-              {formatMessage(editedData.scholarshipEmailMessage).map(
-                (line, index) => (
-                  <Text key={index} style={styles.value}>
-                    {line}
-                  </Text>
-                ),
-              )}
-            </View>
-          </View>
+        <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={styles.customizeButton}
-            onPress={() => setModalVisible(true)}
+            style={[
+              styles.tabButton,
+              selectedTab === "scholarships"
+                ? styles.tabButtonActive
+                : styles.tabButtonInactive,
+            ]}
+            onPress={() => setSelectedTab("scholarships")}
           >
-            <Ionicons
-              name="mail-outline"
-              size={moderateScale(24)}
-              color="#fff"
-            />
-            <Text style={styles.customizeButtonText}>
-              Customize Scholarship Email
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === "scholarships"
+                  ? styles.tabTextActive
+                  : styles.tabTextInactive,
+              ]}
+            >
+              Scholarships
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              selectedTab === "jobs"
+                ? styles.tabButtonActive
+                : styles.tabButtonInactive,
+            ]}
+            onPress={() => setSelectedTab("jobs")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === "jobs"
+                  ? styles.tabTextActive
+                  : styles.tabTextInactive,
+              ]}
+            >
+              Jobs
             </Text>
           </TouchableOpacity>
         </View>
@@ -236,8 +252,16 @@ export default function CustomMail() {
         <View style={styles.card}>
           <View style={styles.section}>
             <View style={styles.sectionContent}>
-              <Text style={styles.label}>Job Email Message:</Text>
-              {formatMessage(editedData.jobEmailMessage).map((line, index) => (
+              <Text style={styles.label}>
+                {selectedTab === "scholarships"
+                  ? "Scholarship Email Message:"
+                  : "Job Email Message:"}
+              </Text>
+              {formatMessage(
+                selectedTab === "scholarships"
+                  ? editedData.scholarshipEmailMessage
+                  : editedData.jobEmailMessage,
+              ).map((line, index) => (
                 <Text key={index} style={styles.value}>
                   {line}
                 </Text>
@@ -245,15 +269,30 @@ export default function CustomMail() {
             </View>
           </View>
           <TouchableOpacity
-            style={[styles.customizeButton, styles.jobButton]}
-            onPress={() => setJobModalVisible(true)}
+            style={[
+              styles.customizeButton,
+              selectedTab === "jobs" && styles.jobButton,
+            ]}
+            onPress={() =>
+              selectedTab === "scholarships"
+                ? setModalVisible(true)
+                : setJobModalVisible(true)
+            }
           >
             <Ionicons
-              name="briefcase-outline"
+              name={
+                selectedTab === "scholarships"
+                  ? "mail-outline"
+                  : "briefcase-outline"
+              }
               size={moderateScale(24)}
               color="#fff"
             />
-            <Text style={styles.customizeButtonText}>Customize Job Email</Text>
+            <Text style={styles.customizeButtonText}>
+              {selectedTab === "scholarships"
+                ? "Customize Scholarship Email"
+                : "Customize Job Email"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -369,6 +408,43 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginBottom: verticalScale(20),
     marginTop: verticalScale(20),
+  },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: moderateScale(30),
+    padding: scale(4),
+    marginTop: verticalScale(10),
+    marginBottom: verticalScale(10),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: verticalScale(10),
+    paddingHorizontal: scale(20),
+    borderRadius: moderateScale(26),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabButtonActive: {
+    backgroundColor: "#3b82f6",
+  },
+  tabButtonInactive: {
+    backgroundColor: "transparent",
+  },
+  tabText: {
+    fontSize: moderateScale(14),
+    fontWeight: "600",
+  },
+  tabTextActive: {
+    color: "#fff",
+  },
+  tabTextInactive: {
+    color: "#6b7280",
   },
   section: {
     marginBottom: verticalScale(20),
