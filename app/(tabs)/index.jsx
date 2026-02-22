@@ -321,7 +321,9 @@ const ScholarshipHome = () => {
           <View style={styles.iconsContainer}>
             <View style={styles.iconBackground}>
               <TouchableOpacity
-                onPress={() => router.push(`/Profile?email=${email}`)}
+                onPress={() =>
+                  username ? router.push(`/Profile?username=${username}`) : router.push("/Login")
+                }
               >
                 <Ionicons name="person" size={25} color="#a5a4a4" />
               </TouchableOpacity>

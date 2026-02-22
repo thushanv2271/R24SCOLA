@@ -42,6 +42,7 @@ const TenHome = () => {
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
   const router = useRouter();
   const { username } = useLocalSearchParams();
+  const isLoggedIn = Boolean(username);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",
@@ -133,7 +134,7 @@ const TenHome = () => {
   ]);
 
   const toggleFavorite = (scholarship) => {
-    if (!email) {
+    if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
     }
@@ -319,7 +320,7 @@ Best regards,
             <TouchableOpacity
               style={styles.button}
               onPress={() => {
-                if (email) {
+                  if (isLoggedIn) {
                   sendScholarshipEmail(item.contactProfessors[0].email);
                 } else {
                   setShowLoginModal(true);
@@ -396,11 +397,15 @@ Best regards,
         </View>
       ) : (
         <View>
+          {(() => {
+            const visibleScholarships = filteredScholarships.slice(0, 5);
+            return (
+              <>
           <Text style={styles.resultCount}>
-            Results: {filteredScholarships.length}
+            Results: {visibleScholarships.length}
           </Text>
           <AnimatedFlatList
-            data={filteredScholarships}
+            data={visibleScholarships}
             renderItem={({ item }) => <ScholarshipCard item={item} />}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContainer}
@@ -418,6 +423,9 @@ Best regards,
             )}
             scrollEventThrottle={16}
           />
+              </>
+            );
+          })()}
         </View>
       )}
       <AlertModal
