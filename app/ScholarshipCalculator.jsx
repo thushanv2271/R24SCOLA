@@ -30,7 +30,7 @@ const verticalScale = (size) => (SCREEN_HEIGHT / 667) * size;
 const moderateScale = (size, factor = 0.5) =>
   Math.min(
     Math.max(size + (scale(size) - size) * factor, size * 0.8),
-    size * 1.5
+    size * 1.5,
   );
 
 const ScholarshipPossibilityCalculator = () => {
@@ -78,7 +78,6 @@ const ScholarshipPossibilityCalculator = () => {
     { label: "Netherlands", value: "netherlands" },
     { label: "Sweden", value: "sweden" },
     { label: "New Zealand", value: "newzealand" },
- 
   ];
 
   const gpaOptions = [
@@ -162,7 +161,9 @@ const ScholarshipPossibilityCalculator = () => {
 
     const reqs = minRequirements[country];
     if (gpa < reqs.gpa) {
-      feedbackText.push(`Your GPA is below the minimum requirement (${reqs.gpa}) for ${country.toUpperCase()}.`);
+      feedbackText.push(
+        `Your GPA is below the minimum requirement (${reqs.gpa}) for ${country.toUpperCase()}.`,
+      );
       improvementsList.push(`Increase your GPA to at least ${reqs.gpa}`);
       setPossibility(0);
       setFeedback(feedbackText.join("\n"));
@@ -171,7 +172,7 @@ const ScholarshipPossibilityCalculator = () => {
     }
     if (reqs.ielts && ielts !== null && ielts < reqs.ielts) {
       feedbackText.push(
-        `Your IELTS score is below the minimum requirement (${reqs.ielts}) for ${country.toUpperCase()}.`
+        `Your IELTS score is below the minimum requirement (${reqs.ielts}) for ${country.toUpperCase()}.`,
       );
       improvementsList.push(`Aim for IELTS score of at least ${reqs.ielts}`);
       setPossibility(0);
@@ -188,7 +189,9 @@ const ScholarshipPossibilityCalculator = () => {
     } else if (gpa >= 3.4) {
       strengthsList.push("Strong GPA - good foundation");
     } else if (gpa < 3.3) {
-      improvementsList.push("Consider improving GPA to 3.3+ for better chances");
+      improvementsList.push(
+        "Consider improving GPA to 3.3+ for better chances",
+      );
     }
 
     // IELTS Scoring (20 points max)
@@ -225,7 +228,9 @@ const ScholarshipPossibilityCalculator = () => {
     if (extracurriculars === 3) {
       strengthsList.push("Strong leadership and activity involvement");
     } else if (extracurriculars < 2) {
-      improvementsList.push("Participate in extracurricular activities and leadership roles");
+      improvementsList.push(
+        "Participate in extracurricular activities and leadership roles",
+      );
     }
 
     // Financial Need (10 points max)
@@ -241,14 +246,62 @@ const ScholarshipPossibilityCalculator = () => {
     const competitiveness = {
       usa: { stem: 0.9, business: 0.95, arts: 1.0, social: 0.95, health: 0.9 },
       uk: { stem: 0.95, business: 0.9, arts: 1.0, social: 0.95, health: 0.95 },
-      canada: { stem: 1.0, business: 0.95, arts: 1.0, social: 1.0, health: 0.95 },
-      australia: { stem: 0.95, business: 1.0, arts: 1.0, social: 0.95, health: 0.95 },
-      germany: { stem: 1.0, business: 0.95, arts: 1.0, social: 1.0, health: 0.95 },
-      france: { stem: 0.95, business: 0.9, arts: 1.0, social: 0.95, health: 0.9 },
-      japan: { stem: 0.9, business: 0.95, arts: 1.0, social: 0.95, health: 0.9 },
-      netherlands: { stem: 1.0, business: 0.95, arts: 1.0, social: 1.0, health: 0.95 },
-      sweden: { stem: 1.0, business: 0.95, arts: 1.0, social: 1.0, health: 0.95 },
-      newzealand: { stem: 0.95, business: 1.0, arts: 1.0, social: 0.95, health: 0.95 },
+      canada: {
+        stem: 1.0,
+        business: 0.95,
+        arts: 1.0,
+        social: 1.0,
+        health: 0.95,
+      },
+      australia: {
+        stem: 0.95,
+        business: 1.0,
+        arts: 1.0,
+        social: 0.95,
+        health: 0.95,
+      },
+      germany: {
+        stem: 1.0,
+        business: 0.95,
+        arts: 1.0,
+        social: 1.0,
+        health: 0.95,
+      },
+      france: {
+        stem: 0.95,
+        business: 0.9,
+        arts: 1.0,
+        social: 0.95,
+        health: 0.9,
+      },
+      japan: {
+        stem: 0.9,
+        business: 0.95,
+        arts: 1.0,
+        social: 0.95,
+        health: 0.9,
+      },
+      netherlands: {
+        stem: 1.0,
+        business: 0.95,
+        arts: 1.0,
+        social: 1.0,
+        health: 0.95,
+      },
+      sweden: {
+        stem: 1.0,
+        business: 0.95,
+        arts: 1.0,
+        social: 1.0,
+        health: 0.95,
+      },
+      newzealand: {
+        stem: 0.95,
+        business: 1.0,
+        arts: 1.0,
+        social: 0.95,
+        health: 0.95,
+      },
     };
     const fieldComp = competitiveness[country][studyField] || 1.0;
     const fieldBonus = 5 * fieldComp;
@@ -269,44 +322,70 @@ const ScholarshipPossibilityCalculator = () => {
 
     // Main feedback
     if (finalScore >= 85) {
-      feedbackText.push("🎯 Excellent! You're a very strong candidate for scholarships.");
+      feedbackText.push(
+        "🎯 Excellent! You're a very strong candidate for scholarships.",
+      );
     } else if (finalScore >= 70) {
-      feedbackText.push("✅ Good chances! Focus on creating a compelling application.");
+      feedbackText.push(
+        "✅ Good chances! Focus on creating a compelling application.",
+      );
     } else if (finalScore >= 50) {
-      feedbackText.push("⚠️ Moderate chances. Strengthen the areas below for better results.");
+      feedbackText.push(
+        "⚠️ Moderate chances. Strengthen the areas below for better results.",
+      );
     } else {
-      feedbackText.push("📈 Significant improvements needed to be competitive.");
+      feedbackText.push(
+        "📈 Significant improvements needed to be competitive.",
+      );
     }
 
     // Generate recommendations based on profile
     if (finalScore >= 70) {
-      recommendationsList.push("Start preparing your application documents now");
-      recommendationsList.push("Research specific scholarship programs in your field");
-      recommendationsList.push("Reach out to professors or mentors for recommendation letters");
+      recommendationsList.push(
+        "Start preparing your application documents now",
+      );
+      recommendationsList.push(
+        "Research specific scholarship programs in your field",
+      );
+      recommendationsList.push(
+        "Reach out to professors or mentors for recommendation letters",
+      );
     }
-    
+
     if (studyField === "stem") {
-      recommendationsList.push("Look into research-based fellowships and assistantships");
+      recommendationsList.push(
+        "Look into research-based fellowships and assistantships",
+      );
     }
-    
-    if (country === "germany" || country === "netherlands" || country === "sweden") {
-      recommendationsList.push("Check for tuition-free or low-cost public universities");
+
+    if (
+      country === "germany" ||
+      country === "netherlands" ||
+      country === "sweden"
+    ) {
+      recommendationsList.push(
+        "Check for tuition-free or low-cost public universities",
+      );
     }
-    
+
     if (financialNeed >= 2) {
       recommendationsList.push("Apply to need-based scholarship programs");
-      recommendationsList.push("Consider crowdfunding or sponsorship opportunities");
+      recommendationsList.push(
+        "Consider crowdfunding or sponsorship opportunities",
+      );
     }
 
     if (country === "usa" && finalScore >= 60) {
-      recommendationsList.push("Explore Fulbright, Commonwealth, and university-specific scholarships");
+      recommendationsList.push(
+        "Explore Fulbright, Commonwealth, and university-specific scholarships",
+      );
     }
 
     setFeedback(feedbackText.join("\n"));
     setStrengths(strengthsList);
     setImprovements(improvementsList);
     setRecommendations(recommendationsList);
-    
+
     // Save to database if user is logged in
     if (user?.username) {
       saveResultToDatabase(
@@ -320,10 +399,10 @@ const ScholarshipPossibilityCalculator = () => {
         strengthsList,
         improvementsList,
         recommendationsList,
-        feedbackText.join("\n")
+        feedbackText.join("\n"),
       );
     }
-    
+
     setIsModalVisible(true);
   };
 
@@ -339,7 +418,7 @@ const ScholarshipPossibilityCalculator = () => {
     strengths,
     improvements,
     recommendations,
-    feedbackMessage
+    feedbackMessage,
   ) => {
     try {
       setIsSaving(true);
@@ -365,7 +444,10 @@ const ScholarshipPossibilityCalculator = () => {
         feedback: feedbackMessage || null,
       };
 
-      console.log("Saving calculator result:", JSON.stringify(resultData, null, 2));
+      console.log(
+        "Saving calculator result:",
+        JSON.stringify(resultData, null, 2),
+      );
       await calculatorAPI.saveResult(resultData);
       console.log("Calculator result saved successfully!");
     } catch (error) {
@@ -426,7 +508,7 @@ const ScholarshipPossibilityCalculator = () => {
               await calculatorAPI.deleteResult(resultId);
               // Remove from local state
               setPastResults((prevResults) =>
-                prevResults.filter((result) => result.id !== resultId)
+                prevResults.filter((result) => result.id !== resultId),
               );
               Alert.alert("Success", "Result deleted successfully");
             } catch (error) {
@@ -435,7 +517,7 @@ const ScholarshipPossibilityCalculator = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -455,7 +537,13 @@ const ScholarshipPossibilityCalculator = () => {
         </View>
         <View style={styles.progressBarBackground}>
           <LinearGradient
-            colors={percentage >= 80 ? ["#10b981", "#34d399"] : percentage >= 60 ? ["#3b82f6", "#60a5fa"] : ["#94a3b8", "#cbd5e1"]}
+            colors={
+              percentage >= 80
+                ? ["#10b981", "#34d399"]
+                : percentage >= 60
+                  ? ["#3b82f6", "#60a5fa"]
+                  : ["#94a3b8", "#cbd5e1"]
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[styles.progressBarFill, { width: `${percentage}%` }]}
@@ -599,7 +687,7 @@ const ScholarshipPossibilityCalculator = () => {
         <Modal visible={isModalVisible} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              <ScrollView 
+              <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.modalScrollContent}
               >
@@ -609,8 +697,14 @@ const ScholarshipPossibilityCalculator = () => {
                 >
                   {/* Header */}
                   <View style={styles.modalHeader}>
-                    <MaterialIcons name="assessment" size={32} color="#4a90e2" />
-                    <Text style={styles.modalTitle}>Scholarship Eligibility Report</Text>
+                    <MaterialIcons
+                      name="assessment"
+                      size={32}
+                      color="#4a90e2"
+                    />
+                    <Text style={styles.modalTitle}>
+                      Scholarship Eligibility Report
+                    </Text>
                   </View>
 
                   {/* Score Circle */}
@@ -619,10 +713,10 @@ const ScholarshipPossibilityCalculator = () => {
                       possibility >= 85
                         ? ["#10b981", "#34d399"]
                         : possibility >= 70
-                        ? ["#3b82f6", "#60a5fa"]
-                        : possibility >= 50
-                        ? ["#f59e0b", "#fbbf24"]
-                        : ["#ef4444", "#f87171"]
+                          ? ["#3b82f6", "#60a5fa"]
+                          : possibility >= 50
+                            ? ["#f59e0b", "#fbbf24"]
+                            : ["#ef4444", "#f87171"]
                     }
                     style={styles.resultCircle}
                   >
@@ -631,10 +725,10 @@ const ScholarshipPossibilityCalculator = () => {
                       {possibility >= 85
                         ? "Excellent"
                         : possibility >= 70
-                        ? "Good"
-                        : possibility >= 50
-                        ? "Moderate"
-                        : "Low"}
+                          ? "Good"
+                          : possibility >= 50
+                            ? "Moderate"
+                            : "Low"}
                     </Text>
                   </LinearGradient>
 
@@ -646,28 +740,74 @@ const ScholarshipPossibilityCalculator = () => {
                   {/* Score Breakdown */}
                   <View style={styles.breakdownSection}>
                     <View style={styles.sectionHeader}>
-                      <FontAwesome5 name="chart-bar" size={18} color="#4a90e2" />
+                      <FontAwesome5
+                        name="chart-bar"
+                        size={18}
+                        color="#4a90e2"
+                      />
                       <Text style={styles.sectionTitle}>Score Breakdown</Text>
                     </View>
 
-                    <ScoreBar label="Academic (GPA)" score={scoreBreakdown.gpaScore} maxScore={40} icon="school" />
-                    <ScoreBar label="Language (IELTS)" score={scoreBreakdown.ieltsScore} maxScore={20} icon="translate" />
-                    <ScoreBar label="Research Experience" score={scoreBreakdown.researchScore} maxScore={15} icon="science" />
-                    <ScoreBar label="Extracurricular" score={scoreBreakdown.extracurricularScore} maxScore={10} icon="groups" />
-                    <ScoreBar label="Financial Need" score={scoreBreakdown.financialScore} maxScore={10} icon="account-balance-wallet" />
-                    <ScoreBar label="Field Bonus" score={scoreBreakdown.fieldBonus} maxScore={5} icon="star" />
+                    <ScoreBar
+                      label="Academic (GPA)"
+                      score={scoreBreakdown.gpaScore}
+                      maxScore={40}
+                      icon="school"
+                    />
+                    <ScoreBar
+                      label="Language (IELTS)"
+                      score={scoreBreakdown.ieltsScore}
+                      maxScore={20}
+                      icon="translate"
+                    />
+                    <ScoreBar
+                      label="Research Experience"
+                      score={scoreBreakdown.researchScore}
+                      maxScore={15}
+                      icon="science"
+                    />
+                    <ScoreBar
+                      label="Extracurricular"
+                      score={scoreBreakdown.extracurricularScore}
+                      maxScore={10}
+                      icon="groups"
+                    />
+                    <ScoreBar
+                      label="Financial Need"
+                      score={scoreBreakdown.financialScore}
+                      maxScore={10}
+                      icon="account-balance-wallet"
+                    />
+                    <ScoreBar
+                      label="Field Bonus"
+                      score={scoreBreakdown.fieldBonus}
+                      maxScore={5}
+                      icon="star"
+                    />
                   </View>
 
                   {/* Strengths */}
                   {strengths.length > 0 && (
                     <View style={styles.strengthsSection}>
                       <View style={styles.sectionHeader}>
-                        <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                        <Text style={[styles.sectionTitle, { color: "#10b981" }]}>Your Strengths</Text>
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color="#10b981"
+                        />
+                        <Text
+                          style={[styles.sectionTitle, { color: "#10b981" }]}
+                        >
+                          Your Strengths
+                        </Text>
                       </View>
                       {strengths.map((strength, index) => (
                         <View key={index} style={styles.listItem}>
-                          <Ionicons name="checkmark" size={16} color="#10b981" />
+                          <Ionicons
+                            name="checkmark"
+                            size={16}
+                            color="#10b981"
+                          />
                           <Text style={styles.listItemText}>{strength}</Text>
                         </View>
                       ))}
@@ -678,12 +818,24 @@ const ScholarshipPossibilityCalculator = () => {
                   {improvements.length > 0 && (
                     <View style={styles.improvementsSection}>
                       <View style={styles.sectionHeader}>
-                        <MaterialIcons name="trending-up" size={20} color="#f59e0b" />
-                        <Text style={[styles.sectionTitle, { color: "#f59e0b" }]}>Areas to Improve</Text>
+                        <MaterialIcons
+                          name="trending-up"
+                          size={20}
+                          color="#f59e0b"
+                        />
+                        <Text
+                          style={[styles.sectionTitle, { color: "#f59e0b" }]}
+                        >
+                          Areas to Improve
+                        </Text>
                       </View>
                       {improvements.map((improvement, index) => (
                         <View key={index} style={styles.listItem}>
-                          <MaterialIcons name="arrow-forward" size={16} color="#f59e0b" />
+                          <MaterialIcons
+                            name="arrow-forward"
+                            size={16}
+                            color="#f59e0b"
+                          />
                           <Text style={styles.listItemText}>{improvement}</Text>
                         </View>
                       ))}
@@ -694,13 +846,25 @@ const ScholarshipPossibilityCalculator = () => {
                   {recommendations.length > 0 && (
                     <View style={styles.recommendationsSection}>
                       <View style={styles.sectionHeader}>
-                        <FontAwesome5 name="lightbulb" size={18} color="#8b5cf6" />
-                        <Text style={[styles.sectionTitle, { color: "#8b5cf6" }]}>Next Steps</Text>
+                        <FontAwesome5
+                          name="lightbulb"
+                          size={18}
+                          color="#8b5cf6"
+                        />
+                        <Text
+                          style={[styles.sectionTitle, { color: "#8b5cf6" }]}
+                        >
+                          Next Steps
+                        </Text>
                       </View>
                       {recommendations.map((recommendation, index) => (
                         <View key={index} style={styles.recommendationCard}>
-                          <Text style={styles.recommendationNumber}>{index + 1}</Text>
-                          <Text style={styles.recommendationText}>{recommendation}</Text>
+                          <Text style={styles.recommendationNumber}>
+                            {index + 1}
+                          </Text>
+                          <Text style={styles.recommendationText}>
+                            {recommendation}
+                          </Text>
                         </View>
                       ))}
                     </View>
@@ -725,10 +889,14 @@ const ScholarshipPossibilityCalculator = () => {
         </Modal>
 
         {/* History Modal */}
-        <Modal visible={isHistoryModalVisible} transparent animationType="slide">
+        <Modal
+          visible={isHistoryModalVisible}
+          transparent
+          animationType="slide"
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              <ScrollView 
+              <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.modalScrollContent}
               >
@@ -745,7 +913,9 @@ const ScholarshipPossibilityCalculator = () => {
                   {pastResults.length === 0 ? (
                     <View style={styles.emptyHistoryContainer}>
                       <MaterialIcons name="inbox" size={64} color="#cbd5e1" />
-                      <Text style={styles.emptyHistoryText}>No past calculations found</Text>
+                      <Text style={styles.emptyHistoryText}>
+                        No past calculations found
+                      </Text>
                       <Text style={styles.emptyHistorySubtext}>
                         Your calculation history will appear here
                       </Text>
@@ -753,13 +923,18 @@ const ScholarshipPossibilityCalculator = () => {
                   ) : (
                     <View style={styles.historyList}>
                       {pastResults.map((result, index) => (
-                        <View key={result.id || index} style={styles.historyCard}>
+                        <View
+                          key={result.id || index}
+                          style={styles.historyCard}
+                        >
                           <View style={styles.historyCardHeader}>
                             <View style={styles.historyScoreCircle}>
                               <Text style={styles.historyScoreText}>
                                 {Math.round(result.totalScore)}
                               </Text>
-                              <Text style={styles.historyScoreLabel}>Score</Text>
+                              <Text style={styles.historyScoreLabel}>
+                                Score
+                              </Text>
                             </View>
                             <View style={styles.historyCardInfo}>
                               <Text style={styles.historyDate}>
@@ -767,14 +942,22 @@ const ScholarshipPossibilityCalculator = () => {
                               </Text>
                               <View style={styles.historyDetails}>
                                 <View style={styles.historyDetailItem}>
-                                  <MaterialIcons name="school" size={16} color="#64748b" />
+                                  <MaterialIcons
+                                    name="school"
+                                    size={16}
+                                    color="#64748b"
+                                  />
                                   <Text style={styles.historyDetailText}>
                                     GPA: {result.gpa}
                                   </Text>
                                 </View>
                                 {result.ielts && (
                                   <View style={styles.historyDetailItem}>
-                                    <MaterialIcons name="language" size={16} color="#64748b" />
+                                    <MaterialIcons
+                                      name="language"
+                                      size={16}
+                                      color="#64748b"
+                                    />
                                     <Text style={styles.historyDetailText}>
                                       IELTS: {result.ielts}
                                     </Text>
@@ -782,7 +965,11 @@ const ScholarshipPossibilityCalculator = () => {
                                 )}
                                 {result.country && (
                                   <View style={styles.historyDetailItem}>
-                                    <MaterialIcons name="place" size={16} color="#64748b" />
+                                    <MaterialIcons
+                                      name="place"
+                                      size={16}
+                                      color="#64748b"
+                                    />
                                     <Text style={styles.historyDetailText}>
                                       {result.country.toUpperCase()}
                                     </Text>
@@ -790,7 +977,11 @@ const ScholarshipPossibilityCalculator = () => {
                                 )}
                                 {result.studyField && (
                                   <View style={styles.historyDetailItem}>
-                                    <MaterialIcons name="book" size={16} color="#64748b" />
+                                    <MaterialIcons
+                                      name="book"
+                                      size={16}
+                                      color="#64748b"
+                                    />
                                     <Text style={styles.historyDetailText}>
                                       {result.studyField}
                                     </Text>
@@ -802,14 +993,20 @@ const ScholarshipPossibilityCalculator = () => {
                               style={styles.deleteButton}
                               onPress={() => deleteResult(result.id)}
                             >
-                              <MaterialIcons name="delete" size={24} color="#ef4444" />
+                              <MaterialIcons
+                                name="delete"
+                                size={24}
+                                color="#ef4444"
+                              />
                             </TouchableOpacity>
                           </View>
 
                           {/* Feedback */}
                           {result.feedback && (
                             <View style={styles.historyFeedback}>
-                              <Text style={styles.historyFeedbackText}>{result.feedback}</Text>
+                              <Text style={styles.historyFeedbackText}>
+                                {result.feedback}
+                              </Text>
                             </View>
                           )}
 
@@ -817,7 +1014,8 @@ const ScholarshipPossibilityCalculator = () => {
                           {result.strengths && result.strengths.length > 0 && (
                             <View style={styles.historyStrengthsPreview}>
                               <Text style={styles.historyStrengthsTitle}>
-                                ✅ {result.strengths.length} Strength{result.strengths.length > 1 ? 's' : ''}
+                                ✅ {result.strengths.length} Strength
+                                {result.strengths.length > 1 ? "s" : ""}
                               </Text>
                             </View>
                           )}
