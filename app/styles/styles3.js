@@ -54,6 +54,20 @@ export const styles = StyleSheet.create({
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
   },
+  passwordContainer: {
+    width: '100%',
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 48,
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
   logo: {
     width: 300,
     height: 100,

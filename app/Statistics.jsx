@@ -135,7 +135,7 @@ const ScholarshipApp = () => {
     };
     loadFavorites();
 
-    if (user && user.email) fetchFavorites();
+    if (user && user.username) fetchFavorites();
   }, [user]);
 
   useEffect(() => {
@@ -149,7 +149,7 @@ const ScholarshipApp = () => {
 
   const fetchFavorites = async () => {
     try {
-      const data = await authAPI.getFavorites(user.email);
+      const data = await authAPI.getFavorites(user.username);
       const favoriteIds = data.map((s) => s.id);
       setFavoriteScholarships(favoriteIds);
       await AsyncStorage.setItem(
@@ -180,9 +180,9 @@ const ScholarshipApp = () => {
 
       try {
         if (isFavorited) {
-          await authAPI.removeFavorite(user.email, id);
+          await authAPI.removeFavorite(user.username, id);
         } else {
-          await authAPI.addFavorite(user.email, id);
+          await authAPI.addFavorite(user.username, id);
         }
       } catch (error) {
         console.error(
@@ -196,7 +196,7 @@ const ScholarshipApp = () => {
         );
       }
     }, 300),
-    [favoriteScholarships, user?.email],
+    [favoriteScholarships, user?.username],
   );
 
   const fetchData = async () => {
@@ -220,12 +220,12 @@ const ScholarshipApp = () => {
 
   useEffect(() => {
     const checkPaidStatus = async () => {
-      if (!user?.email) {
+      if (!user?.username) {
         setCheckingPaid(false);
         return;
       }
       try {
-        await authAPI.getUserByEmail(user.email);
+        await authAPI.getUserByUsername(user.username);
       } catch (error) {
         console.error("Error checking paid status:", error);
       } finally {
@@ -233,7 +233,7 @@ const ScholarshipApp = () => {
       }
     };
     checkPaidStatus();
-  }, [user?.email]);
+  }, [user?.username]);
 
   useEffect(() => {
     if (!checkingPaid && isPaidMember) fetchData();
@@ -270,7 +270,7 @@ const ScholarshipApp = () => {
         const professor = item.contactProfessors?.[0];
         await sendScholarshipEmail(
           professor?.email,
-          user?.email, // Pass the current user's email
+          user?.username, // Pass the current user's username
           item.title, // Pass the scholarship title
           professor, // Pass the professor details
         );

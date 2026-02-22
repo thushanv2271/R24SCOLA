@@ -42,7 +42,7 @@ const TenHome = () => {
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
   const router = useRouter();
-  const { email } = useLocalSearchParams();
+  const { username } = useLocalSearchParams();
 
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 50],

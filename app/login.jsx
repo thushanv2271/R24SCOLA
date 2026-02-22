@@ -17,22 +17,27 @@ import { Checkbox } from "react-native-paper";
 import { styles, getDynamicStyles } from "../app/styles/Styles";
 import { AuthContext } from "../components/AuthContext";
 import { authAPI } from "../services/apiService";
+import { IconSymbol } from "../components/ui/IconSymbol";
 
 const LoginSchema = Yup.object().shape({
-  email: Yup.string().required("username is required   "),
+  username: Yup.string()
+    .trim()
+    .matches(/^[a-zA-Z0-9_]{3,20}$/, "Username must be 3-20 characters")
+    .required("Username is required"),
   password: Yup.string()
-    .required("Password is required   ")
-    .min(6, "Password too short   "),
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters"),
 });
 
 export default function LoginForm() {
   const router = useRouter();
   const [rememberMe, setRememberMe] = useState(false);
   const [initialValues, setInitialValues] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false); // New state for login button loading
+  const [showPassword, setShowPassword] = useState(false);
   const colorScheme = useColorScheme();
   const dynamicStyles = getDynamicStyles(colorScheme);
   const { login } = useContext(AuthContext);
@@ -52,23 +57,14 @@ export default function LoginForm() {
 
         // If remember me was true, get the credentials
         if (rememberMeValue) {
-          const savedEmail = await AsyncStorage.getItem("userEmail");
-          const savedPassword = await AsyncStorage.getItem("userPassword");
+          const savedUsername = await AsyncStorage.getItem("username");
 
-          if (savedEmail && savedPassword) {
+          if (savedUsername) {
             // Set initial values for the form
             setInitialValues({
-              email: savedEmail,
-              password: savedPassword,
+              username: savedUsername,
+              password: "",
             });
-
-            // If not already logged in, perform auto-login
-            if (isLoggedIn !== "true") {
-              // Use a slight delay to ensure component is fully mounted
-              setTimeout(() => {
-                handleLogin({ email: savedEmail, password: savedPassword });
-              }, 100);
-            }
           }
         }
 
@@ -86,33 +82,44 @@ export default function LoginForm() {
     try {
       setIsSubmitting(true); // Show loader
 
-      // Check if user exists
-      await authAPI.checkUserExists(values.email);
+      const normalizedUsername = values.username.trim().toLowerCase();
 
       // Login user
-      const data = await authAPI.login(values);
+      const data = await authAPI.login({
+        username: normalizedUsername,
+        password: values.password,
+      });
       await login(data);
 
       // Set login status in AsyncStorage
       await AsyncStorage.setItem("isLoggedIn", "true");
+      if (data?.id) {
+        await AsyncStorage.setItem("userID", data.id);
+      }
 
-      // Save credentials if remember me is checked
+      // Save credentials if remember me is checked (only after successful login)
       if (rememberMe) {
-        await AsyncStorage.setItem("userEmail", values.email);
-        await AsyncStorage.setItem("userPassword", values.password);
+        await AsyncStorage.setItem("username", normalizedUsername);
         await AsyncStorage.setItem("rememberMe", "true");
       } else {
         // Clear saved credentials if remember me is unchecked
-        await AsyncStorage.removeItem("userEmail");
+        await AsyncStorage.removeItem("username");
         await AsyncStorage.removeItem("userPassword");
         await AsyncStorage.removeItem("rememberMe");
       }
 
-      router.push({ pathname: "/", params: { email: values.email } });
+      router.push({ pathname: "/", params: { username: normalizedUsername } });
     } catch (error) {
-      // Clear login status on failure
+      // Clear login status and saved credentials on failure
       await AsyncStorage.removeItem("isLoggedIn");
-      alert(error.message || "Login failed");
+      await AsyncStorage.removeItem("username");
+      await AsyncStorage.removeItem("userPassword");
+      await AsyncStorage.removeItem("rememberMe");
+      await AsyncStorage.removeItem("userID");
+      
+      // Display user-friendly error message
+      const errorMsg = error.message || "Login failed";
+      alert(errorMsg.replace(/^HTTP \d+$/, "Invalid username or password"));
     } finally {
       setIsSubmitting(false); // Hide loader
     }
@@ -155,23 +162,42 @@ export default function LoginForm() {
           <TextInput
             style={[styles.input, dynamicStyles.input]}
             placeholder="Username"
-            onChangeText={handleChange("email")}
-            onBlur={handleBlur("email")}
-            value={values.email}
-            keyboardType="email-address"
+            onChangeText={handleChange("username")}
+            onBlur={handleBlur("username")}
+            value={values.username}
+            keyboardType="default"
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="username"
           />
-          {touched.email && errors.email && (
-            <Text style={styles.errorText}>{errors.email}</Text>
+          {touched.username && errors.username && (
+            <Text style={styles.errorText}>{errors.username}</Text>
           )}
 
-          <TextInput
-            style={[styles.input, dynamicStyles.input]}
-            placeholder="Password"
-            secureTextEntry
-            onChangeText={handleChange("password")}
-            onBlur={handleBlur("password")}
-            value={values.password}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.input, dynamicStyles.input, styles.passwordInput]}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              onChangeText={handleChange("password")}
+              onBlur={handleBlur("password")}
+              value={values.password}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="password"
+            />
+            <TouchableOpacity
+              style={styles.passwordToggle}
+              onPress={() => setShowPassword((prev) => !prev)}
+              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+            >
+              <IconSymbol
+                name={showPassword ? "eye.slash.fill" : "eye.fill"}
+                size={22}
+                color="#333"
+              />
+            </TouchableOpacity>
+          </View>
           {touched.password && errors.password && (
             <Text style={styles.errorText}>{errors.password}</Text>
           )}

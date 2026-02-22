@@ -27,11 +27,11 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (user?.email) {
+      if (user?.username) {
         try {
           const response = await fetch(
             `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-              user.email,
+              user.username,
             )}`,
             { method: "GET", headers: { Accept: "application/json" } },
           );
@@ -50,7 +50,7 @@ export default function ProfileScreen() {
       }
     };
     fetchUserDetails();
-  }, [user?.email]);
+  }, [user?.username]);
 
   const handleChange = (field, value) => {
     setEditedData((prevData) => ({
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
             <Text style={styles.sectionTitle}> Personal Information</Text>
             <View style={styles.sectionContent}>
               <Text style={styles.label}>Username:</Text>
-              <Text style={styles.value}>{user?.email}</Text>
+              <Text style={styles.value}>{user?.username}</Text>
 
               {/* <Text style={styles.label}>Age:</Text>
               {isEditing ? (

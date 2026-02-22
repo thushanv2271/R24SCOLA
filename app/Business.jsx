@@ -135,7 +135,7 @@ const ScholarshipApp = () => {
     };
     loadFavorites();
 
-    if (user && user.email) fetchFavorites();
+    if (user && user.username) fetchFavorites();
   }, [user]);
 
   useEffect(() => {
@@ -151,7 +151,7 @@ const ScholarshipApp = () => {
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email,
+          user.username,
         )}/favorites`,
       );
       if (!response.ok) throw new Error("Failed to fetch favorites");
@@ -186,8 +186,8 @@ const ScholarshipApp = () => {
 
       try {
         const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email,
-        )}/favorites/by-email`;
+          user.username,
+        )}/favorites/by-username`;
         const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
         const method = isFavorited ? "DELETE" : "POST";
         const body = isFavorited ? null : JSON.stringify(id);
@@ -215,7 +215,7 @@ const ScholarshipApp = () => {
         );
       }
     }, 300),
-    [favoriteScholarships, user?.email],
+    [favoriteScholarships, user?.username],
   );
 
   const fetchData = async () => {
@@ -239,14 +239,14 @@ const ScholarshipApp = () => {
 
   useEffect(() => {
     const checkPaidStatus = async () => {
-      if (!user?.email) {
+      if (!user?.username) {
         setCheckingPaid(false);
         return;
       }
       try {
         const response = await fetch(
           `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.email,
+            user.username,
           )}`,
         );
         if (!response.ok) throw new Error("Failed to fetch user data");
@@ -256,7 +256,7 @@ const ScholarshipApp = () => {
       }
     };
     checkPaidStatus();
-  }, [user?.email]);
+  }, [user?.username]);
 
   useEffect(() => {
     if (!checkingPaid && isPaidMember) fetchData();
@@ -293,7 +293,7 @@ const ScholarshipApp = () => {
         const professor = item.contactProfessors?.[0];
         await sendScholarshipEmail(
           professor?.email,
-          user?.email,
+          user?.username,
           item.title,
           professor,
         );

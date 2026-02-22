@@ -58,7 +58,7 @@ const ScholarshipHome = () => {
   const sidebarAnim = useRef(new Animated.Value(-width * 0.75)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
   const router = useRouter();
-  const { email = "" } = useLocalSearchParams();
+  const { username = "" } = useLocalSearchParams();
   const navigation = useNavigation();
   const [paidMember, setPaidMember] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -66,11 +66,14 @@ const ScholarshipHome = () => {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
+        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+        if (isLoggedIn !== "true") {
+          return;
+        }
+
         const storedUser = await AsyncStorage.getItem("userID");
         if (storedUser) {
           console.log(`The current user ID is: ${storedUser}`);
-        } else {
-          console.log("User ID not found in AsyncStorage.");
         }
       } catch (error) {
         console.error("Error fetching user ID:", error);
@@ -84,7 +87,7 @@ const ScholarshipHome = () => {
     const fetchPaidStatus = async () => {
       try {
         const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${email}`,
+          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${username}`,
         );
         const userData = await response.json();
         setPaidMember(userData.paidMember);
@@ -93,8 +96,8 @@ const ScholarshipHome = () => {
       }
     };
 
-    if (email) fetchPaidStatus();
-  }, [email]);
+    if (username) fetchPaidStatus();
+  }, [username]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -138,9 +141,8 @@ const ScholarshipHome = () => {
     else return "🌙 Good Evening!";
   };
 
-  function getUserName(email) {
-    if (!email) return "User";
-    const username = email.split("@")[0];
+  function getUserName(username) {
+    if (!username) return "User";
     return username.length > 10
       ? username.slice(0, 10)
       : username.padEnd(5, " ");
@@ -148,7 +150,7 @@ const ScholarshipHome = () => {
 
   const sidebarItems = [
     { title: "Home", icon: "home", screen: "index" },
-    { title: "Profile", icon: "person", screen: "Profile", params: { email } },
+    { title: "Profile", icon: "person", screen: "Profile", params: { username } },
     { title: "Scholarships", icon: "school", screen: "Scholarships" },
     { title: "Jobs", icon: "briefcase", screen: "JobInside" },
     { title: "Favourites", icon: "heart", screen: "Favourites" },
@@ -179,7 +181,7 @@ const ScholarshipHome = () => {
           <View style={[styles.mainHeader, { width: width * 0.9 }]}>
             <View>
               <Text style={styles.userName}>
-                Hi, {getUserName(item.data.email)}
+                Hi, {getUserName(item.data.username)}
               </Text>
               <Text style={styles.greeting}>{getGreeting()}</Text>
             </View>
@@ -249,7 +251,7 @@ const ScholarshipHome = () => {
   };
 
   const data = [
-    { type: "mainHeader", data: { email } },
+    { type: "mainHeader", data: { username } },
     { type: "banner", data: bannerData },
     {
       type: "mainActions",

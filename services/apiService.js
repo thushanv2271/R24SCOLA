@@ -21,15 +21,24 @@ const apiCall = async (endpoint, options = {}) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
       let errorMessage = `HTTP ${response.status}`;
       try {
-        const parsed = JSON.parse(errorData);
-        errorMessage = parsed.message || errorMessage;
+        const errorData = await response.text();
+        // Try to parse as JSON first
+        try {
+          const parsed = JSON.parse(errorData);
+          errorMessage = parsed.message || parsed.title || errorMessage;
+        } catch (e) {
+          // If not JSON, use the text directly (remove quotes if present)
+          errorMessage = errorData.replace(/^"+|"+$/g, '') || errorMessage;
+        }
       } catch (e) {
-        errorMessage = errorData || errorMessage;
+        // If reading response fails, use status code
       }
-      throw new Error(errorMessage);
+      const httpError = new Error(errorMessage);
+      httpError.status = response.status;
+      httpError.endpoint = endpoint;
+      throw httpError;
     }
 
     if (response.status === 204) {
@@ -38,7 +47,10 @@ const apiCall = async (endpoint, options = {}) => {
 
     return await response.json();
   } catch (error) {
-    console.error(`API Error at ${endpoint}:`, error);
+    const status = error?.status;
+    if (!status || status >= 500) {
+      console.error(`API Error at ${endpoint}:`, error);
+    }
     throw error;
   }
 };
@@ -47,8 +59,8 @@ const apiCall = async (endpoint, options = {}) => {
  * Authentication APIs
  */
 export const authAPI = {
-  checkUserExists: (email) =>
-    apiCall(`/Users/${encodeURIComponent(email)}`, { method: "GET" }),
+  checkUserExists: (username) =>
+    apiCall(`/Users/${encodeURIComponent(username)}`, { method: "GET" }),
 
   login: (credentials) =>
     apiCall("/Users/login", {
@@ -62,8 +74,8 @@ export const authAPI = {
       body: JSON.stringify(userData),
     }),
 
-  getUserByEmail: (email) =>
-    apiCall(`/Users/${encodeURIComponent(email)}`, { method: "GET" }),
+  getUserByUsername: (username) =>
+    apiCall(`/Users/${encodeURIComponent(username)}`, { method: "GET" }),
 
   updateUser: (userId, userData, token) =>
     apiCall(`/Users/${userId}`, {
@@ -73,31 +85,31 @@ export const authAPI = {
     }),
 
   // Favorite Management
-  getFavorites: (email) =>
-    apiCall(`/Users/${encodeURIComponent(email)}/favorites`, { method: "GET" }),
+  getFavorites: (username) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/favorites`, { method: "GET" }),
 
-  addFavorite: (email, scholarshipId) =>
-    apiCall(`/Users/${encodeURIComponent(email)}/favorites/by-email`, {
+  addFavorite: (username, scholarshipId) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/favorites/by-username`, {
       method: "POST",
       body: JSON.stringify(scholarshipId),
     }),
 
-  removeFavorite: (email, scholarshipId) =>
+  removeFavorite: (username, scholarshipId) =>
     apiCall(
-      `/Users/${encodeURIComponent(email)}/favorites/by-email/${scholarshipId}`,
+      `/Users/${encodeURIComponent(username)}/favorites/by-username/${scholarshipId}`,
       {
         method: "DELETE",
       },
     ),
 
   // Email Management
-  getEmailMessage: (email) =>
-    apiCall(`/Users/${encodeURIComponent(email)}/email-message`, {
+  getEmailMessage: (username) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/email-message`, {
       method: "GET",
     }),
 
-  updateEmailMessage: (email, message) =>
-    apiCall(`/Users/${encodeURIComponent(email)}/email-message`, {
+  updateEmailMessage: (username, message) =>
+    apiCall(`/Users/${encodeURIComponent(username)}/email-message`, {
       method: "PUT",
       body: JSON.stringify({ scholarshipEmailMessage: message }),
     }),

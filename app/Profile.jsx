@@ -14,10 +14,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, router } from "expo-router";
-import { fetchUserByEmail, updateUser } from "../services/userService";
+import { fetchUserByUsername, updateUser } from "../services/userService";
 
 export default function Profile() {
-  const { email } = useLocalSearchParams(); // Get the email from query parameters
+  const { username } = useLocalSearchParams(); // Get the username from query parameters
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
@@ -26,7 +26,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const data = await fetchUserByEmail(email);
+        const data = await fetchUserByUsername(username);
         setUserData(data);
         setEditedData(data);
       } catch (error) {
@@ -36,13 +36,13 @@ export default function Profile() {
       }
     };
     fetchUserData();
-  }, [email]);
+  }, [username]);
 
   // Logout Function
   const handleLogout = async () => {
     try {
       await AsyncStorage.multiRemove([
-        "userEmail",
+        "username",
         "userPassword",
         "userToken",
       ]);
@@ -77,7 +77,7 @@ export default function Profile() {
   const prepareDataForAPI = () => {
     return {
       id: userData.id,
-      email: editedData.email,
+      username: editedData.username,
       password: editedData.password,
       age: editedData.age,
       country: editedData.country,
@@ -240,8 +240,8 @@ export default function Profile() {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Personal Information</Text>
                 <View style={styles.sectionContent}>
-                  <Text style={styles.label}>Email:</Text>
-                  <Text style={styles.value}>{userData.email}</Text>
+                  <Text style={styles.label}>Username:</Text>
+                  <Text style={styles.value}>{userData.username}</Text>
 
                   <Text style={styles.label}>Age:</Text>
                   {isEditing ? (

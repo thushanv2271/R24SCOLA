@@ -51,11 +51,11 @@ export default function CustomMail() {
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (!user?.email) return;
+      if (!user?.username) return;
       try {
         const response = await fetch(
           `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.email
+            user.username
           )}`,
           {
             method: "GET",
@@ -82,12 +82,12 @@ export default function CustomMail() {
   }, [user]);
 
   const handleSaveEmailMessage = async () => {
-    if (!user?.email) return;
+    if (!user?.username) return;
     try {
       setLoading(true);
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.email
+          user.username
         )}/email-message`,
         {
           method: "PUT",

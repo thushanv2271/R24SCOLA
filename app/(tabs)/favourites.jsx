@@ -225,11 +225,11 @@ const FavoriteItemsList = () => {
     router?.back() || console.log("Navigation failed: router is undefined");
   };
 
-  const fetchFavoriteScholarships = useCallback(async (email) => {
+  const fetchFavoriteScholarships = useCallback(async (username) => {
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
-          email,
+          username,
         )}/favorites`,
       );
       if (!response.ok) throw new Error("Failed to fetch favorites");
@@ -244,13 +244,13 @@ const FavoriteItemsList = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    if (user?.email) {
-      await fetchFavoriteScholarships(user.email);
+    if (user?.username) {
+      await fetchFavoriteScholarships(user.username);
     }
   };
 
   const handleRequestAllScholarships = async () => {
-    if (!user?.email) {
+    if (!user?.username) {
       Alert.alert("Error", "Please log in to request scholarships.");
       return;
     }
@@ -290,7 +290,7 @@ const FavoriteItemsList = () => {
       // Send single email to all professor emails
       await sendScholarshipEmail(
         professorEmails,
-        user.email,
+        user.username,
         "Scholarship Request for Multiple Favorites",
         { name: "Multiple Recipients" },
         emailBody,
@@ -317,15 +317,15 @@ const FavoriteItemsList = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (user?.email) {
+      if (user?.username) {
         setRefreshing(true);
-        fetchFavoriteScholarships(user.email);
+        fetchFavoriteScholarships(user.username);
       }
     }, [user, fetchFavoriteScholarships]),
   );
 
   useEffect(() => {
-    if (user?.email) fetchFavoriteScholarships(user.email);
+    if (user?.username) fetchFavoriteScholarships(user.username);
   }, [refreshFavorites, user, fetchFavoriteScholarships]);
 
   const renderItem = ({ item }) => {
@@ -335,7 +335,7 @@ const FavoriteItemsList = () => {
 
     const handleRequestScholarship = async () => {
       const professor = item.contactProfessors?.[0];
-      if (!professor?.email || !user?.email) {
+      if (!professor?.email || !user?.username) {
         Alert.alert("Error", "Missing email information.");
         return;
       }
@@ -343,7 +343,7 @@ const FavoriteItemsList = () => {
       try {
         await sendScholarshipEmail(
           professor.email,
-          user.email,
+          user.username,
           item.title,
           professor,
         );
@@ -404,7 +404,7 @@ const FavoriteItemsList = () => {
     );
   };
 
-  if (!user || !user.email) {
+  if (!user || !user.username) {
     return (
       <View style={styles.container}>
         <Text style={styles.emptyText}>

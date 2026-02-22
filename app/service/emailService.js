@@ -3,13 +3,13 @@ import { authAPI } from "../../services/apiService";
 
 export const sendScholarshipEmail = async (
   professorEmail,
-  userEmail,
+  username,
   scholarshipTitle,
   professorDetails,
 ) => {
   try {
     // Fetch the user's custom email message
-    const messageData = await authAPI.getEmailMessage(userEmail);
+    const messageData = await authAPI.getEmailMessage(username);
 
     // Handle different response formats
     let customMessage = messageData?.scholarshipEmailMessage || messageData;
