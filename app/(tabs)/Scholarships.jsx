@@ -19,7 +19,6 @@ import {
   Modal,
   Linking,
   ScrollView,
-  Alert,
   Dimensions,
   RefreshControl,
   TextInput,
@@ -34,6 +33,7 @@ import LoaderModal from "../../components/JustMoment";
 import BottomModal from "../../components/BottomModal";
 import NotificationModal from "../../components/NotificationModal";
 import { useNavigation } from "@react-navigation/native";
+import AlertModal from "../../components/AlertModal";
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -61,6 +61,15 @@ const ScholarshipApp = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterModalY = useRef(new Animated.Value(screenHeight)).current;
   const navigation = useNavigation();
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
   const majors = [
     "Chemistry",
     "Computer Science",
@@ -216,9 +225,10 @@ const ScholarshipApp = () => {
           error,
         );
         setFavoriteScholarships(favoriteScholarships);
-        Alert.alert(
+        showAlert(
           "Error",
           `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
+          "error"
         );
       }
     }, 300),
@@ -240,13 +250,13 @@ const ScholarshipApp = () => {
       );
 
       if (!response.ok) throw new Error("Failed to submit report");
-      Alert.alert("Success", "Report submitted successfully.");
+      showAlert("Success", "Report submitted successfully.", "success");
       setShowReportModal(false);
       setReportMessage("");
       setSelectedScholarshipId(null);
     } catch (error) {
       console.error("Error submitting report:", error);
-      Alert.alert("Error", "Could not submit report.");
+      showAlert("Error", "Could not submit report.", "error");
     }
   };
 
@@ -273,9 +283,10 @@ const ScholarshipApp = () => {
       setScholarships(data);
     } catch (error) {
       console.error("Error fetching scholarships:", error.message);
-      Alert.alert(
+      showAlert(
         "Error",
         error.message || "Could not fetch scholarship data.",
+        "error"
       );
     } finally {
       setLoading(false);
@@ -349,12 +360,15 @@ const ScholarshipApp = () => {
 
       const handleRequestScholarship = async () => {
         const professor = item.contactProfessors?.[0];
-        await sendScholarshipEmail(
+        const result = await sendScholarshipEmail(
           professor?.email,
           user?.username,
           item.title,
           professor,
         );
+        if (result && !result.success) {
+          showAlert("Error", result.error, "error");
+        }
       };
 
       const formatDate = (dateString) => {
@@ -816,6 +830,14 @@ const ScholarshipApp = () => {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </SafeAreaView>
   );
 };

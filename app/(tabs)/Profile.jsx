@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "./../../components/Header";
 import { useLocalSearchParams, router } from "expo-router";
 import LoaderModal from "../../components/JustMoment";
+import AlertModal from "../../components/AlertModal";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,6 +24,15 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({});
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -65,7 +74,7 @@ export default function ProfileScreen() {
       router.replace("/Login");
     } catch (error) {
       console.error("Error during logout:", error);
-      Alert.alert("Error", "Failed to log out. Please try again.");
+      showAlert("Error", "Failed to log out. Please try again.", "error");
     }
   };
 
@@ -149,6 +158,14 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </SafeAreaView>
   );
 }

@@ -1,4 +1,4 @@
-import { Linking, Alert } from "react-native";
+import { Linking } from "react-native";
 import { authAPI } from "../../services/apiService";
 
 export const sendScholarshipEmail = async (
@@ -43,11 +43,12 @@ export const sendScholarshipEmail = async (
     console.log("Decoded body for debugging:", decodeURIComponent(encodedBody));
 
     await Linking.openURL(mailtoUrl);
+    return { success: true };
   } catch (error) {
     console.error("Error sending email:", error);
-    Alert.alert(
-      "Error",
-      "Unable to open the email client or fetch custom message.",
-    );
+    return { 
+      success: false, 
+      error: "Unable to open the email client or fetch custom message." 
+    };
   }
 };

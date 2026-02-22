@@ -13,7 +13,6 @@ import {
   Modal,
   Linking,
   Dimensions,
-  Alert,
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +20,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoaderModal from "../components/JustMoment";
 import { getAllScholarships } from "../app/service/ConsolidatedScholarshipService";
+import AlertModal from "../components/AlertModal";
 
 const screenWidth = Dimensions.get("window").width;
 const screenheight = Dimensions.get("window").height / 3;
@@ -40,9 +40,17 @@ const TenHome = () => {
   const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
   const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
   const router = useRouter();
   const { username } = useLocalSearchParams();
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 50],
@@ -77,7 +85,7 @@ const TenHome = () => {
       setScholarships(data || []);
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Could not fetch scholarship data.");
+      showAlert("Error", "Could not fetch scholarship data.", "error");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -148,7 +156,7 @@ Best regards,
     )}&body=${encodeURIComponent(body)}`;
 
     Linking.openURL(mailtoUrl).catch(() =>
-      Alert.alert("Error", "Unable to open the email client."),
+      showAlert("Error", "Unable to open the email client.", "error"),
     );
   };
 
@@ -406,6 +414,14 @@ Best regards,
           />
         </View>
       )}
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </SafeAreaView>
   );
 };

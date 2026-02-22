@@ -19,7 +19,6 @@ import {
   Modal,
   Linking,
   ScrollView,
-  Alert,
   Dimensions,
   RefreshControl,
 } from "react-native";
@@ -32,6 +31,7 @@ import { AuthContext } from "../components/AuthContext";
 import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
+import AlertModal from "../components/AlertModal";
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -43,6 +43,9 @@ const ScholarshipApp = () => {
   const [scholarships, setScholarships] = useState([]);
   const { user, logout } = useContext(AuthContext);
   const [checkingPaid, setCheckingPaid] = useState(true);
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+  const showAlert = (title, message, type = "info", actions = []) => { setAlertConfig({ visible: true, title, message, type, actions }); };
+  const closeAlert = () => { setAlertConfig({ ...alertConfig, visible: false }); };
   const [selectedMajor, setSelectedMajor] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedFunding, setSelectedFunding] = useState("");
@@ -209,9 +212,10 @@ const ScholarshipApp = () => {
           error,
         );
         setFavoriteScholarships(favoriteScholarships);
-        Alert.alert(
+        showAlert(
           "Error",
           `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
+          "error"
         );
       }
     }, 300),
@@ -225,7 +229,7 @@ const ScholarshipApp = () => {
       setScholarships(data);
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Could not fetch scholarship data.");
+      showAlert("Error", "Could not fetch scholarship data.", "error");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -291,12 +295,15 @@ const ScholarshipApp = () => {
 
       const handleRequestScholarship = async () => {
         const professor = item.contactProfessors?.[0];
-        await sendScholarshipEmail(
+        const result = await sendScholarshipEmail(
           professor?.email,
           user?.username,
           item.title,
           professor,
         );
+        if (result && !result.success) {
+          showAlert("Error", result.error, "error");
+        }
       };
 
       return (

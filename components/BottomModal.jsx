@@ -6,7 +6,7 @@ const BottomModal = ({ visible, onClose }) => {
   const instructions = [
     {
       id: 1,
-      title: 'Welcome to Schola!   ',
+      title: 'Welcome to Scola!   ',
       description: 'Login to request scholarships and manage your applications.   ',
       image: require('../assets/images/OPPORTUNITIES.png'),
     },

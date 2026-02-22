@@ -11,7 +11,6 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Alert,
   StatusBar,
   useWindowDimensions,
   RefreshControl,
@@ -23,6 +22,7 @@ import { sendScholarshipEmail } from "../service/emailService";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AlertModal from "../../components/AlertModal";
 
 const FavoriteItemsList = () => {
   const { user, refreshFavorites } = useContext(AuthContext);
@@ -34,6 +34,15 @@ const FavoriteItemsList = () => {
   const navigation = useNavigation();
   const scaleFactor = screenWidth / 375;
   const scale = (size) => Math.min(size * scaleFactor, size * 1.5);
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   // Load requested scholarships from AsyncStorage when the component mounts
   useEffect(() => {
@@ -46,7 +55,7 @@ const FavoriteItemsList = () => {
         }
       } catch (error) {
         console.error("Failed to load requested scholarships:", error);
-        Alert.alert("Error", "Could not load requested scholarships data.");
+        showAlert("Error", "Could not load requested scholarships data.", "error");
       }
     };
     loadRequestedScholarships();
@@ -62,7 +71,7 @@ const FavoriteItemsList = () => {
         );
       } catch (error) {
         console.error("Failed to save requested scholarships:", error);
-        Alert.alert("Error", "Could not save requested scholarships data.");
+        showAlert("Error", "Could not save requested scholarships data.", "error");
       }
     };
     saveRequestedScholarships();
@@ -236,7 +245,7 @@ const FavoriteItemsList = () => {
       const data = await response.json();
       setFavoriteScholarships(data);
     } catch (error) {
-      Alert.alert("Error", "Could not fetch favorite scholarships.");
+      showAlert("Error", "Could not fetch favorite scholarships.", "error");
     } finally {
       setRefreshing(false);
     }
@@ -251,7 +260,7 @@ const FavoriteItemsList = () => {
 
   const handleRequestAllScholarships = async () => {
     if (!user?.username) {
-      Alert.alert("Error", "Please log in to request scholarships.");
+      showAlert("Error", "Please log in to request scholarships.", "error");
       return;
     }
 
@@ -263,9 +272,10 @@ const FavoriteItemsList = () => {
     );
 
     if (scholarshipsToRequest.length === 0) {
-      Alert.alert(
+      showAlert(
         "Info",
         "No new scholarships to request or missing professor emails.",
+        "info"
       );
       return;
     }
@@ -303,15 +313,16 @@ const FavoriteItemsList = () => {
       );
       setRequestedScholarships(newRequested);
 
-      Alert.alert(
+      showAlert(
         "Success",
         `${scholarshipsToRequest.length} scholarship${
           scholarshipsToRequest.length > 1 ? "s" : ""
         } requested successfully!`,
+        "success"
       );
     } catch (error) {
       console.error("Failed to send scholarship request email:", error);
-      Alert.alert("Error", "Failed to send scholarship request email.");
+      showAlert("Error", "Failed to send scholarship request email.", "error");
     }
   };
 
@@ -336,7 +347,7 @@ const FavoriteItemsList = () => {
     const handleRequestScholarship = async () => {
       const professor = item.contactProfessors?.[0];
       if (!professor?.email || !user?.username) {
-        Alert.alert("Error", "Missing email information.");
+        showAlert("Error", "Missing email information.", "error");
         return;
       }
 
@@ -352,9 +363,9 @@ const FavoriteItemsList = () => {
           newSet.add(item.id);
           return newSet;
         });
-        Alert.alert("Success", "Scholarship request sent successfully!");
+        showAlert("Success", "Scholarship request sent successfully!", "success");
       } catch (error) {
-        Alert.alert("Error", "Failed to send scholarship request.");
+        showAlert("Error", "Failed to send scholarship request.", "error");
       }
     };
 

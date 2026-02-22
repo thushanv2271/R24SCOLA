@@ -8,13 +8,13 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, router } from "expo-router";
 import { fetchUserByUsername, updateUser } from "../services/userService";
+import AlertModal from "../components/AlertModal";
 
 export default function Profile() {
   const { username } = useLocalSearchParams(); // Get the username from query parameters
@@ -22,6 +22,15 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
   const [editedData, setEditedData] = useState({}); // State to hold edited user data
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -46,7 +55,7 @@ export default function Profile() {
       router.replace("/Login");
     } catch (error) {
       console.error("Error during logout:", error);
-      Alert.alert("Error", "Failed to log out. Please try again.");
+      showAlert("Error", "Failed to log out. Please try again.", "error");
     }
   };
 
@@ -60,11 +69,11 @@ export default function Profile() {
 
   const validateInput = () => {
     if (isNaN(editedData.age) || editedData.age <= 0) {
-      Alert.alert("Invalid Input", "Age must be a positive number.");
+      showAlert("Invalid Input", "Age must be a positive number.", "warning");
       return false;
     }
     if (!editedData.country.trim()) {
-      Alert.alert("Invalid Input", "Country cannot be empty.");
+      showAlert("Invalid Input", "Country cannot be empty.", "warning");
       return false;
     }
     return true;
@@ -92,10 +101,10 @@ export default function Profile() {
       const updatedData = await updateUser(userId, dataToSend, token);
       setUserData(updatedData || dataToSend);
       setIsEditing(false);
-      Alert.alert("Success", "Profile updated successfully!");
+      showAlert("Success", "Profile updated successfully!", "success");
     } catch (error) {
       console.error("Error updating user data:", error);
-      Alert.alert("Error", error.message || "Failed to update profile.");
+      showAlert("Error", error.message || "Failed to update profile.", "error");
     }
   };
 
@@ -283,9 +292,17 @@ export default function Profile() {
             </>
           ) : (
             <Text style={styles.noDataText}>No user data found.</Text>
-          )}
+)}
         </View>
       </ScrollView>
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </SafeAreaView>
   );
 }

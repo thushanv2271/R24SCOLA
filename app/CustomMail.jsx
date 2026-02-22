@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
   Dimensions,
   Modal,
 } from "react-native";
@@ -18,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import LoaderModal from "../components/JustMoment";
 import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
+import AlertModal from "../components/AlertModal";
 
 const { width, height } = Dimensions.get("window");
 
@@ -48,6 +48,15 @@ export default function CustomMail() {
   const [modalVisible, setModalVisible] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
   const navigation = useNavigation();
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -73,7 +82,7 @@ export default function CustomMail() {
         setEmailMessage(convertToNewlines(data.scholarshipEmailMessage));
       } catch (error) {
         console.error("Error fetching user details:", error);
-        Alert.alert("Error", "Failed to load user details");
+        showAlert("Error", "Failed to load user details", "error");
       } finally {
         setLoading(false);
       }
@@ -106,10 +115,10 @@ export default function CustomMail() {
       // Convert <br> to \n again when updating emailMessage
       setEmailMessage(convertToNewlines(updatedData.scholarshipEmailMessage));
       setModalVisible(false);
-      Alert.alert("Success", "Email message updated successfully");
+      showAlert("Success", "Email message updated successfully", "success");
     } catch (error) {
       console.error("Error updating email message:", error);
-      Alert.alert("Error", "Failed to update email message");
+      showAlert("Error", "Failed to update email message", "error");
     } finally {
       setLoading(false);
     }
@@ -220,6 +229,14 @@ export default function CustomMail() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </SafeAreaView>
   );
 }

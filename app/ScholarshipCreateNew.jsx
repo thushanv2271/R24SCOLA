@@ -9,7 +9,6 @@ import {
   Dimensions,
   SafeAreaView,
   StatusBar,
-  Alert,
   Image,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
@@ -18,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { scholarshipAPI } from "../services/apiService";
+import AlertModal from "../components/AlertModal";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const scale = (size) => (SCREEN_WIDTH / 375) * size;
@@ -48,6 +48,15 @@ const ScholarshipCreateNew = () => {
     office: "",
   });
   const router = useRouter();
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   const countryOptions = [
     { label: "USA", value: "usa" },
@@ -99,7 +108,7 @@ const ScholarshipCreateNew = () => {
       !level ||
       !qualifications
     ) {
-      Alert.alert("Error", "Please fill in all required fields");
+      showAlert("Error", "Please fill in all required fields", "warning");
       return;
     }
 
@@ -156,20 +165,22 @@ const ScholarshipCreateNew = () => {
         office: "",
       });
 
-      Alert.alert("Success!", "Scholarship created successfully", [
+      showAlert("Success!", "Scholarship created successfully", "success", [
         {
           text: "OK",
           onPress: () => {
+            closeAlert();
             router.back();
           },
         },
       ]);
     } catch (error) {
       console.error("API Error:", error);
-      Alert.alert(
+      showAlert(
         "Error",
         error.message ||
           "An error occurred while submitting. Please check your connection.",
+        "error"
       );
     }
   };
@@ -332,6 +343,14 @@ const ScholarshipCreateNew = () => {
           </ScrollView>
         </LinearGradient>
       </SafeAreaView>
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </PaperProvider>
   );
 };

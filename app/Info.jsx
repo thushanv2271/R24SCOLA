@@ -14,11 +14,21 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { AuthContext } from "../components/AuthContext";
 import { useLocalSearchParams, router } from "expo-router";
+import AlertModal from "../components/AlertModal";
 
 const { width, height } = Dimensions.get("window");
 
 export default function ScholarshipGuide() {
   const { user, logout } = useContext(AuthContext);
+  const [alertConfig, setAlertConfig] = React.useState({ visible: false, title: "", message: "", type: "info", actions: [] });
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({ visible: true, title, message, type, actions });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
+  };
 
   const handleLogout = async () => {
     try {
@@ -26,7 +36,7 @@ export default function ScholarshipGuide() {
       router.replace("/Login");
     } catch (error) {
       console.error("Logout failed:", error);
-      Alert.alert("Error", "Unable to log out. Please retry.");
+      showAlert("Error", "Unable to log out. Please retry.", "error");
     }
   };
 
@@ -302,6 +312,14 @@ export default function ScholarshipGuide() {
           </Animated.View>
         </View>
       </ScrollView>
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        actions={alertConfig.actions.length > 0 ? alertConfig.actions : [{ text: "OK", onPress: closeAlert }]}
+        onClose={closeAlert}
+      />
     </SafeAreaView>
   );
 }

@@ -7,7 +7,6 @@ import {
   Modal,
   SafeAreaView,
   StatusBar,
-  Alert,
   Image,
   ScrollView,
   Dimensions,
@@ -21,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../components/AuthContext";
 import { calculatorAPI } from "../services/apiService";
+import AlertModal from "../components/AlertModal";
 
 const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
 
@@ -47,6 +47,13 @@ const ScholarshipPossibilityCalculator = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [pastResults, setPastResults] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+    actions: [],
+  });
   const [possibility, setPossibility] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [scoreBreakdown, setScoreBreakdown] = useState({
@@ -65,6 +72,20 @@ const ScholarshipPossibilityCalculator = () => {
 
   const handleBackPress = () => {
     router?.back() || console.log("Navigation failed: router is undefined");
+  };
+
+  const showAlert = (title, message, type = "info", actions = []) => {
+    setAlertConfig({
+      visible: true,
+      title,
+      message,
+      type,
+      actions,
+    });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig({ ...alertConfig, visible: false });
   };
 
   const countryOptions = [
@@ -136,7 +157,7 @@ const ScholarshipPossibilityCalculator = () => {
       !extracurriculars ||
       !financialNeed
     ) {
-      Alert.alert("Error", "Please complete all required fields");
+      showAlert("Error", "Please complete all required fields", "error");
       return;
     }
 
@@ -463,7 +484,7 @@ const ScholarshipPossibilityCalculator = () => {
 
   const fetchPastResults = async () => {
     if (!user?.username) {
-      Alert.alert("Error", "Please login to view your calculation history");
+      showAlert("Error", "Please login to view your calculation history", "error");
       return;
     }
 
@@ -474,7 +495,7 @@ const ScholarshipPossibilityCalculator = () => {
       setIsHistoryModalVisible(true);
     } catch (error) {
       console.error("Error fetching past results:", error);
-      Alert.alert("Error", "Failed to load calculation history");
+      showAlert("Error", "Failed to load calculation history", "error");
     } finally {
       setLoadingHistory(false);
     }
@@ -492,17 +513,18 @@ const ScholarshipPossibilityCalculator = () => {
   };
 
   const deleteResult = async (resultId) => {
-    Alert.alert(
+    showAlert(
       "Delete Result",
       "Are you sure you want to delete this calculation result?",
+      "warning",
       [
         {
           text: "Cancel",
-          style: "cancel",
+          onPress: () => {},
         },
         {
           text: "Delete",
-          style: "destructive",
+          destructive: true,
           onPress: async () => {
             try {
               await calculatorAPI.deleteResult(resultId);
@@ -510,10 +532,10 @@ const ScholarshipPossibilityCalculator = () => {
               setPastResults((prevResults) =>
                 prevResults.filter((result) => result.id !== resultId),
               );
-              Alert.alert("Success", "Result deleted successfully");
+              showAlert("Success", "Result deleted successfully", "success");
             } catch (error) {
               console.error("Error deleting result:", error);
-              Alert.alert("Error", "Failed to delete result");
+              showAlert("Error", "Failed to delete result", "error");
             }
           },
         },
@@ -1041,6 +1063,16 @@ const ScholarshipPossibilityCalculator = () => {
             </View>
           </View>
         </Modal>
+
+        {/* Alert Modal */}
+        <AlertModal
+          visible={alertConfig.visible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          type={alertConfig.type}
+          actions={alertConfig.actions}
+          onClose={closeAlert}
+        />
       </SafeAreaView>
     </PaperProvider>
   );

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Alert,
 } from "react-native";
 import { authAPI } from "../services/apiService";
 
@@ -21,6 +20,7 @@ const CustomizeEmailMessageModal = ({
   onClose,
   setLoading,
   setEditedData,
+  onShowAlert,
 }) => {
   const handleSaveEmailMessage = async () => {
     try {
@@ -32,10 +32,14 @@ const CustomizeEmailMessageModal = ({
       setEditedData(updatedData);
       setEmailMessage(updatedData?.scholarshipEmailMessage || emailMessage);
       onClose();
-      Alert.alert("Success", "Email message updated successfully");
+      if (onShowAlert) {
+        onShowAlert("Success", "Email message updated successfully", "success");
+      }
     } catch (error) {
       console.error("Error updating email message:", error);
-      Alert.alert("Error", "Failed to update email message");
+      if (onShowAlert) {
+        onShowAlert("Error", "Failed to update email message", "error");
+      }
     } finally {
       setLoading(false);
     }
