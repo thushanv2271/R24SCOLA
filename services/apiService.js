@@ -118,6 +118,32 @@ export const authAPI = {
 };
 
 /**
+ * Calculator Result APIs
+ */
+export const calculatorAPI = {
+  saveResult: (resultData) =>
+    apiCall("/CalculatorResults", {
+      method: "POST",
+      body: JSON.stringify(resultData),
+    }),
+
+  getUserResults: (username) =>
+    apiCall(`/CalculatorResults/user/${encodeURIComponent(username)}`, {
+      method: "GET",
+    }),
+
+  getResultById: (id) =>
+    apiCall(`/CalculatorResults/${id}`, {
+      method: "GET",
+    }),
+
+  deleteResult: (id) =>
+    apiCall(`/CalculatorResults/${id}`, {
+      method: "DELETE",
+    }),
+};
+
+/**
  * Scholarship APIs
  */
 export const scholarshipAPI = {
