@@ -55,7 +55,7 @@ export default function CustomMail() {
       try {
         const response = await fetch(
           `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.username
+            user.username,
           )}`,
           {
             method: "GET",
@@ -63,7 +63,7 @@ export default function CustomMail() {
               Accept: "application/json",
               "Content-Type": "application/json",
             },
-          }
+          },
         );
         if (!response.ok) throw new Error("Failed to fetch user details");
         const data = await response.json();
@@ -87,7 +87,7 @@ export default function CustomMail() {
       setLoading(true);
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username
+          user.username,
         )}/email-message`,
         {
           method: "PUT",
@@ -97,7 +97,7 @@ export default function CustomMail() {
           },
           // Send the emailMessage as-is with \n; adjust if backend needs <br>
           body: JSON.stringify({ scholarshipEmailMessage: emailMessage }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to update email message");
       const updatedData = await response.json();
@@ -164,7 +164,7 @@ export default function CustomMail() {
                   <Text key={index} style={styles.value}>
                     {line}
                   </Text>
-                )
+                ),
               )}
             </View>
           </View>
@@ -381,4 +381,3 @@ const styles = StyleSheet.create({
     height: verticalScale(50),
   },
 });
-

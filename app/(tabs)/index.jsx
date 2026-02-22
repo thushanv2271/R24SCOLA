@@ -150,7 +150,12 @@ const ScholarshipHome = () => {
 
   const sidebarItems = [
     { title: "Home", icon: "home", screen: "index" },
-    { title: "Profile", icon: "person", screen: "Profile", params: { username } },
+    {
+      title: "Profile",
+      icon: "person",
+      screen: "Profile",
+      params: { username },
+    },
     { title: "Scholarships", icon: "school", screen: "Scholarships" },
     { title: "Jobs", icon: "briefcase", screen: "JobInside" },
     { title: "Favourites", icon: "heart", screen: "Favourites" },

@@ -30,7 +30,7 @@ const apiCall = async (endpoint, options = {}) => {
           errorMessage = parsed.message || parsed.title || errorMessage;
         } catch (e) {
           // If not JSON, use the text directly (remove quotes if present)
-          errorMessage = errorData.replace(/^"+|"+$/g, '') || errorMessage;
+          errorMessage = errorData.replace(/^"+|"+$/g, "") || errorMessage;
         }
       } catch (e) {
         // If reading response fails, use status code
@@ -86,7 +86,9 @@ export const authAPI = {
 
   // Favorite Management
   getFavorites: (username) =>
-    apiCall(`/Users/${encodeURIComponent(username)}/favorites`, { method: "GET" }),
+    apiCall(`/Users/${encodeURIComponent(username)}/favorites`, {
+      method: "GET",
+    }),
 
   addFavorite: (username, scholarshipId) =>
     apiCall(`/Users/${encodeURIComponent(username)}/favorites/by-username`, {

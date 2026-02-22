@@ -41,11 +41,7 @@ export default function Profile() {
   // Logout Function
   const handleLogout = async () => {
     try {
-      await AsyncStorage.multiRemove([
-        "username",
-        "userPassword",
-        "userToken",
-      ]);
+      await AsyncStorage.multiRemove(["username", "userPassword", "userToken"]);
       console.log("User logged out");
       router.replace("/Login");
     } catch (error) {

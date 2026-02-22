@@ -116,7 +116,7 @@ export default function LoginForm() {
       await AsyncStorage.removeItem("userPassword");
       await AsyncStorage.removeItem("rememberMe");
       await AsyncStorage.removeItem("userID");
-      
+
       // Display user-friendly error message
       const errorMsg = error.message || "Login failed";
       alert(errorMsg.replace(/^HTTP \d+$/, "Invalid username or password"));
@@ -189,7 +189,9 @@ export default function LoginForm() {
             <TouchableOpacity
               style={styles.passwordToggle}
               onPress={() => setShowPassword((prev) => !prev)}
-              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
             >
               <IconSymbol
                 name={showPassword ? "eye.slash.fill" : "eye.fill"}
@@ -234,4 +236,3 @@ export default function LoginForm() {
     </Formik>
   );
 }
-

@@ -73,12 +73,20 @@ export default function RegisterForm() {
     } catch (error) {
       // Handle duplicate email error from backend
       const errorMsg = error.message || "Registration failed";
-      if (errorMsg.toLowerCase().includes("already exists") || errorMsg.toLowerCase().includes("already in use")) {
+      if (
+        errorMsg.toLowerCase().includes("already exists") ||
+        errorMsg.toLowerCase().includes("already in use")
+      ) {
         setFieldError("username", "Username already in use");
       } else if (errorMsg.toLowerCase().includes("required")) {
         alert("Username and password are required");
       } else {
-        alert(errorMsg.replace(/^HTTP \d+$/, "Registration failed. Please try again."));
+        alert(
+          errorMsg.replace(
+            /^HTTP \d+$/,
+            "Registration failed. Please try again.",
+          ),
+        );
       }
     }
   };
@@ -132,7 +140,11 @@ export default function RegisterForm() {
 
             <View style={styles.passwordContainer}>
               <TextInput
-                style={[styles.input, dynamicStyles.input, styles.passwordInput]}
+                style={[
+                  styles.input,
+                  dynamicStyles.input,
+                  styles.passwordInput,
+                ]}
                 placeholder="Password"
                 secureTextEntry={!showPassword}
                 onChangeText={handleChange("password")}
@@ -145,7 +157,9 @@ export default function RegisterForm() {
               <TouchableOpacity
                 style={styles.passwordToggle}
                 onPress={() => setShowPassword((prev) => !prev)}
-                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                accessibilityLabel={
+                  showPassword ? "Hide password" : "Show password"
+                }
               >
                 <IconSymbol
                   name={showPassword ? "eye.slash.fill" : "eye.fill"}
@@ -160,7 +174,11 @@ export default function RegisterForm() {
 
             <View style={styles.passwordContainer}>
               <TextInput
-                style={[styles.input, dynamicStyles.input, styles.passwordInput]}
+                style={[
+                  styles.input,
+                  dynamicStyles.input,
+                  styles.passwordInput,
+                ]}
                 placeholder="Confirm Password"
                 secureTextEntry={!showConfirmPassword}
                 onChangeText={handleChange("confirmPassword")}
@@ -173,7 +191,9 @@ export default function RegisterForm() {
               <TouchableOpacity
                 style={styles.passwordToggle}
                 onPress={() => setShowConfirmPassword((prev) => !prev)}
-                accessibilityLabel={showConfirmPassword ? "Hide password" : "Show password"}
+                accessibilityLabel={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
               >
                 <IconSymbol
                   name={showConfirmPassword ? "eye.slash.fill" : "eye.fill"}
