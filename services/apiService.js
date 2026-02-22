@@ -30,7 +30,8 @@ const apiCall = async (endpoint, options = {}) => {
           if (parsed?.errors && typeof parsed.errors === "object") {
             const firstKey = Object.keys(parsed.errors)[0];
             const firstError = parsed.errors[firstKey]?.[0];
-            errorMessage = firstError || parsed.title || parsed.message || errorMessage;
+            errorMessage =
+              firstError || parsed.title || parsed.message || errorMessage;
           } else {
             errorMessage = parsed.message || parsed.title || errorMessage;
           }
@@ -117,10 +118,13 @@ export const authAPI = {
     }),
 
   addJobFavorite: (username, jobId) =>
-    apiCall(`/Users/${encodeURIComponent(username)}/job-favorites/by-username`, {
-      method: "POST",
-      body: JSON.stringify(jobId),
-    }),
+    apiCall(
+      `/Users/${encodeURIComponent(username)}/job-favorites/by-username`,
+      {
+        method: "POST",
+        body: JSON.stringify(jobId),
+      },
+    ),
 
   removeJobFavorite: (username, jobId) =>
     apiCall(

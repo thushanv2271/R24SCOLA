@@ -237,13 +237,11 @@ export default function CustomMail() {
           <View style={styles.section}>
             <View style={styles.sectionContent}>
               <Text style={styles.label}>Job Email Message:</Text>
-              {formatMessage(editedData.jobEmailMessage).map(
-                (line, index) => (
-                  <Text key={index} style={styles.value}>
-                    {line}
-                  </Text>
-                ),
-              )}
+              {formatMessage(editedData.jobEmailMessage).map((line, index) => (
+                <Text key={index} style={styles.value}>
+                  {line}
+                </Text>
+              ))}
             </View>
           </View>
           <TouchableOpacity
@@ -255,9 +253,7 @@ export default function CustomMail() {
               size={moderateScale(24)}
               color="#fff"
             />
-            <Text style={styles.customizeButtonText}>
-              Customize Job Email
-            </Text>
+            <Text style={styles.customizeButtonText}>Customize Job Email</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

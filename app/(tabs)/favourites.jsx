@@ -441,8 +441,7 @@ const FavoriteItemsList = () => {
 
     // Filter out already requested jobs and those without valid contact emails
     const jobsToRequest = favoriteJobs.filter(
-      (job) =>
-        !requestedJobs.has(job.id) && job.contactProfessors?.[0]?.email,
+      (job) => !requestedJobs.has(job.id) && job.contactProfessors?.[0]?.email,
     );
 
     if (jobsToRequest.length === 0) {
@@ -596,7 +595,8 @@ const FavoriteItemsList = () => {
               {item.title || `Untitled ${isJob ? "Job" : "Scholarship"}`}
             </Text>
             <Text style={styles.cardSubtitle}>
-              {item.university || `Unknown ${isJob ? "Organization" : "University"}`}
+              {item.university ||
+                `Unknown ${isJob ? "Organization" : "University"}`}
             </Text>
           </View>
         </View>
@@ -607,7 +607,9 @@ const FavoriteItemsList = () => {
             onPress={handleRequestItem}
           >
             <Text style={styles.buttonText}>
-              {isRequested ? "Requested" : `Request ${isJob ? "Job" : "Scholarship"}`}
+              {isRequested
+                ? "Requested"
+                : `Request ${isJob ? "Job" : "Scholarship"}`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -633,8 +635,12 @@ const FavoriteItemsList = () => {
     );
   }
 
-  const currentData = selectedTab === "scholarships" ? favoriteScholarships : favoriteJobs;
-  const handleRequestAll = selectedTab === "scholarships" ? handleRequestAllScholarships : handleRequestAllJobs;
+  const currentData =
+    selectedTab === "scholarships" ? favoriteScholarships : favoriteJobs;
+  const handleRequestAll =
+    selectedTab === "scholarships"
+      ? handleRequestAllScholarships
+      : handleRequestAllJobs;
 
   return (
     <View style={styles.container}>
