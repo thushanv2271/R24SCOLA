@@ -10,8 +10,10 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { PRIMARY_BLUE, PRIMARY_DARK_BLUE, COLORS } from "../constants/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { ALERT_INFO_BG } = COLORS;
 
 const AlertModal = memo(
   ({ visible, title, message, type = "info", onClose, actions = [] }) => {
@@ -33,14 +35,14 @@ const AlertModal = memo(
     const getIconConfig = () => {
       switch (type) {
         case "success":
-          return { name: "check-circle", color: "#10b981", bgColor: "#d1fae5" };
+          return { name: "check-circle", color: COLORS.SUCCESS, bgColor: COLORS.ALERT_SUCCESS_BG };
         case "error":
-          return { name: "error", color: "#ef4444", bgColor: "#fee2e2" };
+          return { name: "error", color: COLORS.ERROR, bgColor: COLORS.ALERT_ERROR_BG };
         case "warning":
-          return { name: "warning", color: "#f59e0b", bgColor: "#fef3c7" };
+          return { name: "warning", color: COLORS.WARNING, bgColor: COLORS.ALERT_WARNING_BG };
         case "info":
         default:
-          return { name: "info", color: "#3b82f6", bgColor: "#dbeafe" };
+          return { name: "info", color: PRIMARY_BLUE, bgColor: ALERT_INFO_BG };
       }
     };
 
@@ -104,7 +106,7 @@ const AlertModal = memo(
                   <LinearGradient
                     colors={
                       action.primary
-                        ? ["#4a90e2", "#357abd"]
+                        ? [PRIMARY_BLUE, PRIMARY_DARK_BLUE]
                         : action.destructive
                           ? ["#ef4444", "#dc2626"]
                           : ["#9ca3af", "#6b7280"]

@@ -9,10 +9,11 @@
 
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
+import { PRIMARY_BLUE } from '../constants/colors';
 
 const LoadingComponent = () => (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <ActivityIndicator size="large" color="#0000ff" />
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <ActivityIndicator size="large" color={PRIMARY_BLUE} />
   </View>
 );
 

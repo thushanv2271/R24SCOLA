@@ -259,6 +259,29 @@ const FavoriteItemsList = () => {
           color: "#cccccc",
           textDecorationLine: "none",
         },
+        actionButtonsContainer: {
+          flexDirection: "row",
+          justifyContent: "space-around",
+          alignItems: "center",
+          marginTop: scale(5),
+          marginHorizontal: scale(10),
+        },
+        actionButton: {
+          flex: 1,
+          marginHorizontal: scale(5),
+        },
+        removeAllText: {
+          fontSize: scale(16),
+          fontFamily: "Roboto",
+          color: "#ff4d4d",
+          textDecorationLine: "underline",
+          textAlign: "center",
+          marginTop: scale(10),
+        },
+        removeAllTextDisabled: {
+          color: "#cccccc",
+          textDecorationLine: "none",
+        },
         removeButton: {
           backgroundColor: "#ff4d4d",
           padding: scale(10),
@@ -495,6 +518,82 @@ const FavoriteItemsList = () => {
     }
   };
 
+  const handleRemoveAll = async () => {
+    const isJob = selectedTab === "jobs";
+    const itemsToRemove = isJob ? favoriteJobs : favoriteScholarships;
+
+    if (itemsToRemove.length === 0) {
+      showAlert(
+        "Info",
+        `No ${isJob ? "jobs" : "scholarships"} to remove.`,
+        "info",
+      );
+      return;
+    }
+
+    showAlert(
+      "Confirm",
+      `Are you sure you want to remove all ${itemsToRemove.length} ${isJob ? "job" : "scholarship"}${itemsToRemove.length > 1 ? "s" : ""} from favorites?`,
+      "warning",
+      [
+        {
+          text: "Cancel",
+          onPress: closeAlert,
+          style: "cancel",
+        },
+        {
+          text: "Remove All",
+          onPress: async () => {
+            closeAlert();
+            try {
+              // Remove all items from backend
+              const deletePromises = itemsToRemove.map((item) =>
+                fetch(
+                  `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
+                    user.username,
+                  )}/${isJob ? "job-favorites" : "favorites"}/by-username/${item.id}`,
+                  {
+                    method: "DELETE",
+                  },
+                ),
+              );
+
+              await Promise.all(deletePromises);
+
+              // Update local state
+              if (isJob) {
+                setFavoriteJobs([]);
+                await AsyncStorage.setItem("favoriteJobs", JSON.stringify([]));
+              } else {
+                setFavoriteScholarships([]);
+                await AsyncStorage.setItem(
+                  "favoriteScholarships",
+                  JSON.stringify([]),
+                );
+              }
+
+              // Trigger refresh in other components
+              refreshFavorites();
+
+              showAlert(
+                "Success",
+                `All ${isJob ? "jobs" : "scholarships"} removed from favorites!`,
+                "success",
+              );
+            } catch (error) {
+              console.error("Error removing all favorites:", error);
+              showAlert(
+                "Error",
+                `Could not remove all ${isJob ? "jobs" : "scholarships"} from favorites.`,
+                "error",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   useFocusEffect(
     useCallback(() => {
       if (user?.username) {
@@ -511,6 +610,66 @@ const FavoriteItemsList = () => {
       fetchFavoriteJobs(user.username);
     }
   }, [refreshFavorites, user, fetchFavoriteScholarships, fetchFavoriteJobs]);
+
+  const handleRemoveFavorite = async (item) => {
+    const isJob = selectedTab === "jobs";
+    
+    try {
+      const response = await fetch(
+        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
+          user.username,
+        )}/${isJob ? "job-favorites" : "favorites"}/by-username/${item.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to remove ${isJob ? "job" : "scholarship"} from favorites`);
+      }
+
+      // Update local state
+      if (isJob) {
+        const updatedJobs = favoriteJobs.filter((job) => job.id !== item.id);
+        setFavoriteJobs(updatedJobs);
+        
+        // Update AsyncStorage with the new job favorites list
+        const jobIds = updatedJobs.map((j) => j.id);
+        await AsyncStorage.setItem(
+          "favoriteJobs",
+          JSON.stringify(jobIds),
+        );
+      } else {
+        const updatedFavorites = favoriteScholarships.filter(
+          (scholarship) => scholarship.id !== item.id,
+        );
+        setFavoriteScholarships(updatedFavorites);
+        
+        // Update AsyncStorage with the new favorites list
+        const favoriteIds = updatedFavorites.map((s) => s.id);
+        await AsyncStorage.setItem(
+          "favoriteScholarships",
+          JSON.stringify(favoriteIds),
+        );
+      }
+
+      // Trigger refresh in other components
+      refreshFavorites();
+
+      showAlert(
+        "Success",
+        `${isJob ? "Job" : "Scholarship"} removed from favorites!`,
+        "success",
+      );
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      showAlert(
+        "Error",
+        `Could not remove ${isJob ? "job" : "scholarship"} from favorites.`,
+        "error",
+      );
+    }
+  };
 
   const renderItem = ({ item }) => {
     const imageUrl =
@@ -616,6 +775,12 @@ const FavoriteItemsList = () => {
                 : `Request ${isJob ? "Job" : "Scholarship"}`}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => handleRemoveFavorite(item)}
+          >
+            <MaterialIcons name="delete" size={scale(24)} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -719,19 +884,36 @@ const FavoriteItemsList = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          onPress={handleRequestAll}
-          disabled={currentData.length === 0}
-        >
-          <Text
-            style={[
-              styles.requestAllText,
-              currentData.length === 0 && styles.requestAllTextDisabled,
-            ]}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity
+            onPress={handleRequestAll}
+            disabled={currentData.length === 0}
+            style={styles.actionButton}
           >
-            Request All
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.requestAllText,
+                currentData.length === 0 && styles.requestAllTextDisabled,
+              ]}
+            >
+              Request All
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleRemoveAll}
+            disabled={currentData.length === 0}
+            style={styles.actionButton}
+          >
+            <Text
+              style={[
+                styles.removeAllText,
+                currentData.length === 0 && styles.removeAllTextDisabled,
+              ]}
+            >
+              Remove All
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList

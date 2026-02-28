@@ -43,7 +43,7 @@ const modalHeight = screenHeight * 0.7; // 70% of screen height
 
 const ScholarshipApp = () => {
   const [scholarships, setScholarships] = useState([]);
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, favoritesRefreshTrigger } = useContext(AuthContext);
   const [checkingPaid, setCheckingPaid] = useState(true);
   const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info", actions: [] });
   const showAlert = (title, message, type = "info", actions = []) => { setAlertConfig({ visible: true, title, message, type, actions }); };
@@ -99,7 +99,7 @@ const ScholarshipApp = () => {
     loadFavorites();
 
     if (user && user.username) fetchFavorites();
-  }, [user]);
+  }, [user, favoritesRefreshTrigger]);
 
   useEffect(() => {
     AsyncStorage.setItem("favoriteJobs", JSON.stringify(favoriteJobs)).catch(
