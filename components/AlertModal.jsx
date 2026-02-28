@@ -35,11 +35,23 @@ const AlertModal = memo(
     const getIconConfig = () => {
       switch (type) {
         case "success":
-          return { name: "check-circle", color: COLORS.SUCCESS, bgColor: COLORS.ALERT_SUCCESS_BG };
+          return {
+            name: "check-circle",
+            color: COLORS.SUCCESS,
+            bgColor: COLORS.ALERT_SUCCESS_BG,
+          };
         case "error":
-          return { name: "error", color: COLORS.ERROR, bgColor: COLORS.ALERT_ERROR_BG };
+          return {
+            name: "error",
+            color: COLORS.ERROR,
+            bgColor: COLORS.ALERT_ERROR_BG,
+          };
         case "warning":
-          return { name: "warning", color: COLORS.WARNING, bgColor: COLORS.ALERT_WARNING_BG };
+          return {
+            name: "warning",
+            color: COLORS.WARNING,
+            bgColor: COLORS.ALERT_WARNING_BG,
+          };
         case "info":
         default:
           return { name: "info", color: PRIMARY_BLUE, bgColor: ALERT_INFO_BG };

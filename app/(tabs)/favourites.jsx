@@ -613,7 +613,7 @@ const FavoriteItemsList = () => {
 
   const handleRemoveFavorite = async (item) => {
     const isJob = selectedTab === "jobs";
-    
+
     try {
       const response = await fetch(
         `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
@@ -625,26 +625,25 @@ const FavoriteItemsList = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to remove ${isJob ? "job" : "scholarship"} from favorites`);
+        throw new Error(
+          `Failed to remove ${isJob ? "job" : "scholarship"} from favorites`,
+        );
       }
 
       // Update local state
       if (isJob) {
         const updatedJobs = favoriteJobs.filter((job) => job.id !== item.id);
         setFavoriteJobs(updatedJobs);
-        
+
         // Update AsyncStorage with the new job favorites list
         const jobIds = updatedJobs.map((j) => j.id);
-        await AsyncStorage.setItem(
-          "favoriteJobs",
-          JSON.stringify(jobIds),
-        );
+        await AsyncStorage.setItem("favoriteJobs", JSON.stringify(jobIds));
       } else {
         const updatedFavorites = favoriteScholarships.filter(
           (scholarship) => scholarship.id !== item.id,
         );
         setFavoriteScholarships(updatedFavorites);
-        
+
         // Update AsyncStorage with the new favorites list
         const favoriteIds = updatedFavorites.map((s) => s.id);
         await AsyncStorage.setItem(
