@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const Dropdown = ({ title, children }) => {
+const Dropdown = memo(({ title, children }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -21,7 +21,7 @@ const Dropdown = ({ title, children }) => {
       {isVisible && <View style={styles.dropdownContent}>{children}</View>}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   dropdownToggle: {

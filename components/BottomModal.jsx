@@ -1,29 +1,21 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable, Modal, Dimensions  } from 'react-native';
-import Swiper from 'react-native-swiper';
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BottomModal = ({ visible, onClose }) => {
-  const instructions = [
-    {
-      id: 1,
-      title: 'Welcome to Scola!   ',
-      description: 'Login to request scholarships and manage your applications.   ',
-      image: require('../assets/images/OPPORTUNITIES.png'),
-    },
-    {
-      id: 2,
-      title: 'Request a Scholarship   ',
-      description: 'Click the "Request Scholarship" button to start your application.   ',
-      image: require('../assets/images/OPPORTUNITIES.png'),
-    },
-    {
-      id: 3,
-      title: 'View Your Request   ',
-      description: 'Check your email template and send your request directly to the university.   ',
-      image: require('../assets/images/OPPORTUNITIES.png'),
-    },
-  ];
+import React, { useState, memo } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Pressable,
+  Modal,
+  Dimensions,
+} from "react-native";
+import Swiper from "react-native-swiper";
+import { INSTRUCTION_SLIDES } from "../constants/modalConstants";
 
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const INSTRUCTION_IMAGE = require("../assets/images/OPPORTUNITIES.png");
+
+const BottomModal = memo(({ visible, onClose }) => {
   return (
     <Modal
       animationType="slide"
@@ -46,12 +38,12 @@ const BottomModal = ({ visible, onClose }) => {
           dot={<View style={styles.dot} />}
           activeDot={<View style={styles.activeDot} />}
         >
-          {instructions.map((instruction, index) => (
+          {INSTRUCTION_SLIDES.map((instruction, index) => (
             <View key={instruction.id} style={styles.slide}>
-              <Image source={instruction.image} style={styles.image} />
+              <Image source={INSTRUCTION_IMAGE} style={styles.image} />
               <Text style={styles.title}>{instruction.title}</Text>
               <Text style={styles.description}>{instruction.description}</Text>
-              {index === instructions.length - 1 && (
+              {index === INSTRUCTION_SLIDES.length - 1 && (
                 <TouchableOpacity
                   style={styles.button}
                   onPress={onClose} // Close the modal on button press
@@ -65,28 +57,28 @@ const BottomModal = ({ visible, onClose }) => {
       </View>
     </Modal>
   );
-};
+});
 
 // Styles
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
   },
   modalContent: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'white', // Background color of the modal
+    backgroundColor: "white", // Background color of the modal
     borderTopLeftRadius: 20, // Rounded corners at the top-left
     borderTopRightRadius: 20, // Rounded corners at the top-right
     elevation: 5, // Adds a shadow on Android
-    shadowColor: '#000', // Shadow color for iOS
+    shadowColor: "#000", // Shadow color for iOS
     shadowOffset: { width: 0, height: -2 }, // Shadow offset for iOS
     shadowOpacity: 0.25, // Shadow opacity for iOS
     shadowRadius: 4, // Shadow radius for iOS
-    height: '70%', // Set height for the modal content
+    height: "70%", // Set height for the modal content
     padding: 20, // Padding inside the modal
   },
   swiper: {
@@ -94,52 +86,52 @@ const styles = StyleSheet.create({
   },
   slide: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.94)",
   },
   image: {
     width: 300,
     height: 200,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 20,
-    textAlign: 'center',
-    color: '#333', // Adjust text color for better contrast
+    textAlign: "center",
+    color: "#333", // Adjust text color for better contrast
   },
   description: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginTop: 10,
     paddingHorizontal: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   dot: {
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     width: 10,
     height: 10,
     borderRadius: 24,
     margin: 3,
   },
   activeDot: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     width: 10,
     height: 10,
     borderRadius: 24,
     margin: 3,
   },
   button: {
-    backgroundColor: '#004aad', // Add gradient background or use your own colors
+    backgroundColor: "#004aad", // Add gradient background or use your own colors
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 35,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
@@ -147,8 +139,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     paddingHorizontal: 10,
     marginRight: 5,
   },

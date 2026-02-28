@@ -12,7 +12,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   StatusBar,
   Animated,
   FlatList,
@@ -21,7 +20,9 @@ import {
   ScrollView,
   Dimensions,
   RefreshControl,
+  Image,
 } from "react-native";
+import FastImage from 'react-native-fast-image';
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "./service/itjobsfetch";
@@ -32,6 +33,7 @@ import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
 import AlertModal from "../components/AlertModal";
+import { MAJORS, COUNTRIES, FUNDING_TYPES } from "../constants/filterOptions";
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -58,51 +60,10 @@ const ScholarshipApp = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterModalY = useRef(new Animated.Value(screenHeight)).current;
 
-  const majors = [
-    "Chemistry",
-    "Computer Science",
-    "Physics",
-    "Engineering",
-    "Natural Sciences",
-    "Mathematics & Statistics",
-    "Business & Economics",
-    "Health Sciences",
-  ];
-  const countries = [
-    { name: "Canada", flag: "🇨🇦" },
-    { name: "United States", flag: "🇺🇸" },
-    { name: "Sri Lanka", flag: "🇱🇰" },
-    { name: "Malta", flag: "🇲🇹" },
-    { name: "UK", flag: "🇬🇧" },
-    { name: "Australia", flag: "🇦🇺" },
-    { name: "Germany", flag: "🇩🇪" },
-    { name: "France", flag: "🇫🇷" },
-    { name: "Netherlands", flag: "🇳🇱" },
-    { name: "Sweden", flag: "🇸🇪" },
-    { name: "Switzerland", flag: "🇨🇭" },
-    { name: "Japan", flag: "🇯🇵" },
-    { name: "South Korea", flag: "🇰🇷" },
-    { name: "China", flag: "🇨🇳" },
-    { name: "New Zealand", flag: "🇳🇿" },
-    { name: "Norway", flag: "🇳🇴" },
-    { name: "Finland", flag: "🇫🇮" },
-    { name: "Denmark", flag: "🇩🇰" },
-    { name: "Italy", flag: "🇮🇹" },
-    { name: "Spain", flag: "🇪🇸" },
-    { name: "Austria", flag: "🇦🇹" },
-    { name: "Belgium", flag: "🇧🇪" },
-    { name: "Singapore", flag: "🇸🇬" },
-    { name: "Malaysia", flag: "🇲🇾" },
-    { name: "Turkey", flag: "🇹🇷" },
-    { name: "Russia", flag: "🇷🇺" },
-    { name: "Saudi Arabia", flag: "🇸🇦" },
-    { name: "United Arab Emirates (UAE)", flag: "🇦🇪" },
-    { name: "Qatar", flag: "🇶🇦" },
-    { name: "Ireland", flag: "🇮🇪" },
-    { name: "Portugal", flag: "🇵🇹" },
-    { name: "South Africa", flag: "🇿🇦" },
-  ];
-  const fundingTypes = ["full scholar", "Partial scholar"];
+  // Use imported constants (not recreated on every render)
+  const majors = MAJORS;
+  const countries = COUNTRIES;
+  const fundingTypes = FUNDING_TYPES;
 
   const isPaidMember = user?.paidMember || false;
 
@@ -314,10 +275,14 @@ const ScholarshipApp = () => {
             data={item.images}
             keyExtractor={(image, index) => `${item.id}-image-${index}`}
             renderItem={({ item: imageUri }) => (
-              <Image
-                source={{ uri: imageUri }}
+              <FastImage
+                source={{ 
+                  uri: imageUri,
+                  cache: FastImage.cacheControl.immutable,
+                  priority: FastImage.priority.normal,
+                }}
                 style={styles.cardImage}
-                resizeMode="cover"
+                resizeMode={FastImage.resizeMode.cover}
               />
             )}
           />

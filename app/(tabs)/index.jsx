@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   StatusBar,
   Animated,
   RefreshControl,
@@ -14,6 +13,7 @@ import {
   ScrollView,
   Modal,
 } from "react-native";
+import FastImage from "react-native-fast-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -218,9 +218,14 @@ const ScholarshipHome = () => {
           >
             {item.data.map((banner) => (
               <View key={banner.id} style={styles.banner}>
-                <Image
-                  source={{ uri: banner.imageUrl }}
+                <FastImage
+                  source={{
+                    uri: banner.imageUrl,
+                    cache: FastImage.cacheControl.immutable,
+                    priority: FastImage.priority.normal,
+                  }}
                   style={styles.bannerImage}
+                  resizeMode={FastImage.resizeMode.cover}
                 />
                 <Text style={styles.bannerText}>{banner.text}</Text>
               </View>
@@ -314,9 +319,10 @@ const ScholarshipHome = () => {
         style={[styles.headerContainer, { opacity: headerOpacity }]}
       >
         <View style={styles.headerRow}>
-          <Image
+          <FastImage
             source={require("../../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}
+            resizeMode={FastImage.resizeMode.contain}
           />
           <View style={styles.iconsContainer}>
             <View style={styles.iconBackground}>

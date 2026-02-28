@@ -10,30 +10,9 @@ import {
 import Swiper from "react-native-swiper";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { INSTRUCTION_SLIDES } from "../constants/modalConstants";
 
-const instructions = [
-  {
-    id: 1,
-    title: "  Welcome to Scola!",
-    description:
-      "Login to request scholarships and manage your applications.  ",
-    image: require("../assets/images/OPPORTUNITIES.png"),
-  },
-  {
-    id: 2,
-    title: "  Request a Scholarship",
-    description:
-      'Click the "Request Scholarship" button to start your application.  ',
-    image: require("../assets/images/OPPORTUNITIES.png"),
-  },
-  {
-    id: 3,
-    title: "  View Your Request",
-    description:
-      "Check your email template and send your request directly to the university.  ",
-    image: require("../assets/images/OPPORTUNITIES.png"),
-  },
-];
+const INSTRUCTION_IMAGE = require("../assets/images/OPPORTUNITIES.png");
 
 const InstructionScreen = () => {
   const router = useRouter();
@@ -69,12 +48,12 @@ const InstructionScreen = () => {
         dot={<View style={styles.dot} />}
         activeDot={<View style={styles.activeDot} />}
       >
-        {instructions.map((instruction, index) => (
+        {INSTRUCTION_SLIDES.map((instruction, index) => (
           <View key={instruction.id} style={styles.slide}>
-            <Image source={instruction.image} style={styles.image} />
+            <Image source={INSTRUCTION_IMAGE} style={styles.image} />
             <Text style={styles.title}>{instruction.title}</Text>
             <Text style={styles.description}>{instruction.description}</Text>
-            {index === instructions.length - 1 && (
+            {index === INSTRUCTION_SLIDES.length - 1 && (
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => router.replace("/TenHome")}

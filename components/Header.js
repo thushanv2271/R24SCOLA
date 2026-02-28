@@ -1,11 +1,17 @@
-import React from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import React, { memo } from "react";
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 // Get screen dimensions
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
-const Header = ({ onFilterPress, onProfilePress }) => {
+const Header = memo(({ onFilterPress, onProfilePress }) => {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerRow}>
@@ -28,18 +34,18 @@ const Header = ({ onFilterPress, onProfilePress }) => {
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   headerContainer: {
     position: "absolute",
-    top: '4%', // Using percentage for better scaling
+    top: "4%", // Using percentage for better scaling
     left: 0,
     right: 0,
     zIndex: 10,
     backgroundColor: "#f5f5f5",
     paddingHorizontal: width * 0.03, // Responsive padding (3% of screen width)
-    paddingVertical: '2%', // Responsive vertical padding
+    paddingVertical: "2%", // Responsive vertical padding
   },
   headerRow: {
     flexDirection: "row",
@@ -47,7 +53,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     maxWidth: 600, // Maximum width for larger devices
-    marginHorizontal: 'auto', // Center on wider screens
+    marginHorizontal: "auto", // Center on wider screens
   },
   iconsContainer: {
     flexDirection: "row",

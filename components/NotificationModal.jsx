@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import {
   View,
   Text,
@@ -9,40 +9,13 @@ import {
   FlatList,
   Dimensions,
 } from "react-native";
+import { INITIAL_NOTIFICATIONS } from "../constants/modalConstants";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const NotificationModal = ({ visible, onClose }) => {
+const NotificationModal = memo(({ visible, onClose }) => {
   // Sample notification data
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Registration Successful",
-      description: "Your account has been successfully created.",
-      time: "Just now",
-    },
-    {
-      id: 2,
-      title: "Account Activity Alert",
-      description:
-        "There was a recent login to your account from a new device.",
-      time: "10 minutes ago",
-    },
-    {
-      id: 3,
-      title: "New Scholarship Opportunity",
-      description:
-        "A new scholarship opportunity from Stanford University is available.",
-      time: "1 hour ago",
-    },
-    {
-      id: 4,
-      title: "Upcoming Deadline",
-      description:
-        "The application deadline for Yale University scholarship is approaching.",
-      time: "2 hours ago",
-    },
-  ]);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
 
   return (
     <Modal
@@ -86,7 +59,7 @@ const NotificationModal = ({ visible, onClose }) => {
       </View>
     </Modal>
   );
-};
+});
 
 // Styles
 const styles = StyleSheet.create({

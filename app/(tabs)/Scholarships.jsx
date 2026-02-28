@@ -12,7 +12,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   StatusBar,
   Animated,
   FlatList,
@@ -23,6 +22,7 @@ import {
   RefreshControl,
   TextInput,
 } from "react-native";
+import FastImage from "react-native-fast-image";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "../service/ScholarshipService";
@@ -34,6 +34,11 @@ import BottomModal from "../../components/BottomModal";
 import NotificationModal from "../../components/NotificationModal";
 import { useNavigation } from "@react-navigation/native";
 import AlertModal from "../../components/AlertModal";
+import {
+  MAJORS,
+  COUNTRIES,
+  FUNDING_TYPES,
+} from "../../constants/filterOptions";
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -76,53 +81,14 @@ const ScholarshipApp = () => {
   const closeAlert = () => {
     setAlertConfig({ ...alertConfig, visible: false });
   };
-  const majors = [
-    "Chemistry",
-    "Computer Science",
-    "Software Engineering",
-    "Physics",
-    "Engineering",
-    "Natural Sciences",
-    "Mathematics & Statistics",
-    "Business & Economics",
-    "Health Sciences",
-  ];
-  const countries = [
-    { name: "Canada", flag: "🇨🇦" },
-    { name: "United States", flag: "🇺🇸" },
-    { name: "Sri Lanka", flag: "🇱🇰" },
-    { name: "Malta", flag: "🇲🇹" },
-    { name: "UK", flag: "🇬🇧" },
-    { name: "Australia", flag: "🇦🇺" },
-    { name: "Germany", flag: "🇩🇪" },
-    { name: "France", flag: "🇫🇷" },
-    { name: "Netherlands", flag: "🇳🇱" },
-    { name: "Sweden", flag: "🇸🇪" },
-    { name: "Switzerland", flag: "🇨🇭" },
-    { name: "Japan", flag: "🇯🇵" },
-    { name: "South Korea", flag: "🇰🇷" },
-    { name: "China", flag: "🇨🇳" },
-    { name: "New Zealand", flag: "🇳🇿" },
-    { name: "Norway", flag: "🇳🇴" },
-    { name: "Finland", flag: "🇫🇮" },
-    { name: "Denmark", flag: "🇩🇰" },
-    { name: "Italy", flag: "🇮🇹" },
-    { name: "Spain", flag: "🇪🇸" },
-    { name: "Austria", flag: "🇦🇹" },
-    { name: "Belgium", flag: "🇧🇪" },
-    { name: "Singapore", flag: "🇸🇬" },
-    { name: "Malaysia", flag: "🇲🇾" },
-    { name: "Turkey", flag: "🇹🇷" },
-    { name: "Russia", flag: "🇷🇺" },
-    { name: "Saudi Arabia", flag: "🇸🇦" },
-    { name: "United Arab Emirates (UAE)", flag: "🇦🇪" },
-    { name: "Qatar", flag: "🇶🇦" },
-    { name: "Ireland", flag: "🇮🇪" },
-    { name: "Portugal", flag: "🇵🇹" },
-    { name: "South Africa", flag: "🇿🇦" },
-  ];
-  const fundingTypes = ["Full", "Partial"];
-  const sortOptions = ["Ascending", "Descending"]; // New options for sorting
+
+  // Use imported constants (not recreated on every render)
+  const majors = MAJORS;
+  const countries = COUNTRIES;
+  const fundingTypes = FUNDING_TYPES.map((ft) =>
+    ft === "full scholar" ? "Full" : "Partial",
+  );
+  const sortOptions = ["Ascending", "Descending"]; // Scholarship-specific sort options
 
   const isPaidMember = user?.paidMember || false;
 
@@ -396,10 +362,14 @@ const ScholarshipApp = () => {
               data={item.images}
               keyExtractor={(image, index) => `${item.id}-image-${index}`}
               renderItem={({ item: imageUri }) => (
-                <Image
-                  source={{ uri: imageUri }}
+                <FastImage
+                  source={{
+                    uri: imageUri,
+                    cache: FastImage.cacheControl.immutable,
+                    priority: FastImage.priority.normal,
+                  }}
                   style={styles.cardImage}
-                  resizeMode="cover"
+                  resizeMode={FastImage.resizeMode.cover}
                 />
               )}
             />
@@ -627,10 +597,10 @@ const ScholarshipApp = () => {
         style={[styles.headerContainer, { opacity: headerOpacity }]}
       >
         <View style={styles.headerRow}>
-          <Image
+          <FastImage
             source={require("../../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
           <View style={styles.iconsContainer}>
             <TouchableOpacity

@@ -12,7 +12,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   StatusBar,
   Animated,
   FlatList,
@@ -21,7 +20,9 @@ import {
   ScrollView,
   Dimensions,
   RefreshControl,
+  Image,
 } from "react-native";
+import FastImage from "react-native-fast-image";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "./service/ComputerSciencefetchScholarships";
@@ -324,10 +325,14 @@ const ScholarshipApp = () => {
             data={item.images}
             keyExtractor={(image, index) => `${item.id}-image-${index}`}
             renderItem={({ item: imageUri }) => (
-              <Image
-                source={{ uri: imageUri }}
+              <FastImage
+                source={{
+                  uri: imageUri,
+                  cache: FastImage.cacheControl.immutable,
+                  priority: FastImage.priority.normal,
+                }}
                 style={styles.cardImage}
-                resizeMode="cover"
+                resizeMode={FastImage.resizeMode.cover}
               />
             )}
           />

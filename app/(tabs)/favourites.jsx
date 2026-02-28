@@ -10,11 +10,11 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  Image,
   StatusBar,
   useWindowDimensions,
   RefreshControl,
 } from "react-native";
+import FastImage from "react-native-fast-image";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 import { AuthContext } from "../../components/AuthContext";
@@ -573,14 +573,18 @@ const FavoriteItemsList = () => {
         <View style={styles.cardHeader}>
           <View style={styles.imageContainer}>
             {imageUrl ? (
-              <Image
-                source={{ uri: imageUrl }}
+              <FastImage
+                source={{
+                  uri: imageUrl,
+                  cache: FastImage.cacheControl.immutable,
+                  priority: FastImage.priority.normal,
+                }}
                 style={{
                   width: "100%",
                   height: "100%",
                   borderRadius: scale(8),
                 }}
-                resizeMode="cover"
+                resizeMode={FastImage.resizeMode.cover}
               />
             ) : (
               <MaterialIcons
@@ -658,9 +662,10 @@ const FavoriteItemsList = () => {
           <TouchableOpacity style={styles.iconButton} onPress={handleBackPress}>
             <Ionicons name="arrow-back" size={scale(24)} color="#a5a4a4" />
           </TouchableOpacity>
-          <Image
+          <FastImage
             source={require("../../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}
+            resizeMode={FastImage.resizeMode.contain}
           />
           <TouchableOpacity
             style={styles.iconBackground}

@@ -1,9 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView, Linking, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Linking,
+  StyleSheet,
+} from "react-native";
+import FastImage from "react-native-fast-image";
 import { Ionicons } from "@expo/vector-icons";
 import Dropdown from "./Dropdown";
 
-const ScholarshipCard = ({ item, favorites, toggleFavorite, sendScholarshipEmail }) => {
+const ScholarshipCard = ({
+  item,
+  favorites,
+  toggleFavorite,
+  sendScholarshipEmail,
+}) => {
   return (
     <View style={styles.card}>
       <ScrollView
@@ -13,10 +26,15 @@ const ScholarshipCard = ({ item, favorites, toggleFavorite, sendScholarshipEmail
         style={styles.imageCarousel}
       >
         {item.images.map((imageUri, index) => (
-          <Image
+          <FastImage
             key={`${item.id}-image-${index}`}
-            source={{ uri: imageUri }}
+            source={{
+              uri: imageUri,
+              cache: FastImage.cacheControl.immutable,
+              priority: FastImage.priority.normal,
+            }}
             style={styles.cardImage}
+            resizeMode={FastImage.resizeMode.cover}
           />
         ))}
       </ScrollView>
@@ -42,7 +60,8 @@ const ScholarshipCard = ({ item, favorites, toggleFavorite, sendScholarshipEmail
             <Text style={styles.boldText}>University:</Text> {item.university}
           </Text>
           <Text style={styles.dropdownText}>
-            <Text style={styles.boldText}>Details:</Text> {item.universityDetails}
+            <Text style={styles.boldText}>Details:</Text>{" "}
+            {item.universityDetails}
           </Text>
           <Text style={styles.dropdownText}>
             <Text style={styles.boldText}>Website:</Text>{" "}
@@ -77,7 +96,8 @@ const ScholarshipCard = ({ item, favorites, toggleFavorite, sendScholarshipEmail
             <Text style={styles.boldText}>Funding:</Text> {item.funding}
           </Text>
           <Text style={styles.dropdownText}>
-            <Text style={styles.boldText}>Course Value:</Text> {item.courseValue}
+            <Text style={styles.boldText}>Course Value:</Text>{" "}
+            {item.courseValue}
           </Text>
           <Text style={styles.dropdownText}>
             <Text style={styles.boldText}>Qualifications:</Text>{" "}

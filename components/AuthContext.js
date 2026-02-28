@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useState, useEffect, useMemo, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const AuthContext = createContext();
@@ -6,6 +6,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [favoritesRefreshTrigger, setFavoritesRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -41,10 +42,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Memoized refresh function to trigger favorite refetches
+  const refreshFavorites = useCallback(() => {
+    setFavoritesRefreshTrigger(prev => prev + 1);
+  }, []);
+
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(
-    () => ({ user, login, setUser, logout, loading }),
-    [user, loading],
+    () => ({ user, login, setUser, logout, loading, refreshFavorites, favoritesRefreshTrigger }),
+    [user, loading, refreshFavorites, favoritesRefreshTrigger],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

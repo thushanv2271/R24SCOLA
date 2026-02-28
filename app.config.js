@@ -6,7 +6,7 @@ module.exports = {
     icon: "./assets/images/icon.png",
     scheme: "scholarships",
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
+    newArchEnabled: false,
     ios: {
       supportsTablet: true,
     },
