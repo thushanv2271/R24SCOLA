@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,16 +12,22 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { fetchUserByUsername, updateUser } from "../services/userService";
 import AlertModal from "../components/AlertModal";
+import { AuthContext } from "../components/AuthContext";
+
+const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api/Users";
 
 export default function Profile() {
   const { username } = useLocalSearchParams(); // Get the username from query parameters
+  const { favoritesRefreshTrigger } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
   const [editedData, setEditedData] = useState({}); // State to hold edited user data
+  const [favoriteScholarshipsCount, setFavoriteScholarshipsCount] = useState(0);
+  const [favoriteJobsCount, setFavoriteJobsCount] = useState(0);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",
@@ -52,6 +58,85 @@ export default function Profile() {
     };
     fetchUserData();
   }, [username]);
+
+  useEffect(() => {
+    const fetchFavoriteCounts = async () => {
+      if (!username) {
+        setFavoriteScholarshipsCount(0);
+        setFavoriteJobsCount(0);
+        return;
+      }
+
+      try {
+        const [scholarshipsResponse, jobsResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          }),
+          fetch(
+            `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
+            { method: "GET", headers: { Accept: "application/json" } },
+          ),
+        ]);
+
+        const scholarships = scholarshipsResponse.ok
+          ? await scholarshipsResponse.json()
+          : [];
+        const jobs = jobsResponse.ok ? await jobsResponse.json() : [];
+
+        setFavoriteScholarshipsCount(
+          Array.isArray(scholarships) ? scholarships.length : 0,
+        );
+        setFavoriteJobsCount(Array.isArray(jobs) ? jobs.length : 0);
+      } catch (error) {
+        console.error("Error fetching favorite counts:", error);
+        setFavoriteScholarshipsCount(0);
+        setFavoriteJobsCount(0);
+      }
+    };
+
+    fetchFavoriteCounts();
+  }, [username, favoritesRefreshTrigger]);
+
+  // Refetch favorites count when profile comes into view
+  useFocusEffect(
+    useCallback(() => {
+      const fetchCounts = async () => {
+        if (!username) {
+          setFavoriteScholarshipsCount(0);
+          setFavoriteJobsCount(0);
+          return;
+        }
+
+        try {
+          const [scholarshipsResponse, jobsResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
+              method: "GET",
+              headers: { Accept: "application/json" },
+            }),
+            fetch(
+              `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
+              { method: "GET", headers: { Accept: "application/json" } },
+            ),
+          ]);
+
+          const scholarships = scholarshipsResponse.ok
+            ? await scholarshipsResponse.json()
+            : [];
+          const jobs = jobsResponse.ok ? await jobsResponse.json() : [];
+
+          setFavoriteScholarshipsCount(
+            Array.isArray(scholarships) ? scholarships.length : 0,
+          );
+          setFavoriteJobsCount(Array.isArray(jobs) ? jobs.length : 0);
+        } catch (error) {
+          console.error("Error fetching favorite counts on focus:", error);
+        }
+      };
+
+      fetchCounts();
+    }, [username]),
+  );
 
   // Logout Function
   const handleLogout = async () => {
@@ -254,6 +339,12 @@ export default function Profile() {
                   <Text style={styles.label}>Username:</Text>
                   <Text style={styles.value}>{userData.username}</Text>
 
+                  <Text style={styles.label}>Favourite Scholarships:</Text>
+                  <Text style={styles.value}>{favoriteScholarshipsCount}</Text>
+
+                  <Text style={styles.label}>Favourite Jobs:</Text>
+                  <Text style={styles.value}>{favoriteJobsCount}</Text>
+
                   <Text style={styles.label}>Age:</Text>
                   {isEditing ? (
                     <TextInput
@@ -320,89 +411,110 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8fafc",
   },
   scrollViewContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: 16,
+    paddingTop: 12,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingHorizontal: 4,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "black",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#0f172a",
+    fontFamily: "Roboto",
   },
   iconButton: {
-    padding: 10,
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: "#f1f5f9",
   },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
+    marginBottom: 20,
   },
   profilePictureContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   profilePicture: {
     width: 150,
     height: 150,
     borderRadius: 75,
+    borderWidth: 4,
+    borderColor: "#e0f2fe",
+    backgroundColor: "#f1f5f9",
   },
   infoContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   name: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#0f172a",
+    fontFamily: "Roboto",
   },
   title: {
-    fontSize: 18,
-    color: "#666",
-    marginTop: 5,
+    fontSize: 16,
+    color: "#64748b",
+    fontFamily: "Roboto",
+    marginTop: 4,
   },
   bioContainer: {
     marginBottom: 20,
   },
   bio: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: "center",
-    color: "#555",
+    color: "#475569",
+    fontFamily: "Roboto",
+    fontStyle: "italic",
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "black",
-    marginBottom: 10,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#0f172a",
+    marginBottom: 12,
+    fontFamily: "Roboto",
   },
   sectionContent: {
-    paddingLeft: 10,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   label: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 5,
+    fontSize: 14,
+    color: "#64748b",
+    marginBottom: 6,
+    fontWeight: "500",
+    fontFamily: "Roboto",
   },
   value: {
-    fontSize: 18,
-    color: "#333",
-    marginBottom: 15,
-    fontWeight: "500",
+    fontSize: 16,
+    color: "#0f172a",
+    marginBottom: 14,
+    fontWeight: "600",
+    fontFamily: "Roboto",
   },
   noDataText: {
     fontSize: 16,
@@ -410,34 +522,54 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    height: 40,
-    borderColor: "#ccc",
+    height: 44,
+    borderColor: "#cbd5e1",
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
     fontSize: 16,
+    fontFamily: "Roboto",
+    backgroundColor: "#f8fafc",
   },
   editButton: {
     alignSelf: "flex-end",
-    padding: 10,
-    backgroundColor: "#007AFF",
-    borderRadius: 5,
-    marginBottom: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "#3b82f6",
+    borderRadius: 10,
+    marginBottom: 16,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   editButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "600",
+    fontSize: 14,
+    fontFamily: "Roboto",
   },
   saveButton: {
     alignSelf: "flex-end",
-    padding: 10,
-    backgroundColor: "green",
-    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: "#10b981",
+    borderRadius: 10,
+    marginTop: 12,
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   saveButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "600",
+    fontSize: 14,
+    fontFamily: "Roboto",
   },
   countryContainer: {
     flexDirection: "row",
