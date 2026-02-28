@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const AuthContext = createContext();
@@ -16,6 +16,8 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error("Error loading user data:", error);
+      } finally {
+        setLoading(false);
       }
     };
     loadUserData();
@@ -39,8 +41,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(
+    () => ({ user, login, setUser, logout, loading }),
+    [user, loading]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, login,  setUser, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

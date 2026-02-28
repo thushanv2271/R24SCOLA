@@ -11,31 +11,26 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Image,
   StatusBar,
   Animated,
   FlatList,
-  Modal,
-  Linking,
-  ScrollView,
   Dimensions,
   RefreshControl,
+  ScrollView,
 } from "react-native";
-import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAllScholarships } from "./service/ConsolidatedScholarshipService";
 import { sendScholarshipEmail } from "./service/emailService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
 import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
 import { authAPI } from "../services/apiService";
 import AlertModal from "../components/AlertModal";
-
-// Create an animated version of FlatList
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+import ScholarshipCardOptimized from "../components/ScholarshipCardOptimized";
+import HeaderComponent from "../components/HeaderComponent";
+import FilterModal from "../components/FilterModal";
+import { MAJORS, COUNTRIES, FUNDING_TYPES, LANGUAGE_TESTS } from "../constants/filterOptions";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.7; // 70% of screen height
@@ -67,53 +62,6 @@ const ScholarshipApp = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const filterModalY = useRef(new Animated.Value(screenHeight)).current;
-
-  const majors = [
-    "Chemistry",
-    "Computer Science",
-    "Physics",
-    "Engineering",
-    "Natural Sciences",
-    "Mathematics & Statistics",
-    "Business & Economics",
-    "Health Sciences",
-  ];
-  const countries = [
-    { name: "Canada", flag: "🇨🇦" },
-    { name: "United States", flag: "🇺🇸" },
-    { name: "Sri Lanka", flag: "🇱🇰" },
-    { name: "Malta", flag: "🇲🇹" }, // Corrected flag
-    { name: "UK", flag: "🇬🇧" }, // Could also be "United Kingdom"
-    { name: "Australia", flag: "🇦🇺" },
-    { name: "Germany", flag: "🇩🇪" },
-    { name: "France", flag: "🇫🇷" },
-    { name: "Netherlands", flag: "🇳🇱" },
-    { name: "Sweden", flag: "🇸🇪" },
-    { name: "Switzerland", flag: "🇨🇭" },
-    { name: "Japan", flag: "🇯🇵" },
-    { name: "South Korea", flag: "🇰🇷" },
-    { name: "China", flag: "🇨🇳" },
-    { name: "New Zealand", flag: "🇳🇿" },
-    { name: "Norway", flag: "🇳🇴" },
-    { name: "Finland", flag: "🇫🇮" },
-    { name: "Denmark", flag: "🇩🇰" },
-    { name: "Italy", flag: "🇮🇹" },
-    { name: "Spain", flag: "🇪🇸" },
-    { name: "Austria", flag: "🇦🇹" },
-    { name: "Belgium", flag: "🇧🇪" },
-    { name: "Singapore", flag: "🇸🇬" },
-    { name: "Malaysia", flag: "🇲🇾" },
-    { name: "Turkey", flag: "🇹🇷" },
-    { name: "Russia", flag: "🇷🇺" },
-    { name: "Saudi Arabia", flag: "🇸🇦" },
-    { name: "United Arab Emirates (UAE)", flag: "🇦🇪" },
-    { name: "Qatar", flag: "🇶🇦" },
-    { name: "Ireland", flag: "🇮🇪" },
-    { name: "Portugal", flag: "🇵🇹" },
-    { name: "South Africa", flag: "🇿🇦" },
-  ];
-  const fundingTypes = ["full scholar", "Partial scholar"];
 
   const isPaidMember = user?.paidMember || false;
 
@@ -124,22 +72,6 @@ const ScholarshipApp = () => {
   });
 
   const [favoriteScholarships, setFavoriteScholarships] = useState([]);
-
-  useEffect(() => {
-    if (showFilterModal) {
-      Animated.timing(filterModalY, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(filterModalY, {
-        toValue: screenHeight,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showFilterModal]);
 
   useEffect(() => {
     const loadFavorites = async () => {
@@ -274,290 +206,45 @@ const ScholarshipApp = () => {
     selectedTest,
   ]);
 
-  const ScholarshipCard = React.memo(
-    ({ item }) => {
-      const [isCourseVisible, setIsCourseVisible] = useState(false);
-      const [isUniversityVisible, setIsUniversityVisible] = useState(false);
-      const [isProfessorsVisible, setIsProfessorsVisible] = useState(false);
-
-      const handleRequestScholarship = async () => {
-        const professor = item.contactProfessors?.[0];
-        const result = await sendScholarshipEmail(
-          professor?.email,
-          user?.username, // Pass the current user's username
-          item.title, // Pass the scholarship title
-          professor, // Pass the professor details
-        );
-        if (result && !result.success) {
-          showAlert("Error", result.error, "error");
-        }
-      };
-
-      return (
-        <View style={styles.card}>
-          <FlatList
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            data={item.images}
-            keyExtractor={(image, index) => `${item.id}-image-${index}`}
-            renderItem={({ item: imageUri }) => (
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
-            )}
-          />
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.university}</Text>
-            <View style={styles.cardFooter}>
-              <Text style={styles.cardFunding}>{item.funding} Scholar</Text>
-              <Text style={styles.cardFunding}>{item.country}</Text>
-              <Text style={styles.cardFunding}>{item.major}</Text>
-              <TouchableOpacity
-                onPress={() => handleFavorite(item.id)}
-                style={styles.likeButton}
-              >
-                <FontAwesome
-                  name={
-                    favoriteScholarships.includes(item.id) ? "heart" : "heart-o"
-                  }
-                  size={25}
-                  color={
-                    favoriteScholarships.includes(item.id) ? "red" : "black"
-                  }
-                />
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.dropdownToggle}
-              onPress={() => setIsUniversityVisible(!isUniversityVisible)}
-            >
-              <Text style={styles.dropdownToggleText}>University Details</Text>
-              <Ionicons
-                name={isUniversityVisible ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="gray"
-              />
-            </TouchableOpacity>
-            {isUniversityVisible && (
-              <View style={styles.dropdownContent}>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>University:</Text>{" "}
-                  {item.university}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Website:</Text>{" "}
-                  <Text
-                    style={styles.linkText}
-                    onPress={() => Linking.openURL(item.universityWebsite)}
-                  >
-                    {item.universityWebsite}
-                  </Text>
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Department Head:</Text>{" "}
-                  {item.departmentHead?.name} ({item.departmentHead?.position})
-                </Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.dropdownToggle}
-              onPress={() => setIsCourseVisible(!isCourseVisible)}
-            >
-              <Text style={styles.dropdownToggleText}>Course Details</Text>
-              <Ionicons
-                name={isCourseVisible ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="gray"
-              />
-            </TouchableOpacity>
-            {isCourseVisible && (
-              <View style={styles.dropdownContent}>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Major:</Text> {item.major}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Type:</Text> {item.type}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Level:</Text> {item.level}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Language Tests:</Text>{" "}
-                  {item.languageTests?.join(", ")}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Funding:</Text> {item.funding}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Course Value:</Text>{" "}
-                  {item.courseValue}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Qualifications:</Text>{" "}
-                  {item.qualifications}
-                </Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.dropdownToggle}
-              onPress={() => setIsProfessorsVisible(!isProfessorsVisible)}
-            >
-              <Text style={styles.dropdownToggleText}>Professor Details</Text>
-              <Ionicons
-                name={isProfessorsVisible ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="gray"
-              />
-            </TouchableOpacity>
-            {isProfessorsVisible && (
-              <View style={styles.dropdownContent}>
-                {item.contactProfessors?.map((professor, index) => (
-                  <View
-                    key={`${item.id}-professor-${index}`}
-                    style={styles.professorContainer}
-                  >
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Name:</Text>{" "}
-                      {professor.name}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Position:</Text>{" "}
-                      {professor.position}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Email:</Text>{" "}
-                      {professor.email}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Research:</Text>{" "}
-                      {professor.research}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Office:</Text>{" "}
-                      {professor.office}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleRequestScholarship}
-            >
-              <Text style={styles.buttonText}>Request Scholarship</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    },
-    (prevProps, nextProps) =>
-      prevProps.item.id === nextProps.item.id &&
-      prevProps.item === nextProps.item,
-  );
-
   const router = useRouter();
 
-  const renderFilterOption = (label, options, selected, setSelected) => (
-    <View style={styles.filterContainer}>
-      <Text style={styles.filterLabel}>{label}</Text>
-      <View style={styles.filterOptionsVertical}>
-        {options.map((item) => {
-          const displayText =
-            typeof item === "string" ? item : `${item.flag} ${item.name}`;
-          const value = typeof item === "string" ? item : item.name;
-          return (
-            <TouchableOpacity
-              key={typeof item === "string" ? item : item.name}
-              style={[
-                styles.filterOption,
-                selected === value && styles.filterOptionSelected,
-              ]}
-              onPress={() => setSelected(selected === value ? "" : value)}
-            >
-              <Text style={styles.filterOptionText}>{displayText}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
+  const handleRequestScholarship = useCallback(async (item) => {
+    const professor = item.contactProfessors?.[0];
+    const result = await sendScholarshipEmail(
+      professor?.email,
+      user?.username,
+      item.title,
+      professor,
+    );
+    if (result && !result.success) {
+      showAlert("Error", result.error, "error");
+    }
+  }, [user?.username]);
 
   const renderItem = useCallback(
-    ({ item }) => <ScholarshipCard item={item} />,
-    [handleFavorite, favoriteScholarships],
+    ({ item }) => (
+      <ScholarshipCardOptimized
+        item={item}
+        isFavorite={favoriteScholarships.includes(item.id)}
+        onFavoriteToggle={() => handleFavorite(item.id)}
+        onRequestPress={handleRequestScholarship}
+      />
+    ),
+    [handleFavorite, favoriteScholarships, handleRequestScholarship],
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* <Animated.View
-        style={[styles.headerContainer, { opacity: headerOpacity }]}
-      >
-        <View style={styles.headerRow}>
-          <Image
-            source={require("../assets/images/OPPORTUNITIES.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <View style={styles.iconsContainer}>
-            <TouchableOpacity
-              style={styles.iconBackground}
-              onPress={() => setShowFilterModal(true)}
-            >
-              <Ionicons name="funnel" size={25} color="#a5a4a4" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconBackground}
-              onPress={() => setShowNotificationModal(true)}
-            >
-              <Ionicons name="notifications" size={25} color="#a5a4a4" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Animated.View> */}
-
-      {/* Header */}
-      <Animated.View
-        style={[styles.headerContainer, { opacity: headerOpacity }]}
-      >
-        <View style={styles.headerRow}>
-          <View style={styles.iconBackground}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={25} color="#a5a4a4" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Logo */}
-          <Image
-            source={require("../assets/images/11.png")}
-            style={styles.logo}
-          />
-          {/* Filter Icon */}
-          <View style={styles.iconsContainer}>
-            <View style={styles.iconBackground}>
-              <TouchableOpacity onPress={() => setShowFilterModal(true)}>
-                <Ionicons name="funnel" size={25} color="#a5a4a4" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.iconBackground}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => router.push("/")}
-              >
-                <Ionicons name="home" size={24} color="#a5a4a4" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Animated.View>
+      <HeaderComponent
+        opacity={headerOpacity}
+        logoSource={require("../assets/images/11.png")}
+        showBack={true}
+        showFilter={true}
+        showHome={true}
+        onBackPress={() => router.back()}
+        onFilterPress={() => setShowFilterModal(true)}
+        onHomePress={() => router.push("/")}
+      />
 
       <BottomModal
         visible={showInfoModal}
@@ -568,66 +255,31 @@ const ScholarshipApp = () => {
         onClose={() => setShowNotificationModal(false)}
       />
 
-      <Modal
+      <FilterModal
         visible={showFilterModal}
-        transparent={true}
-        animationType="none"
-        onRequestClose={() => setShowFilterModal(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowFilterModal(false)}
-        >
-          <Animated.View
-            style={[
-              styles.bottomModalContent,
-              {
-                transform: [{ translateY: filterModalY }],
-              },
-            ]}
-          >
-            <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
-              <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={true}
-              >
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setShowFilterModal(false)}
-                >
-                  <Ionicons name="close" size={30} color="gray" />
-                </TouchableOpacity>
-                <Text style={styles.modalTitle}>Filter Scholarships</Text>
-                {renderFilterOption(
-                  "Major",
-                  majors,
-                  selectedMajor,
-                  setSelectedMajor,
-                )}
-                {renderFilterOption(
-                  "Country",
-                  countries,
-                  selectedCountry,
-                  setSelectedCountry,
-                )}
-                {renderFilterOption(
-                  "Funding",
-                  fundingTypes,
-                  selectedFunding,
-                  setSelectedFunding,
-                )}
-                <TouchableOpacity
-                  style={styles.filterbutton}
-                  onPress={() => setShowFilterModal(false)}
-                >
-                  <Text style={styles.buttonText}>Apply Filters</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </TouchableOpacity>
-          </Animated.View>
-        </TouchableOpacity>
-      </Modal>
+        onClose={() => setShowFilterModal(false)}
+        filters={[
+          {
+            label: "Major",
+            options: MAJORS,
+            selected: selectedMajor,
+            setSelected: setSelectedMajor,
+          },
+          {
+            label: "Country",
+            options: COUNTRIES,
+            selected: selectedCountry,
+            setSelected: setSelectedCountry,
+          },
+          {
+            label: "Funding",
+            options: FUNDING_TYPES,
+            selected: selectedFunding,
+            setSelected: setSelectedFunding,
+          },
+        ]}
+        onApplyFilters={() => setShowFilterModal(false)}
+      />
 
       {!checkingPaid && (
         <Text style={styles.resultCount}>
@@ -645,15 +297,10 @@ const ScholarshipApp = () => {
             <LoaderModal />
           </View>
         ) : (
-          <AnimatedFlatList
+          <FlatList
             data={filteredScholarships}
             renderItem={renderItem}
             keyExtractor={(item) => item.id.toString()}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true },
-            )}
-            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -661,6 +308,9 @@ const ScholarshipApp = () => {
               />
             }
             initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            removeClippedSubviews={true}
             maxToRenderPerBatch={10}
             windowSize={5}
           />
