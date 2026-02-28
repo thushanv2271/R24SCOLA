@@ -148,17 +148,17 @@ const TenHome = () => {
       setShowLoginModal(true);
       return;
     }
-    
+
     // Open email client
     const email = item.contactProfessors?.[0]?.email || "";
     if (email) {
       const subject = "Scholarship Application";
       const body = `Dear Professor,\n\nI am writing to express my interest in applying for the scholarship program at your esteemed university.\n\nBest regards,\n[Your Name]`;
       const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      
+
       import("react-native").then(({ Linking }) => {
         Linking.openURL(mailtoUrl).catch(() =>
-          showAlert("Error", "Unable to open the email client.", "error")
+          showAlert("Error", "Unable to open the email client.", "error"),
         );
       });
     }
@@ -174,7 +174,7 @@ const TenHome = () => {
         onFilterPress={() => setShowLoginModal(true)}
         onHomePress={() => setShowLoginModal(true)}
       />
-      
+
       <LoginModal
         visible={showLoginModal}
         onClose={() => setShowLoginModal(false)}
@@ -183,7 +183,7 @@ const TenHome = () => {
           router.push("/Login");
         }}
       />
-      
+
       {loading ? (
         <View style={styles.loaderContainer}>
           <LoaderModal />

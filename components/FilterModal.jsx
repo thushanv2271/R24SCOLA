@@ -47,8 +47,11 @@ const FilterModal = ({
         <View style={styles.filterOptionsVertical}>
           {options.map((item) => {
             const displayText =
-              typeof item === "string" ? item : `${item.flag || ""} ${item.name || item.label}`;
-            const value = typeof item === "string" ? item : (item.value || item.name);
+              typeof item === "string"
+                ? item
+                : `${item.flag || ""} ${item.name || item.label}`;
+            const value =
+              typeof item === "string" ? item : item.value || item.name;
 
             return (
               <TouchableOpacity

@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 const HeaderComponent = ({
@@ -26,11 +32,7 @@ const HeaderComponent = ({
         )}
 
         {logoSource && (
-          <Image
-            source={logoSource}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <Image source={logoSource} style={styles.logo} resizeMode="contain" />
         )}
 
         <View style={styles.iconsContainer}>

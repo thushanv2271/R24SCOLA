@@ -30,7 +30,12 @@ import AlertModal from "../components/AlertModal";
 import ScholarshipCardOptimized from "../components/ScholarshipCardOptimized";
 import HeaderComponent from "../components/HeaderComponent";
 import FilterModal from "../components/FilterModal";
-import { MAJORS, COUNTRIES, FUNDING_TYPES, LANGUAGE_TESTS } from "../constants/filterOptions";
+import {
+  MAJORS,
+  COUNTRIES,
+  FUNDING_TYPES,
+  LANGUAGE_TESTS,
+} from "../constants/filterOptions";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.7; // 70% of screen height
@@ -208,18 +213,21 @@ const ScholarshipApp = () => {
 
   const router = useRouter();
 
-  const handleRequestScholarship = useCallback(async (item) => {
-    const professor = item.contactProfessors?.[0];
-    const result = await sendScholarshipEmail(
-      professor?.email,
-      user?.username,
-      item.title,
-      professor,
-    );
-    if (result && !result.success) {
-      showAlert("Error", result.error, "error");
-    }
-  }, [user?.username]);
+  const handleRequestScholarship = useCallback(
+    async (item) => {
+      const professor = item.contactProfessors?.[0];
+      const result = await sendScholarshipEmail(
+        professor?.email,
+        user?.username,
+        item.title,
+        professor,
+      );
+      if (result && !result.success) {
+        showAlert("Error", result.error, "error");
+      }
+    },
+    [user?.username],
+  );
 
   const renderItem = useCallback(
     ({ item }) => (

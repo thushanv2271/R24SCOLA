@@ -187,7 +187,8 @@ const ScholarshipCardOptimized = ({
                   {professor.research}
                 </Text>
                 <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Office:</Text> {professor.office}
+                  <Text style={styles.boldText}>Office:</Text>{" "}
+                  {professor.office}
                 </Text>
               </View>
             ))}
@@ -318,5 +319,5 @@ export default memo(
   ScholarshipCardOptimized,
   (prevProps, nextProps) =>
     prevProps.item.id === nextProps.item.id &&
-    prevProps.isFavorite === nextProps.isFavorite
+    prevProps.isFavorite === nextProps.isFavorite,
 );

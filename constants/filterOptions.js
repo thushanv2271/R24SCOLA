@@ -55,7 +55,11 @@ export const LANGUAGE_TESTS = ["IELTS", "TOEFL", "PTE", "Duolingo"];
 
 export const STUDY_LEVELS = ["Bachelors", "Masters", "PhD"];
 
-export const SCHOLARSHIP_TYPES = ["Merit-based", "Need-based", "Research-based"];
+export const SCHOLARSHIP_TYPES = [
+  "Merit-based",
+  "Need-based",
+  "Research-based",
+];
 
 export const COUNTRY_OPTIONS = [
   { label: "USA", value: "usa" },
