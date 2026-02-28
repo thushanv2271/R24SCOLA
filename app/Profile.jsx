@@ -58,7 +58,7 @@ export default function Profile() {
     try {
       await AsyncStorage.multiRemove(["username", "userPassword", "userToken"]);
       console.log("User logged out");
-      router.replace("/Login");
+      router.replace("/login");
     } catch (error) {
       console.error("Error during logout:", error);
       showAlert("Error", "Failed to log out. Please try again.", "error");

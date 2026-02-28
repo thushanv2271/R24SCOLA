@@ -39,7 +39,7 @@ export default function ScholarshipGuide() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace("/Login");
+      router.replace("/login");
     } catch (error) {
       console.error("Logout failed:", error);
       showAlert("Error", "Unable to log out. Please retry.", "error");

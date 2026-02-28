@@ -110,7 +110,7 @@ export default function LoginForm() {
         await AsyncStorage.removeItem("rememberMe");
       }
 
-      router.push({ pathname: "/", params: { username: normalizedUsername } });
+      router.push("/(tabs)/");
     } catch (error) {
       // Clear login status and saved credentials on failure
       await AsyncStorage.removeItem("isLoggedIn");
@@ -228,7 +228,7 @@ export default function LoginForm() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push("RegisterForm")}>
+          <TouchableOpacity onPress={() => router.push("/RegisterForm")}>
             <Text style={[styles.switchText, dynamicStyles.switchText]}>
               Don't have an account? Create Account
             </Text>

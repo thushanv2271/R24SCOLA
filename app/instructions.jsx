@@ -25,7 +25,7 @@ const InstructionScreen = () => {
         setShowInstructions(true);
         await AsyncStorage.setItem("hasLaunched", "true");
       } else {
-        router.replace("/TenHome");
+        router.replace("/login");
       }
     };
     checkFirstLaunch();
@@ -56,7 +56,7 @@ const InstructionScreen = () => {
             {index === INSTRUCTION_SLIDES.length - 1 && (
               <TouchableOpacity
                 style={styles.button}
-                onPress={() => router.replace("/TenHome")}
+                onPress={() => router.replace("/login")}
               >
                 <Text style={styles.buttonText}> Get Started</Text>
               </TouchableOpacity>

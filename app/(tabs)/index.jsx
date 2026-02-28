@@ -330,7 +330,7 @@ const ScholarshipHome = () => {
                 onPress={() =>
                   username
                     ? router.push(`/Profile?username=${username}`)
-                    : router.push("/Login")
+                    : router.push("/login")
                 }
               >
                 <Ionicons name="person" size={25} color="#a5a4a4" />

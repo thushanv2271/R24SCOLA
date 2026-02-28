@@ -1,8 +1,3 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -38,11 +33,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="Login" options={{ headerShown: false }} />
-          <Stack.Screen name="TenHome" options={{ headerShown: false }} />
-          <Stack.Screen name="Instructions" options={{ headerShown: false }} />
+      <Stack>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="Instructions" options={{ headerShown: false }} />
           <Stack.Screen name="RegisterForm" options={{ headerShown: false }} />
           <Stack.Screen
             name="ComputerScience"
@@ -119,7 +112,6 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="dark" />
-      </ThemeProvider>
-    </AuthProvider>
-  );
-}
+      </AuthProvider>
+    );
+  }

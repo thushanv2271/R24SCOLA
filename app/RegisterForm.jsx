@@ -68,7 +68,7 @@ export default function RegisterForm() {
       setIsModalVisible(true);
 
       setTimeout(() => {
-        router.push("/Login");
+        router.push("/login");
         setIsModalVisible(false);
       }, 3000);
     } catch (error) {
@@ -211,7 +211,7 @@ export default function RegisterForm() {
               <Text style={styles.buttonText}>Create Account </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push("/Login")}>
+            <TouchableOpacity onPress={() => router.push("/login")}>
               <Text style={[styles.switchText, dynamicStyles.switchText]}>
                 Already have an account? Login
               </Text>
