@@ -3,9 +3,9 @@
  * Reduces repeated AsyncStorage calls and optimizes data access
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const CACHE_KEY_PREFIX = '@scola_cache_';
+const CACHE_KEY_PREFIX = "@scola_cache_";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 class StorageCache {
@@ -39,7 +39,10 @@ class StorageCache {
         const parsed = JSON.parse(stored);
         if (Date.now() - parsed.timestamp < ttl) {
           // Update memory cache
-          this.memoryCache.set(key, { data: parsed.data, timestamp: parsed.timestamp });
+          this.memoryCache.set(key, {
+            data: parsed.data,
+            timestamp: parsed.timestamp,
+          });
           return parsed.data;
         }
         // TTL expired, remove from AsyncStorage
@@ -48,16 +51,16 @@ class StorageCache {
 
       // Fetch fresh data
       const data = await fetchFn();
-      
+
       // Store in both caches
       const cacheData = {
         data,
         timestamp: Date.now(),
       };
-      
+
       this.memoryCache.set(key, cacheData);
       await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      
+
       return data;
     } catch (error) {
       console.warn(`Cache error for key ${key}:`, error);
@@ -80,7 +83,7 @@ class StorageCache {
       data,
       timestamp: Date.now(),
     };
-    
+
     this.memoryCache.set(key, cacheData);
     await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheData));
   }
@@ -100,7 +103,7 @@ class StorageCache {
   async clearAll() {
     this.memoryCache.clear();
     const keys = await AsyncStorage.getAllKeys();
-    const cacheKeys = keys.filter(k => k.startsWith(CACHE_KEY_PREFIX));
+    const cacheKeys = keys.filter((k) => k.startsWith(CACHE_KEY_PREFIX));
     await AsyncStorage.multiRemove(cacheKeys);
   }
 

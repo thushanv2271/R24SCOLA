@@ -3,7 +3,7 @@
  * Implements efficient pagination to load items incrementally instead of all at once
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from "react";
 
 export const usePagination = (
   fetchFunc,
@@ -21,18 +21,18 @@ export const usePagination = (
   // Fetch initial data
   const fetchInitialData = useCallback(async () => {
     if (isFetchingRef.current) return;
-    
+
     isFetchingRef.current = true;
     setLoading(true);
     setError(null);
-    
+
     try {
       const result = await fetchFunc(0, initialPageSize);
       setData(Array.isArray(result) ? result : []);
       setCurrentPage(0);
       setHasMore(result?.length >= initialPageSize);
     } catch (err) {
-      setError(err.message || 'Error loading data');
+      setError(err.message || "Error loading data");
       setData([]);
     } finally {
       setLoading(false);
@@ -43,22 +43,22 @@ export const usePagination = (
   // Fetch next page
   const fetchNextPage = useCallback(async () => {
     if (!hasMore || isFetchingRef.current || loading) return;
-    
+
     isFetchingRef.current = true;
-    
+
     try {
       const nextPage = currentPage + 1;
       const result = await fetchFunc(nextPage * pageSize, pageSize);
-      
+
       if (Array.isArray(result) && result.length > 0) {
-        setData(prev => [...prev, ...result]);
+        setData((prev) => [...prev, ...result]);
         setCurrentPage(nextPage);
         setHasMore(result.length >= pageSize);
       } else {
         setHasMore(false);
       }
     } catch (err) {
-      setError(err.message || 'Error loading more data');
+      setError(err.message || "Error loading more data");
     } finally {
       isFetchingRef.current = false;
     }
@@ -99,7 +99,7 @@ export const usePagination = (
  */
 export const useInfiniteScroll = (data, onEndReached, threshold = 0.5) => {
   const onEndReachedThreshold = Math.max(threshold, 0.1); // Minimum 0.1 to avoid too frequent calls
-  
+
   return {
     onEndReached: ({ distanceFromEnd }) => {
       if (distanceFromEnd < 0) {
