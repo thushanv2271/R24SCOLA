@@ -29,6 +29,7 @@ import { fetchScholarships } from "./service/itjobsfetch";
 import { sendJobEmail } from "./service/emailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../components/AuthContext";
+import { authAPI } from "../services/apiService";
 import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
@@ -109,16 +110,7 @@ const ScholarshipApp = () => {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username
-        )}/job-favorites`
-      );
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to fetch favorites");
-      }
-      const data = await response.json();
+      const data = await authAPI.getJobFavorites(user.username);
       const favoriteIds = data.map((s) => s.id);
       setFavoriteJobs(favoriteIds);
       await AsyncStorage.setItem("favoriteJobs", JSON.stringify(favoriteIds));
@@ -145,25 +137,10 @@ const ScholarshipApp = () => {
       setFavoriteJobs(updatedFavorites);
 
       try {
-        const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username
-        )}/job-favorites/by-username`;
-        const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
-        const method = isFavorited ? "DELETE" : "POST";
-        const body = isFavorited ? null : JSON.stringify(id);
-
-        const response = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body,
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            errorText ||
-              `Failed to ${isFavorited ? "remove" : "add"} favorite`
-          );
+        if (isFavorited) {
+          await authAPI.removeJobFavorite(user.username, id);
+        } else {
+          await authAPI.addJobFavorite(user.username, id);
         }
       } catch (error) {
         console.error(
@@ -208,12 +185,7 @@ const ScholarshipApp = () => {
         return;
       }
       try {
-        const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.username
-          )}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch user data");
+        await authAPI.getUserByUsername(user.username);
       } catch (error) {
       } finally {
         setCheckingPaid(false);

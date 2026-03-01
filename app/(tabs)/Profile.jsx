@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "../../components/AuthContext";
+import { authAPI } from "../../services/apiService";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "./../../components/Header";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
@@ -64,19 +65,9 @@ export default function ProfileScreen() {
     const fetchUserDetails = async () => {
       if (username) {
         try {
-          const response = await fetch(
-            `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-              username,
-            )}`,
-            { method: "GET", headers: { Accept: "application/json" } },
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setPaidMember(data.paidMember);
-            setEditedData(data);
-          } else {
-            console.error("Failed to fetch user details");
-          }
+          const data = await authAPI.getUserByUsername(username);
+          setPaidMember(data.paidMember);
+          setEditedData(data);
         } catch (error) {
           console.error("Error fetching user details:", error);
         } finally {
@@ -96,21 +87,10 @@ export default function ProfileScreen() {
       }
 
       try {
-        const [scholarshipsResponse, jobsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
-            method: "GET",
-            headers: { Accept: "application/json" },
-          }),
-          fetch(
-            `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
-            { method: "GET", headers: { Accept: "application/json" } },
-          ),
+        const [scholarships, jobs] = await Promise.all([
+          authAPI.getFavorites(username),
+          authAPI.getJobFavorites(username),
         ]);
-
-        const scholarships = scholarshipsResponse.ok
-          ? await scholarshipsResponse.json()
-          : [];
-        const jobs = jobsResponse.ok ? await jobsResponse.json() : [];
 
         setFavoriteScholarshipsCount(
           Array.isArray(scholarships) ? scholarships.length : 0,

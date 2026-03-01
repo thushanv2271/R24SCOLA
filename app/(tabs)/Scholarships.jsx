@@ -29,6 +29,7 @@ import { fetchScholarships } from "../service/ScholarshipService";
 import { sendScholarshipEmail } from "../service/emailService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../../components/AuthContext";
+import { authAPI, scholarshipAPI } from "../../services/apiService";
 import LoaderModal from "../../components/JustMoment";
 import BottomModal from "../../components/BottomModal";
 import NotificationModal from "../../components/NotificationModal";
@@ -139,13 +140,7 @@ const ScholarshipApp = () => {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username,
-        )}/favorites`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch favorites");
-      const data = await response.json();
+      const data = await authAPI.getFavorites(user.username);
       const favoriteIds = data.map((s) => s.id);
       setFavoriteScholarships(favoriteIds);
       await AsyncStorage.setItem(
@@ -175,23 +170,10 @@ const ScholarshipApp = () => {
       setFavoriteScholarships(updatedFavorites);
 
       try {
-        const baseUrl = `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username,
-        )}/favorites/by-username`;
-        const url = isFavorited ? `${baseUrl}/${id}` : baseUrl;
-        const method = isFavorited ? "DELETE" : "POST";
-        const body = isFavorited ? null : JSON.stringify(id);
-
-        const response = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body,
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to ${isFavorited ? "remove" : "add"} favorite`,
-          );
+        if (isFavorited) {
+          await authAPI.removeFavorite(user.username, id);
+        } else {
+          await authAPI.addFavorite(user.username, id);
         }
       } catch (error) {
         console.error(
@@ -211,19 +193,7 @@ const ScholarshipApp = () => {
 
   const handleReport = async (scholarshipId, description) => {
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Scholarships/${scholarshipId}/report`,
-        {
-          method: "POST",
-          headers: {
-            accept: "*/*",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ description }),
-        },
-      );
-
-      if (!response.ok) throw new Error("Failed to submit report");
+      await authAPI.reportScholarship(scholarshipId, description);
       showAlert("Success", "Report submitted successfully.", "success");
       setShowReportModal(false);
       setReportMessage("");
@@ -237,23 +207,13 @@ const ScholarshipApp = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      let url =
-        "https://webapplication2-old-pond-3577.fly.dev/api/Scholarships";
+      let data;
       if (sortOrder) {
-        const ascending = sortOrder === "Ascending" ? "true" : "false";
-        url = `https://webapplication2-old-pond-3577.fly.dev/api/Scholarships/sortByDate?ascending=${ascending}`;
+        const ascending = sortOrder === "Ascending";
+        data = await scholarshipAPI.sortByDate(ascending);
+      } else {
+        data = await scholarshipAPI.getAllScholarships();
       }
-      const response = await fetch(url, {
-        method: "GET",
-        headers: { accept: "text/plain" },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage =
-          errorData.errors?.ascending?.[0] || "Failed to fetch scholarships";
-        throw new Error(errorMessage);
-      }
-      const data = await response.json();
 
       // Check if there are new scholarships and show notification
       const previousScholarshipsCount = scholarships.length;
@@ -303,12 +263,7 @@ const ScholarshipApp = () => {
         return;
       }
       try {
-        const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.username,
-          )}`,
-        );
-        if (!response.ok) throw new Error("Failed to fetch user data");
+        await authAPI.getUserByUsername(user.username);
       } catch (error) {
         console.error("Error checking paid status:", error);
       } finally {

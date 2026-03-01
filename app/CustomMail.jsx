@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
 import { AuthContext } from "../components/AuthContext";
+import { authAPI } from "../services/apiService";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoaderModal from "../components/JustMoment";
 import { router } from "expo-router";
@@ -71,20 +72,7 @@ export default function CustomMail() {
     const fetchUserDetails = async () => {
       if (!user?.username) return;
       try {
-        const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-            user.username,
-          )}`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          },
-        );
-        if (!response.ok) throw new Error("Failed to fetch user details");
-        const data = await response.json();
+        const data = await authAPI.getUserByUsername(user.username);
         setPaidMember(data.paidMember);
         setEditedData(data);
         // Convert <br> to \n when setting emailMessage for TextInput
@@ -104,22 +92,10 @@ export default function CustomMail() {
     if (!user?.username) return;
     try {
       setLoading(true);
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username,
-        )}/email-message`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          // Send the emailMessage as-is with \n; adjust if backend needs <br>
-          body: JSON.stringify({ scholarshipEmailMessage: emailMessage }),
-        },
+      const updatedData = await authAPI.updateEmailMessage(
+        user.username,
+        emailMessage,
       );
-      if (!response.ok) throw new Error("Failed to update email message");
-      const updatedData = await response.json();
       console.log("Saved email message:", updatedData.scholarshipEmailMessage); // Debug log
       setEditedData(updatedData);
       // Convert <br> to \n again when updating emailMessage
@@ -138,21 +114,10 @@ export default function CustomMail() {
     if (!user?.username) return;
     try {
       setLoading(true);
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-          user.username,
-        )}/job-email-message`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ jobEmailMessage: jobEmailMessage }),
-        },
+      const updatedData = await authAPI.updateJobEmailMessage(
+        user.username,
+        jobEmailMessage,
       );
-      if (!response.ok) throw new Error("Failed to update job email message");
-      const updatedData = await response.json();
       console.log("Saved job email message:", updatedData.jobEmailMessage);
       setEditedData(updatedData);
       setJobEmailMessage(convertToNewlines(updatedData.jobEmailMessage));

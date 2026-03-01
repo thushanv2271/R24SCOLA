@@ -19,6 +19,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../components/AuthContext";
+import { authAPI } from "../../services/apiService";
 import LoaderModal from "../../components/JustMoment";
 import NotificationModal from "../../components/NotificationModal";
 
@@ -89,10 +90,7 @@ const ScholarshipHome = () => {
   useEffect(() => {
     const fetchPaidStatus = async () => {
       try {
-        const response = await fetch(
-          `https://webapplication2-old-pond-3577.fly.dev/api/Users/${username}`,
-        );
-        const userData = await response.json();
+        const userData = await authAPI.getUserByUsername(username);
         setPaidMember(userData.paidMember);
       } catch (error) {
         console.error("Error fetching paid status:", error);

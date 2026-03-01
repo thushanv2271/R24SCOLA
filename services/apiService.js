@@ -248,6 +248,12 @@ export const scholarshipAPI = {
 
   deleteScholarship: (id) =>
     apiCall(`/Scholarships/${id}`, { method: "DELETE" }),
+
+  reportScholarship: (id, description) =>
+    apiCall(`/Scholarships/${id}/report`, {
+      method: "POST",
+      body: JSON.stringify({ description }),
+    }),
 };
 
 /**

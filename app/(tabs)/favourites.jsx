@@ -18,6 +18,7 @@ import FastImage from "react-native-fast-image";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 import { AuthContext } from "../../components/AuthContext";
+import { authAPI } from "../../services/apiService";
 import { sendScholarshipEmail, sendJobEmail } from "../service/emailService";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
@@ -345,13 +346,7 @@ const FavoriteItemsList = () => {
 
   const fetchFavoriteScholarships = useCallback(async (username) => {
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
-          username,
-        )}/favorites`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch favorites");
-      const data = await response.json();
+      const data = await authAPI.getFavorites(username);
       setFavoriteScholarships(data);
     } catch (error) {
       showAlert("Error", "Could not fetch favorite scholarships.", "error");
@@ -362,13 +357,7 @@ const FavoriteItemsList = () => {
 
   const fetchFavoriteJobs = useCallback(async (username) => {
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
-          username,
-        )}/job-favorites`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch job favorites");
-      const data = await response.json();
+      const data = await authAPI.getJobFavorites(username);
       setFavoriteJobs(data);
     } catch (error) {
       showAlert("Error", "Could not fetch favorite jobs.", "error");
@@ -548,14 +537,9 @@ const FavoriteItemsList = () => {
             try {
               // Remove all items from backend
               const deletePromises = itemsToRemove.map((item) =>
-                fetch(
-                  `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
-                    user.username,
-                  )}/${isJob ? "job-favorites" : "favorites"}/by-username/${item.id}`,
-                  {
-                    method: "DELETE",
-                  },
-                ),
+                isJob
+                  ? authAPI.removeJobFavorite(user.username, item.id)
+                  : authAPI.removeFavorite(user.username, item.id),
               );
 
               await Promise.all(deletePromises);
@@ -615,19 +599,10 @@ const FavoriteItemsList = () => {
     const isJob = selectedTab === "jobs";
 
     try {
-      const response = await fetch(
-        `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURI(
-          user.username,
-        )}/${isJob ? "job-favorites" : "favorites"}/by-username/${item.id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to remove ${isJob ? "job" : "scholarship"} from favorites`,
-        );
+      if (isJob) {
+        await authAPI.removeJobFavorite(user.username, item.id);
+      } else {
+        await authAPI.removeFavorite(user.username, item.id);
       }
 
       // Update local state
