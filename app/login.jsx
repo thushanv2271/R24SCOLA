@@ -90,13 +90,13 @@ export default function LoginForm() {
         username: normalizedUsername,
         password: values.password,
       });
-      
+
       // Ensure username is included in the user data
       const userDataWithUsername = {
         ...data,
         username: normalizedUsername,
       };
-      
+
       await login(userDataWithUsername);
 
       // Set login status in AsyncStorage
@@ -104,7 +104,7 @@ export default function LoginForm() {
       if (data?.id) {
         await AsyncStorage.setItem("userID", data.id);
       }
-      
+
       // Store username in AsyncStorage for easy access
       await AsyncStorage.setItem("username", normalizedUsername);
 

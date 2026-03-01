@@ -97,10 +97,10 @@ export default function ProfileScreen() {
 
       try {
         const [scholarshipsResponse, jobsResponse] = await Promise.all([
-          fetch(
-            `${API_BASE_URL}/${encodeURIComponent(username)}/favorites`,
-            { method: "GET", headers: { Accept: "application/json" } },
-          ),
+          fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          }),
           fetch(
             `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
             { method: "GET", headers: { Accept: "application/json" } },
@@ -138,10 +138,10 @@ export default function ProfileScreen() {
 
         try {
           const [scholarshipsResponse, jobsResponse] = await Promise.all([
-            fetch(
-              `${API_BASE_URL}/${encodeURIComponent(username)}/favorites`,
-              { method: "GET", headers: { Accept: "application/json" } },
-            ),
+            fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
+              method: "GET",
+              headers: { Accept: "application/json" },
+            }),
             fetch(
               `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
               { method: "GET", headers: { Accept: "application/json" } },
