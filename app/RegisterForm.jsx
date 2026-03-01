@@ -41,15 +41,12 @@ export default function RegisterForm() {
     try {
       const normalizedUsername = values.username.trim().toLowerCase();
 
-      // Register new user
+      // Register new user with only required fields
       await authAPI.register({
-        id: "",
         username: normalizedUsername,
         password: values.password,
         age: 25,
         country: "United States",
-        favoriteScholarshipIds: [],
-        favoriteJobIds: [],
       });
 
       setIsModalVisible(true);
