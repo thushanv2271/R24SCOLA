@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   interpolate,
   Extrapolate,
-} from 'react-native-reanimated';
-import { IconSymbol } from './ui/IconSymbol';
+} from "react-native-reanimated";
+import { IconSymbol } from "./ui/IconSymbol";
 
 interface AnimatedTabIconProps {
   name: any;
@@ -50,10 +50,7 @@ export function AnimatedTabIcon({
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [
-        { scale: scale.value },
-        { rotate: `${rotation.value}deg` },
-      ],
+      transform: [{ scale: scale.value }, { rotate: `${rotation.value}deg` }],
     };
   });
 
@@ -66,7 +63,7 @@ export function AnimatedTabIcon({
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

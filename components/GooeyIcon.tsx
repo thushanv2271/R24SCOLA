@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   interpolate,
   Extrapolate,
-} from 'react-native-reanimated';
-import { IconSymbol } from './ui/IconSymbol';
+} from "react-native-reanimated";
+import { IconSymbol } from "./ui/IconSymbol";
 
 interface GooeyIconProps {
   name: any;
@@ -16,12 +16,7 @@ interface GooeyIconProps {
   focused: boolean;
 }
 
-export function GooeyIcon({
-  name,
-  size,
-  color,
-  focused,
-}: GooeyIconProps) {
+export function GooeyIcon({ name, size, color, focused }: GooeyIconProps) {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(0.8);
 
@@ -64,7 +59,7 @@ export function GooeyIcon({
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

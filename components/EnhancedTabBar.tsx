@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Colors } from '@/constants/Colors';
+import React from "react";
+import { View, StyleSheet, Platform } from "react-native";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { Colors } from "@/constants/Colors";
 
 export function EnhancedTabBar({
   state,
@@ -17,14 +17,14 @@ export function EnhancedTabBar({
             options.tabBarLabel !== undefined
               ? options.tabBarLabel
               : options.title !== undefined
-              ? options.title
-              : route.name;
+                ? options.title
+                : route.name;
 
           const isFocused = state.index === index;
 
           const onPress = () => {
             const event = navigation.emit({
-              type: 'tabPress',
+              type: "tabPress",
               target: route.key,
               canPreventDefault: true,
             });
@@ -36,7 +36,7 @@ export function EnhancedTabBar({
 
           const onLongPress = () => {
             navigation.emit({
-              type: 'tabLongPress',
+              type: "tabLongPress",
               target: route.key,
             });
           };
@@ -44,26 +44,18 @@ export function EnhancedTabBar({
           return (
             <View
               key={route.key}
-              style={[
-                styles.tabItem,
-                isFocused && styles.tabItemFocused,
-              ]}
+              style={[styles.tabItem, isFocused && styles.tabItemFocused]}
             >
-              <View
-                style={[
-                  styles.tab,
-                  isFocused && styles.tabActive,
-                ]}
-              >
-                {options.tabBarIcon ? (
-                  options.tabBarIcon({
-                    focused: isFocused,
-                    color: isFocused
-                      ? Colors['light'].tabBarAccent
-                      : Colors['light'].tabIconDefault,
-                    size: 28,
-                  })
-                ) : null}
+              <View style={[styles.tab, isFocused && styles.tabActive]}>
+                {options.tabBarIcon
+                  ? options.tabBarIcon({
+                      focused: isFocused,
+                      color: isFocused
+                        ? Colors["light"].tabBarAccent
+                        : Colors["light"].tabIconDefault,
+                      size: 28,
+                    })
+                  : null}
               </View>
             </View>
           );
@@ -75,12 +67,12 @@ export function EnhancedTabBar({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors['light'].tabBarBackground,
-    borderTopColor: Colors['light'].tabBarBorder,
+    backgroundColor: Colors["light"].tabBarBackground,
+    borderTopColor: Colors["light"].tabBarBorder,
     borderTopWidth: 1,
   },
   shadow: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -3,
@@ -90,28 +82,27 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   tabBar: {
-    flexDirection: 'row',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    flexDirection: "row",
+    paddingBottom: Platform.OS === "ios" ? 20 : 8,
     paddingTop: 8,
     paddingHorizontal: 8,
   },
   tabItem: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  tabItemFocused: {
-  },
+  tabItemFocused: {},
   tab: {
     padding: 12,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
     aspectRatio: 1,
     maxWidth: 60,
   },
   tabActive: {
-    backgroundColor: Colors['light'].tabBarAccentLight,
+    backgroundColor: Colors["light"].tabBarAccentLight,
   },
 });

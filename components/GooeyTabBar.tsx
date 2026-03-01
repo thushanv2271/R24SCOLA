@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Pressable, Platform } from 'react-native';
+import React, { useEffect } from "react";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   interpolate,
   Extrapolate,
-} from 'react-native-reanimated';
-import { IconSymbol } from './ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
+} from "react-native-reanimated";
+import { IconSymbol } from "./ui/IconSymbol";
+import { Colors } from "@/constants/Colors";
 
 const ICON_SIZE = 28;
 const TAB_WIDTH = 80;
@@ -19,7 +19,11 @@ interface GooeyTabBarProps {
   navigation: any;
 }
 
-export function GooeyTabBar({ state, descriptors, navigation }: GooeyTabBarProps) {
+export function GooeyTabBar({
+  state,
+  descriptors,
+  navigation,
+}: GooeyTabBarProps) {
   const blobPosition = useSharedValue(0);
   const tabCount = state.routes.length;
   const totalWidth = TAB_WIDTH * tabCount;
@@ -55,7 +59,7 @@ export function GooeyTabBar({ state, descriptors, navigation }: GooeyTabBarProps
 
           const onPress = () => {
             const event = navigation.emit({
-              type: 'tabPress',
+              type: "tabPress",
               target: route.key,
               canPreventDefault: true,
             });
@@ -72,15 +76,14 @@ export function GooeyTabBar({ state, descriptors, navigation }: GooeyTabBarProps
               style={[styles.tabItem, { width: TAB_WIDTH }]}
             >
               <Animated.View style={styles.iconWrapper}>
-                {options.tabBarIcon && 
+                {options.tabBarIcon &&
                   options.tabBarIcon({
                     focused: isFocused,
                     color: isFocused
-                      ? Colors['light'].tabBarBackground
-                      : Colors['light'].tabIconDefault,
+                      ? Colors["light"].tabBarBackground
+                      : Colors["light"].tabIconDefault,
                     size: ICON_SIZE,
-                  })
-                }
+                  })}
               </Animated.View>
             </Pressable>
           );
@@ -92,44 +95,44 @@ export function GooeyTabBar({ state, descriptors, navigation }: GooeyTabBarProps
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors['light'].tabBarBackground,
-    borderTopColor: Colors['light'].tabBarBorder,
+    backgroundColor: Colors["light"].tabBarBackground,
+    borderTopColor: Colors["light"].tabBarBorder,
     borderTopWidth: 1,
     paddingVertical: 12,
     paddingHorizontal: 8,
-    position: 'relative',
-    overflow: 'hidden',
+    position: "relative",
+    overflow: "hidden",
   },
   shadowEffect: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 12,
   },
   gooeyBlob: {
-    position: 'absolute',
+    position: "absolute",
     width: TAB_WIDTH - 16,
     height: 56,
-    backgroundColor: Colors['light'].tabBarAccent,
+    backgroundColor: Colors["light"].tabBarAccent,
     borderRadius: 28,
     top: 6,
     left: 12,
     zIndex: 0,
   },
   tabsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     zIndex: 1,
   },
   tabItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     height: 56,
   },
   iconWrapper: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
