@@ -13,7 +13,7 @@ import { AuthContext } from "../../components/AuthContext";
 import { authAPI } from "../../services/apiService";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "./../../components/Header";
-import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoaderModal from "../../components/JustMoment";
 import AlertModal from "../../components/AlertModal";
@@ -22,6 +22,7 @@ const { width, height } = Dimensions.get("window");
 const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api/Users";
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, logout, favoritesRefreshTrigger } = useContext(AuthContext);
   const [paidMember, setPaidMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -117,21 +118,10 @@ export default function ProfileScreen() {
         }
 
         try {
-          const [scholarshipsResponse, jobsResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
-              method: "GET",
-              headers: { Accept: "application/json" },
-            }),
-            fetch(
-              `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
-              { method: "GET", headers: { Accept: "application/json" } },
-            ),
+          const [scholarships, jobs] = await Promise.all([
+            authAPI.getFavorites(username),
+            authAPI.getJobFavorites(username),
           ]);
-
-          const scholarships = scholarshipsResponse.ok
-            ? await scholarshipsResponse.json()
-            : [];
-          const jobs = jobsResponse.ok ? await jobsResponse.json() : [];
 
           setFavoriteScholarshipsCount(
             Array.isArray(scholarships) ? scholarships.length : 0,
@@ -139,6 +129,9 @@ export default function ProfileScreen() {
           setFavoriteJobsCount(Array.isArray(jobs) ? jobs.length : 0);
         } catch (error) {
           console.error("Error fetching favorite counts on focus:", error);
+          // Set to 0 on error to prevent showing stale data
+          setFavoriteScholarshipsCount(0);
+          setFavoriteJobsCount(0);
         }
       };
 
