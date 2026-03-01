@@ -1,9 +1,8 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
-import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import TabBarBackground from "@/components/ui/TabBarBackground";
+import { GooeyTabBar } from "@/components/GooeyTabBar";
+import { GooeyIcon } from "@/components/GooeyIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
@@ -11,31 +10,23 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    // <StripeProvider
-    //   publishableKey="pk_test_51Moj0FA7YwNcizC88oNYnMH4OcCJvyfQSkTeiYWciqgdOfEPg5B74X0EEKSvFZD8dBog2ovsE6ZHpft5J8Avswah00Z0Ep11s4" // Replace with your actual Stripe key
-    //   merchantIdentifier="merchant.com.thvnetwork" // Required for Apple Pay
-    // >
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {},
-        }),
+        tabBar: (props) => <GooeyTabBar {...props} />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GooeyIcon
+              name="house.fill"
+              size={28}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -44,8 +35,13 @@ export default function TabLayout() {
         name="Scholarships"
         options={{
           title: "Scholarships",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="graduationcap.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GooeyIcon
+              name="graduationcap.fill"
+              size={28}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -54,8 +50,13 @@ export default function TabLayout() {
         name="favourites"
         options={{
           title: "Favourites",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="heart.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GooeyIcon
+              name="heart.fill"
+              size={28}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -64,12 +65,16 @@ export default function TabLayout() {
         name="Profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.circle.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GooeyIcon
+              name="person.circle.fill"
+              size={28}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
     </Tabs>
-    // </StripeProvider>
   );
 }
