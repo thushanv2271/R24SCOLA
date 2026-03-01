@@ -34,20 +34,29 @@ const apiCall = async (endpoint, options = {}, config = {}) => {
       let errorMessage = `HTTP ${response.status}`;
       try {
         const errorData = await response.text();
-        // Try to parse as JSON first
-        try {
-          const parsed = JSON.parse(errorData);
-          if (parsed?.errors && typeof parsed.errors === "object") {
-            const firstKey = Object.keys(parsed.errors)[0];
-            const firstError = parsed.errors[firstKey]?.[0];
-            errorMessage =
-              firstError || parsed.title || parsed.message || errorMessage;
-          } else {
-            errorMessage = parsed.message || parsed.title || errorMessage;
+        // Handle empty responses (like Forbid())
+        if (!errorData || errorData.trim() === "") {
+          if (response.status === 403) {
+            errorMessage = "Access forbidden";
+          } else if (response.status === 401) {
+            errorMessage = "Unauthorized - please login";
           }
-        } catch (e) {
-          // If not JSON, use the text directly (remove quotes if present)
-          errorMessage = errorData.replace(/^"+|"+$/g, "") || errorMessage;
+        } else {
+          // Try to parse as JSON
+          try {
+            const parsed = JSON.parse(errorData);
+            if (parsed?.errors && typeof parsed.errors === "object") {
+              const firstKey = Object.keys(parsed.errors)[0];
+              const firstError = parsed.errors[firstKey]?.[0];
+              errorMessage =
+                firstError || parsed.title || parsed.message || errorMessage;
+            } else {
+              errorMessage = parsed.message || parsed.title || errorMessage;
+            }
+          } catch (e) {
+            // If not JSON, use the text directly (remove quotes if present)
+            errorMessage = errorData.replace(/^"+|"+$/g, "") || errorMessage;
+          }
         }
       } catch (e) {
         // If reading response fails, use status code
