@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import notificationService from '@/services/NotificationService';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import notificationService from "@/services/NotificationService";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const ToastNotification = () => {
   const [notifications, setNotifications] = useState([]);
@@ -12,11 +12,11 @@ const ToastNotification = () => {
   useEffect(() => {
     const unsubscribe = notificationService.subscribe((notification) => {
       if (notification.remove) {
-        setNotifications(prev =>
-          prev.filter(n => n.id !== notification.id)
+        setNotifications((prev) =>
+          prev.filter((n) => n.id !== notification.id),
         );
       } else {
-        setNotifications(prev => [notification, ...prev]);
+        setNotifications((prev) => [notification, ...prev]);
 
         // Animate in
         slideAnim.setValue(-100);
@@ -37,27 +37,27 @@ const ToastNotification = () => {
 
   const getIcon = () => {
     switch (notification.type) {
-      case 'success':
-        return 'checkmark-circle';
-      case 'error':
-        return 'alert-circle';
-      case 'warning':
-        return 'warning';
+      case "success":
+        return "checkmark-circle";
+      case "error":
+        return "alert-circle";
+      case "warning":
+        return "warning";
       default:
-        return 'information-circle';
+        return "information-circle";
     }
   };
 
   const getColor = () => {
     switch (notification.type) {
-      case 'success':
-        return '#4CAF50';
-      case 'error':
-        return '#F44336';
-      case 'warning':
-        return '#FF9800';
+      case "success":
+        return "#4CAF50";
+      case "error":
+        return "#F44336";
+      case "warning":
+        return "#FF9800";
       default:
-        return '#2196F3';
+        return "#2196F3";
     }
   };
 
@@ -88,7 +88,7 @@ const ToastNotification = () => {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -97,14 +97,14 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   notification: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderLeftWidth: 4,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    shadowColor: '#000',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -119,13 +119,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: "600",
+    color: "#1a1a1a",
     marginBottom: 4,
   },
   description: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
     marginTop: 2,
   },
 });

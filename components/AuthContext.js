@@ -36,11 +36,11 @@ export const AuthProvider = ({ children }) => {
     try {
       setUser(userData);
       await AsyncStorage.setItem("userData", JSON.stringify(userData));
-      
+
       // Show success notification
       notificationService.success(
         "Login Successful",
-        `Welcome back, ${userData.username || "User"}! 👋`
+        `Welcome back, ${userData.username || "User"}! 👋`,
       );
 
       // Add to notification history
@@ -52,7 +52,10 @@ export const AuthProvider = ({ children }) => {
       });
     } catch (error) {
       console.error("Error during login:", error);
-      notificationService.error("Login Failed", "An error occurred during login");
+      notificationService.error(
+        "Login Failed",
+        "An error occurred during login",
+      );
     }
   };
 

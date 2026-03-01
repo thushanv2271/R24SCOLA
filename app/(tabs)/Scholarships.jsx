@@ -49,7 +49,8 @@ const modalHeight = screenHeight * 0.7; // 70% of screen height
 
 const ScholarshipApp = () => {
   const [scholarships, setScholarships] = useState([]);
-  const { user, favoritesRefreshTrigger, addNotification } = useContext(AuthContext);
+  const { user, favoritesRefreshTrigger, addNotification } =
+    useContext(AuthContext);
   const [checkingPaid, setCheckingPaid] = useState(true);
   const [selectedMajor, setSelectedMajor] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -253,16 +254,19 @@ const ScholarshipApp = () => {
         throw new Error(errorMessage);
       }
       const data = await response.json();
-      
+
       // Check if there are new scholarships and show notification
       const previousScholarshipsCount = scholarships.length;
-      if (previousScholarshipsCount > 0 && data.length > previousScholarshipsCount) {
+      if (
+        previousScholarshipsCount > 0 &&
+        data.length > previousScholarshipsCount
+      ) {
         const newCount = data.length - previousScholarshipsCount;
         notificationService.info(
           `${newCount} New Scholarship${newCount > 1 ? "s" : ""}`,
-          `Found ${newCount} new scholarship opportunity available!`
+          `Found ${newCount} new scholarship opportunity available!`,
         );
-        
+
         // Add to notification history
         if (addNotification) {
           addNotification({
@@ -272,7 +276,7 @@ const ScholarshipApp = () => {
           });
         }
       }
-      
+
       setScholarships(data);
     } catch (error) {
       console.error("Error fetching scholarships:", error.message);

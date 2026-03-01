@@ -1,4 +1,4 @@
-import { DefaultTheme } from '@react-navigation/native';
+import { DefaultTheme } from "@react-navigation/native";
 
 // Notification service to manage app-wide notifications
 export class NotificationService {
@@ -15,19 +15,19 @@ export class NotificationService {
   subscribe(listener) {
     this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
   notify(notification) {
     const id = Date.now();
     const notificationWithId = { ...notification, id };
-    
+
     // Call all listeners
-    this.listeners.forEach(listener => listener(notificationWithId));
+    this.listeners.forEach((listener) => listener(notificationWithId));
 
     // Auto-remove notification after 5 seconds by default
-    if (notification.duration !== 'persistent') {
+    if (notification.duration !== "persistent") {
       const duration = notification.duration || 5000;
       setTimeout(() => {
         this.removeNotification(id);
@@ -38,47 +38,47 @@ export class NotificationService {
   }
 
   removeNotification(id) {
-    this.listeners.forEach(listener => listener({ id, remove: true }));
+    this.listeners.forEach((listener) => listener({ id, remove: true }));
   }
 
   // Convenience methods for different notification types
   success(title, description) {
     return this.notify({
-      type: 'success',
+      type: "success",
       title,
       description,
-      icon: 'checkmark-circle',
-      color: '#4CAF50',
+      icon: "checkmark-circle",
+      color: "#4CAF50",
     });
   }
 
   error(title, description) {
     return this.notify({
-      type: 'error',
+      type: "error",
       title,
       description,
-      icon: 'alert-circle',
-      color: '#F44336',
+      icon: "alert-circle",
+      color: "#F44336",
     });
   }
 
   info(title, description) {
     return this.notify({
-      type: 'info',
+      type: "info",
       title,
       description,
-      icon: 'information-circle',
-      color: '#2196F3',
+      icon: "information-circle",
+      color: "#2196F3",
     });
   }
 
   warning(title, description) {
     return this.notify({
-      type: 'warning',
+      type: "warning",
       title,
       description,
-      icon: 'warning',
-      color: '#FF9800',
+      icon: "warning",
+      color: "#FF9800",
     });
   }
 }

@@ -58,7 +58,7 @@ const NotificationModal = memo(({ visible, onClose }) => {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return new Date(timestamp).toLocaleDateString();
   };
 
@@ -78,13 +78,9 @@ const NotificationModal = memo(({ visible, onClose }) => {
       </View>
       <View style={styles.notificationContent}>
         <Text style={styles.notificationTitle}>{item.title}</Text>
-        <Text style={styles.notificationDescription}>
-          {item.description}
-        </Text>
+        <Text style={styles.notificationDescription}>{item.description}</Text>
       </View>
-      <Text style={styles.notificationTime}>
-        {getTimeAgo(item.timestamp)}
-      </Text>
+      <Text style={styles.notificationTime}>{getTimeAgo(item.timestamp)}</Text>
     </View>
   );
 
