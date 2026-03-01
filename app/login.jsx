@@ -90,13 +90,23 @@ export default function LoginForm() {
         username: normalizedUsername,
         password: values.password,
       });
-      await login(data);
+      
+      // Ensure username is included in the user data
+      const userDataWithUsername = {
+        ...data,
+        username: normalizedUsername,
+      };
+      
+      await login(userDataWithUsername);
 
       // Set login status in AsyncStorage
       await AsyncStorage.setItem("isLoggedIn", "true");
       if (data?.id) {
         await AsyncStorage.setItem("userID", data.id);
       }
+      
+      // Store username in AsyncStorage for easy access
+      await AsyncStorage.setItem("username", normalizedUsername);
 
       // Save credentials if remember me is checked (only after successful login)
       if (rememberMe) {

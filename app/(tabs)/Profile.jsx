@@ -13,6 +13,7 @@ import { AuthContext } from "../../components/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "./../../components/Header";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoaderModal from "../../components/JustMoment";
 import AlertModal from "../../components/AlertModal";
 
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const [editedData, setEditedData] = useState({});
   const [favoriteScholarshipsCount, setFavoriteScholarshipsCount] = useState(0);
   const [favoriteJobsCount, setFavoriteJobsCount] = useState(0);
+  const [username, setUsername] = useState(user?.username || "");
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",
@@ -43,13 +45,28 @@ export default function ProfileScreen() {
     setAlertConfig({ ...alertConfig, visible: false });
   };
 
+  // Fallback: Get username from AsyncStorage if not in AuthContext
+  useEffect(() => {
+    const getUsername = async () => {
+      if (user?.username) {
+        setUsername(user.username);
+      } else {
+        const storedUsername = await AsyncStorage.getItem("username");
+        if (storedUsername) {
+          setUsername(storedUsername);
+        }
+      }
+    };
+    getUsername();
+  }, [user?.username]);
+
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (user?.username) {
+      if (username) {
         try {
           const response = await fetch(
             `https://webapplication2-old-pond-3577.fly.dev/api/Users/${encodeURIComponent(
-              user.username,
+              username,
             )}`,
             { method: "GET", headers: { Accept: "application/json" } },
           );
@@ -68,11 +85,11 @@ export default function ProfileScreen() {
       }
     };
     fetchUserDetails();
-  }, [user?.username]);
+  }, [username]);
 
   useEffect(() => {
     const fetchFavoriteCounts = async () => {
-      if (!user?.username) {
+      if (!username) {
         setFavoriteScholarshipsCount(0);
         setFavoriteJobsCount(0);
         return;
@@ -81,11 +98,11 @@ export default function ProfileScreen() {
       try {
         const [scholarshipsResponse, jobsResponse] = await Promise.all([
           fetch(
-            `${API_BASE_URL}/${encodeURIComponent(user.username)}/favorites`,
+            `${API_BASE_URL}/${encodeURIComponent(username)}/favorites`,
             { method: "GET", headers: { Accept: "application/json" } },
           ),
           fetch(
-            `${API_BASE_URL}/${encodeURIComponent(user.username)}/job-favorites`,
+            `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
             { method: "GET", headers: { Accept: "application/json" } },
           ),
         ]);
@@ -107,13 +124,13 @@ export default function ProfileScreen() {
     };
 
     fetchFavoriteCounts();
-  }, [user?.username, favoritesRefreshTrigger]);
+  }, [username, favoritesRefreshTrigger]);
 
   // Refetch favorites count when profile tab comes into focus
   useFocusEffect(
     useCallback(() => {
       const fetchCounts = async () => {
-        if (!user?.username) {
+        if (!username) {
           setFavoriteScholarshipsCount(0);
           setFavoriteJobsCount(0);
           return;
@@ -122,11 +139,11 @@ export default function ProfileScreen() {
         try {
           const [scholarshipsResponse, jobsResponse] = await Promise.all([
             fetch(
-              `${API_BASE_URL}/${encodeURIComponent(user.username)}/favorites`,
+              `${API_BASE_URL}/${encodeURIComponent(username)}/favorites`,
               { method: "GET", headers: { Accept: "application/json" } },
             ),
             fetch(
-              `${API_BASE_URL}/${encodeURIComponent(user.username)}/job-favorites`,
+              `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
               { method: "GET", headers: { Accept: "application/json" } },
             ),
           ]);
@@ -146,7 +163,7 @@ export default function ProfileScreen() {
       };
 
       fetchCounts();
-    }, [user?.username]),
+    }, [username]),
   );
 
   const handleChange = (field, value) => {
@@ -234,7 +251,7 @@ export default function ProfileScreen() {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.label}>Username</Text>
-              <Text style={styles.value}>{user?.username}</Text>
+              <Text style={styles.value}>{username}</Text>
             </View>
 
             <View style={styles.divider} />

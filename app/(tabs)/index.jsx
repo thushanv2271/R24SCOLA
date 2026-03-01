@@ -58,30 +58,31 @@ const ScholarshipHome = () => {
   const sidebarAnim = useRef(new Animated.Value(-width * 0.75)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
   const router = useRouter();
-  const { username = "" } = useLocalSearchParams();
+  const { username: paramsUsername = "" } = useLocalSearchParams();
+  const [username, setUsername] = useState(paramsUsername);
   const navigation = useNavigation();
   const [paidMember, setPaidMember] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
+  // Fetch username from AsyncStorage if not in route params
   useEffect(() => {
-    const fetchUserId = async () => {
+    const fetchUsernameFromStorage = async () => {
       try {
-        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
-        if (isLoggedIn !== "true") {
+        if (paramsUsername) {
+          setUsername(paramsUsername);
           return;
         }
-
-        const storedUser = await AsyncStorage.getItem("userID");
-        if (storedUser) {
-          console.log(`The current user ID is: ${storedUser}`);
+        const storedUsername = await AsyncStorage.getItem("username");
+        if (storedUsername) {
+          setUsername(storedUsername);
         }
       } catch (error) {
-        console.error("Error fetching user ID:", error);
+        console.error("Error fetching username from storage:", error);
       }
     };
 
-    fetchUserId();
-  }, []);
+    fetchUsernameFromStorage();
+  }, [paramsUsername]);
 
   useEffect(() => {
     const fetchPaidStatus = async () => {
@@ -143,9 +144,7 @@ const ScholarshipHome = () => {
 
   function getUserName(username) {
     if (!username) return "User";
-    return username.length > 10
-      ? username.slice(0, 10)
-      : username.padEnd(5, " ");
+    return username;
   }
 
   const sidebarItems = [
@@ -329,7 +328,7 @@ const ScholarshipHome = () => {
               <TouchableOpacity
                 onPress={() =>
                   username
-                    ? router.push(`/Profile?username=${username}`)
+                    ? navigation.navigate("Profile", { username })
                     : router.push("/login")
                 }
               >
