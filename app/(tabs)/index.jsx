@@ -159,7 +159,7 @@ const ScholarshipHome = () => {
     },
     { title: "Scholarships", icon: "school", screen: "Scholarships" },
     { title: "Jobs", icon: "briefcase", screen: "JobInside" },
-    { title: "Favourites", icon: "heart", screen: "Favourites" },
+    { title: "Favourites", icon: "heart", screen: "favourites" },
     { title: "Edit Mail", icon: "create", screen: "CustomMail" },
   ];
 
@@ -276,7 +276,7 @@ const ScholarshipHome = () => {
           screen: "ScholarshipCalculator",
         },
         { title: "Edit Mail", icon: "create", screen: "CustomMail" },
-        { title: "Favourites", icon: "heart", screen: "Favourites" },
+        { title: "Favourites", icon: "heart", screen: "favourites" },
         {
           title: "Explore Universities",
           icon: "school",
