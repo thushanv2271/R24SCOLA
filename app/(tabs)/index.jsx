@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import {
   SafeAreaView,
   View,
@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "../../components/AuthContext";
 import LoaderModal from "../../components/JustMoment";
 import NotificationModal from "../../components/NotificationModal";
 
@@ -63,6 +64,7 @@ const ScholarshipHome = () => {
   const navigation = useNavigation();
   const [paidMember, setPaidMember] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const { notifications } = useContext(AuthContext);
 
   // Fetch username from AsyncStorage if not in route params
   useEffect(() => {
@@ -338,6 +340,13 @@ const ScholarshipHome = () => {
             <View style={styles.iconBackground}>
               <TouchableOpacity onPress={() => setShowNotificationModal(true)}>
                 <Ionicons name="notifications" size={25} color="#a5a4a4" />
+                {notifications && notifications.length > 0 && (
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.badgeText}>
+                      {notifications.length > 9 ? "9+" : notifications.length}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
 
@@ -440,6 +449,25 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#FF6B6B",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   loaderContainer: {
     flex: 1,
