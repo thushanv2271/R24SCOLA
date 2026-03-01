@@ -41,19 +41,6 @@ export default function RegisterForm() {
     try {
       const normalizedUsername = values.username.trim().toLowerCase();
 
-      try {
-        const existingUser = await authAPI.checkUserExists(normalizedUsername);
-        if (existingUser) {
-          setFieldError("username", "Username already in use");
-          return;
-        }
-      } catch (error) {
-        // 404 means user doesn't exist, which is what we want for registration
-        if (error.status !== 404) {
-          throw error;
-        }
-      }
-
       // Register new user
       await authAPI.register({
         id: "",

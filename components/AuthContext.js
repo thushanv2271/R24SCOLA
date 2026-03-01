@@ -62,7 +62,13 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setUser(null);
-      await AsyncStorage.removeItem("userData");
+      await AsyncStorage.multiRemove([
+        "userData",
+        "userToken",
+        "isLoggedIn",
+        "userID",
+        "userPassword",
+      ]);
       notificationService.info("Logged Out", "You have been logged out");
     } catch (error) {
       console.error("Error during logout:", error);

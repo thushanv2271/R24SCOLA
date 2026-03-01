@@ -58,13 +58,12 @@ export default function LoginForm() {
         // If remember me was true, get the credentials
         if (rememberMeValue) {
           const savedUsername = await AsyncStorage.getItem("username");
-          const savedPassword = await AsyncStorage.getItem("userPassword");
 
           if (savedUsername) {
             // Set initial values for the form
             setInitialValues({
               username: savedUsername,
-              password: savedPassword || "",
+              password: "",
             });
           }
         }
@@ -105,18 +104,20 @@ export default function LoginForm() {
         await AsyncStorage.setItem("userID", data.id);
       }
 
+      if (data?.token) {
+        await AsyncStorage.setItem("userToken", data.token);
+      }
+
       // Store username in AsyncStorage for easy access
       await AsyncStorage.setItem("username", normalizedUsername);
 
-      // Save credentials if remember me is checked (only after successful login)
+      // Save username only if remember me is checked
       if (rememberMe) {
         await AsyncStorage.setItem("username", normalizedUsername);
-        await AsyncStorage.setItem("userPassword", values.password);
         await AsyncStorage.setItem("rememberMe", "true");
       } else {
-        // Clear saved credentials if remember me is unchecked
+        // Clear remembered identity if remember me is unchecked
         await AsyncStorage.removeItem("username");
-        await AsyncStorage.removeItem("userPassword");
         await AsyncStorage.removeItem("rememberMe");
       }
 
@@ -125,9 +126,9 @@ export default function LoginForm() {
       // Clear login status and saved credentials on failure
       await AsyncStorage.removeItem("isLoggedIn");
       await AsyncStorage.removeItem("username");
-      await AsyncStorage.removeItem("userPassword");
       await AsyncStorage.removeItem("rememberMe");
       await AsyncStorage.removeItem("userID");
+      await AsyncStorage.removeItem("userToken");
 
       // Display user-friendly error message
       const errorMsg = error.message || "Login failed";

@@ -3,18 +3,28 @@
  * Handles all backend API calls with environment-based configuration
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
 
 /**
  * Generic fetch wrapper with error handling
  */
-const apiCall = async (endpoint, options = {}) => {
+const apiCall = async (endpoint, options = {}, config = {}) => {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
+    const shouldUseAuth = config.requiresAuth !== false;
+    const token = shouldUseAuth
+      ? await AsyncStorage.getItem("userToken")
+      : null;
+
+    const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
     const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...authHeader,
         ...options.headers,
       },
       ...options,
@@ -67,19 +77,31 @@ const apiCall = async (endpoint, options = {}) => {
  */
 export const authAPI = {
   checkUserExists: (username) =>
-    apiCall(`/Users/${encodeURIComponent(username)}`, { method: "GET" }),
+    apiCall(
+      `/Users/${encodeURIComponent(username)}`,
+      { method: "GET" },
+      { requiresAuth: false },
+    ),
 
   login: (credentials) =>
-    apiCall("/Users/login", {
-      method: "POST",
-      body: JSON.stringify(credentials),
-    }),
+    apiCall(
+      "/Users/login",
+      {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      },
+      { requiresAuth: false },
+    ),
 
   register: (userData) =>
-    apiCall("/Users/register", {
-      method: "POST",
-      body: JSON.stringify(userData),
-    }),
+    apiCall(
+      "/Users/register",
+      {
+        method: "POST",
+        body: JSON.stringify(userData),
+      },
+      { requiresAuth: false },
+    ),
 
   getUserByUsername: (username) =>
     apiCall(`/Users/${encodeURIComponent(username)}`, { method: "GET" }),
