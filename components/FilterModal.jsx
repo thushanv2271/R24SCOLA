@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   filterOptionSelected: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#004aad",
     borderColor: "#0056b3",
   },
   filterOptionText: {
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
   },
   applyButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#004aad",
   },
   resetButtonText: {
     color: "#333",

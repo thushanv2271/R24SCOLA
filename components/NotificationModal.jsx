@@ -35,9 +35,9 @@ const NotificationModal = memo(({ visible, onClose }) => {
   const getNotificationColor = (type) => {
     switch (type) {
       case "login":
-        return "#4CAF50";
+        return "#004aad";
       case "scholarship":
-        return "#2196F3";
+        return "#004aad";
       case "deadline":
         return "#FF9800";
       case "application":

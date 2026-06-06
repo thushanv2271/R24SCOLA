@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     color: "white",
-    backgroundColor: "#245292",
+    backgroundColor: "#004aad",
     paddingHorizontal: "2.5%",
     paddingVertical: "2%",
     borderRadius: 20,
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   linkText: {
-    color: "#007bff",
+    color: "#004aad",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     textDecorationLine: "underline",
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#007bff",
+    color: "#004aad",
   },
   professorContainer: {
     marginBottom: "2%",
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   filterOptionSelected: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#004aad",
   },
   closeButton: {
     alignSelf: "flex-end",
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#007bff",
+    color: "#004aad",
     textDecorationLine: "underline",
     textAlign: "center",
   },

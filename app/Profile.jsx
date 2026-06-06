@@ -271,7 +271,7 @@ export default function Profile() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#004aad" />
       </SafeAreaView>
     );
   }
@@ -282,7 +282,7 @@ export default function Profile() {
         {/* Header with Icons */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleGoHome} style={styles.iconButton}>
-            <Ionicons name="home" size={24} color="#007AFF" />
+            <Ionicons name="home" size={24} color="#004aad" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
@@ -527,10 +527,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#004aad",
     borderRadius: 10,
     marginBottom: 16,
-    shadowColor: "#3b82f6",
+    shadowColor: "#004aad",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -546,10 +546,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: "#10b981",
+    backgroundColor: "#004aad",
     borderRadius: 10,
     marginTop: 12,
-    shadowColor: "#10b981",
+    shadowColor: "#004aad",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   dropdownToggleText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#004aad",
   },
   dropdownContent: {
     marginTop: 10,

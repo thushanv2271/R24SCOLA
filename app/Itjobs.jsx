@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     color: "white",
-    backgroundColor: "#1e7e34", // Changed from #245292 (blue) to green
+    backgroundColor: "#1A237E", // Changed from #004aad (blue) to green
     paddingHorizontal: "2.5%",
     paddingVertical: "2%",
     borderRadius: 20,
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   linkText: {
-    color: "#28a745", // Changed from #007bff (blue) to green
+    color: "#004aad", // Changed from #004aad (blue) to green
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     textDecorationLine: "underline",
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#28a745", // Changed from #007bff (blue) to green
+    color: "#004aad", // Changed from #004aad (blue) to green
   },
   professorContainer: {
     marginBottom: "2%",
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   filterOptionSelected: {
-    backgroundColor: "#28a745", // Changed from #007bff (blue) to green
+    backgroundColor: "#004aad", // Changed from #004aad (blue) to green
   },
   closeButton: {
     alignSelf: "flex-end",
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#28a745", // Changed from #007bff (blue) to green
+    color: "#004aad", // Changed from #004aad (blue) to green
     textDecorationLine: "underline",
     textAlign: "center",
   },

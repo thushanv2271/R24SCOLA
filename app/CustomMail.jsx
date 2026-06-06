@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabButtonActive: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#004aad",
   },
   tabButtonInactive: {
     backgroundColor: "transparent",
@@ -432,14 +432,14 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(20),
     paddingVertical: verticalScale(12),
     paddingHorizontal: scale(20),
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#004aad",
     borderRadius: moderateScale(28),
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
   jobButton: {
-    backgroundColor: "#10b981",
+    backgroundColor: "#004aad",
   },
   customizeButtonText: {
     color: "#fff",
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#6b7280",
   },
   saveButton: {
-    backgroundColor: "#10b981",
+    backgroundColor: "#004aad",
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",

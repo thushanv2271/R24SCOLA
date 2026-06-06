@@ -811,12 +811,14 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: "absolute",
-    top: 25,
+    top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: "#f5f5f5",
-    padding: "2%",
+    backgroundColor: "#f8fafc",
+    paddingTop: StatusBar.currentHeight || 30,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   headerRow: {
     flexDirection: "row",
@@ -901,7 +903,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Roboto",
     color: "white",
-    backgroundColor: "#245292",
+    backgroundColor: "#004aad",
     paddingHorizontal: "2.5%",
     paddingVertical: "2%",
     borderRadius: 20,
@@ -916,8 +918,8 @@ const styles = StyleSheet.create({
     padding: "4%",
   },
   logo: {
-    width: screenWidth * 0.4,
-    height: screenHeight * 0.1,
+    width: 150,
+    height: 50,
   },
   dropdownContent: {
     marginTop: "2%",
@@ -939,7 +941,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   linkText: {
-    color: "#007bff",
+    color: "#004aad",
     textDecorationLine: "underline",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
@@ -1002,7 +1004,7 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.04,
     fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#007bff",
+    color: "#004aad",
     textBreakStrategy: "simple",
   },
   professorContainer: {
@@ -1047,7 +1049,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   filterOptionSelected: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#004aad",
     color: "white",
     fontSize: screenWidth * 0.035,
     fontFamily: "Roboto",
@@ -1067,7 +1069,7 @@ const styles = StyleSheet.create({
   },
   subscribeLink: {
     fontSize: screenWidth * 0.04,
-    color: "#007bff",
+    color: "#004aad",
     fontWeight: "700",
     fontFamily: "Roboto",
     textDecorationLine: "underline",

@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#6b7280",
   },
   saveButton: {
-    backgroundColor: "#10b981",
+    backgroundColor: "#004aad",
   },
   modalButtonText: {
     color: "#fff",

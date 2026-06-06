@@ -68,7 +68,7 @@ export default StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Poppins_700Bold',
     color: 'white',
-    backgroundColor: '#245292',
+    backgroundColor: '#004aad',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -106,7 +106,7 @@ export default StyleSheet.create({
   dropDownToggleText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    color: '#007bff',
+    color: '#004aad',
   },
   dropDownContent: {
     marginTop: 10,
@@ -127,7 +127,7 @@ export default StyleSheet.create({
     color: '#333',
   },
   linkText: {
-    color: '#007bff',
+    color: '#004aad',
     textDecorationLine: 'underline',
   },
   professorContainer: {

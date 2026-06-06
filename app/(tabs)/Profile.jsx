@@ -195,7 +195,7 @@ export default function ProfileScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Ionicons name="book" size={28} color="#3b82f6" />
+              <Ionicons name="book" size={28} color="#004aad" />
             </View>
             <View style={styles.statContent}>
               <Text style={styles.statLabel}>Scholarships</Text>
@@ -205,7 +205,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Ionicons name="briefcase" size={28} color="#10b981" />
+              <Ionicons name="briefcase" size={28} color="#004aad" />
             </View>
             <View style={styles.statContent}>
               <Text style={styles.statLabel}>Jobs</Text>
@@ -217,7 +217,7 @@ export default function ProfileScreen() {
         {/* Account Information Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="person-circle" size={24} color="#3b82f6" />
+            <Ionicons name="person-circle" size={24} color="#004aad" />
             <Text style={styles.sectionTitle}>Account Information</Text>
           </View>
 
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.08,
+    paddingTop: 12,
     paddingBottom: height * 0.05,
   },
   headerCard: {

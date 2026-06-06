@@ -141,9 +141,10 @@ const FavoriteItemsList = () => {
           left: 0,
           right: 0,
           zIndex: 100,
-          backgroundColor: "#f5f5f5",
-          paddingTop: StatusBar.currentHeight || scale(30),
-          paddingHorizontal: scale(10),
+          backgroundColor: "#f8fafc",
+          paddingTop: StatusBar.currentHeight || 30,
+          paddingHorizontal: 10,
+          paddingBottom: 10,
         },
         headerRow: {
           flexDirection: "row",
@@ -168,9 +169,8 @@ const FavoriteItemsList = () => {
           marginHorizontal: 5,
         },
         logo: {
-          width: scale(160),
-          height: scale(60),
-          resizeMode: "contain",
+          width: 150,
+          height: 50,
         },
         title: {
           marginTop: scale(80),
@@ -798,9 +798,6 @@ const FavoriteItemsList = () => {
       <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={handleBackPress}>
-            <Ionicons name="arrow-back" size={scale(24)} color="#a5a4a4" />
-          </TouchableOpacity>
           <FastImage
             source={require("../../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}

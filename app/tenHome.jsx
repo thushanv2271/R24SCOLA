@@ -213,8 +213,8 @@ const TenHome = () => {
                     <RefreshControl
                       refreshing={refreshing}
                       onRefresh={handleRefresh}
-                      colors={["#007bff"]}
-                      tintColor="#007bff"
+                      colors={["#004aad"]}
+                      tintColor="#004aad"
                     />
                   }
                   maxToRenderPerBatch={5}

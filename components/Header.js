@@ -38,14 +38,9 @@ const Header = memo(({ onFilterPress, onProfilePress }) => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    position: "absolute",
-    top: "4%", // Using percentage for better scaling
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: width * 0.03, // Responsive padding (3% of screen width)
-    paddingVertical: "2%", // Responsive vertical padding
+    backgroundColor: "#f8fafc",
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   headerRow: {
     flexDirection: "row",

@@ -116,7 +116,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="person-add"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -135,7 +135,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="log-in"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -154,7 +154,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="checkmark-circle"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -173,7 +173,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="mail"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -194,7 +194,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="search"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -213,7 +213,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="star"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -232,7 +232,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="paper-plane"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -251,7 +251,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="mail-open"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -272,7 +272,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="send"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -293,7 +293,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="rocket"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -312,7 +312,7 @@ export default function ScholarshipGuide() {
             <Ionicons
               name="time"
               size={height * 0.1}
-              color="#3b82f6"
+              color="#004aad"
               style={styles.stepIcon}
             />
           </Animated.View>
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: "#3b82f6",
+    borderLeftColor: "#004aad",
   },
   stepTitle: {
     fontSize: width * 0.05,

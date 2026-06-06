@@ -7,7 +7,7 @@
 export const COLORS = {
   // Primary Blues
   PRIMARY_DARK_BLUE: "#004aad", // Main buttons, dark accents
-  PRIMARY_BLUE: "#007bff", // Links, secondary accents
+  PRIMARY_BLUE: "#004aad", // Links, secondary accents
 
   // Secondary Colors
   SUCCESS: "#10b981", // Success states
@@ -44,7 +44,7 @@ export const COLORS = {
 
 // Legacy aliases for backward compatibility
 export const BLUE_PRIMARY = COLORS.PRIMARY_DARK_BLUE; // #004aad
-export const BLUE_SECONDARY = COLORS.PRIMARY_BLUE; // #007bff
-export const BLUE_LOADING = COLORS.PRIMARY_BLUE; // Changed from #0000ff to #007bff
+export const BLUE_SECONDARY = COLORS.PRIMARY_BLUE; // #004aad
+export const BLUE_LOADING = COLORS.PRIMARY_BLUE; // Changed from #0000ff to #004aad
 
 export default COLORS;

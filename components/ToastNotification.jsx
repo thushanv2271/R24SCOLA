@@ -51,13 +51,13 @@ const ToastNotification = () => {
   const getColor = () => {
     switch (notification.type) {
       case "success":
-        return "#4CAF50";
+        return "#004aad";
       case "error":
         return "#F44336";
       case "warning":
         return "#FF9800";
       default:
-        return "#2196F3";
+        return "#004aad";
     }
   };
 

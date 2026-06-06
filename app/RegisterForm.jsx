@@ -11,7 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { styles, getDynamicStyles } from "../app/styles/Styles3";
+import { styles, getDynamicStyles } from "./styles/styles3";
 import LoaderModal from "../components/LoaderModal";
 import { authAPI } from "../services/apiService";
 import { IconSymbol } from "../components/ui/IconSymbol";

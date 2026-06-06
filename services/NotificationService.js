@@ -48,7 +48,7 @@ export class NotificationService {
       title,
       description,
       icon: "checkmark-circle",
-      color: "#4CAF50",
+      color: "#004aad",
     });
   }
 
@@ -68,7 +68,7 @@ export class NotificationService {
       title,
       description,
       icon: "information-circle",
-      color: "#2196F3",
+      color: "#004aad",
     });
   }
 

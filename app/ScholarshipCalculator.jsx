@@ -565,9 +565,9 @@ const ScholarshipPossibilityCalculator = () => {
           <LinearGradient
             colors={
               percentage >= 80
-                ? ["#10b981", "#34d399"]
+                ? ["#004aad", "#1A237E"]
                 : percentage >= 60
-                  ? ["#3b82f6", "#60a5fa"]
+                  ? ["#004aad", "#1A237E"]
                   : ["#94a3b8", "#cbd5e1"]
             }
             start={{ x: 0, y: 0 }}
@@ -737,9 +737,9 @@ const ScholarshipPossibilityCalculator = () => {
                   <LinearGradient
                     colors={
                       possibility >= 85
-                        ? ["#10b981", "#34d399"]
+                        ? ["#004aad", "#1A237E"]
                         : possibility >= 70
-                          ? ["#3b82f6", "#60a5fa"]
+                          ? ["#004aad", "#1A237E"]
                           : possibility >= 50
                             ? ["#f59e0b", "#fbbf24"]
                             : ["#ef4444", "#f87171"]
@@ -819,10 +819,10 @@ const ScholarshipPossibilityCalculator = () => {
                         <Ionicons
                           name="checkmark-circle"
                           size={20}
-                          color="#10b981"
+                          color="#004aad"
                         />
                         <Text
-                          style={[styles.sectionTitle, { color: "#10b981" }]}
+                          style={[styles.sectionTitle, { color: "#004aad" }]}
                         >
                           Your Strengths
                         </Text>
@@ -832,7 +832,7 @@ const ScholarshipPossibilityCalculator = () => {
                           <Ionicons
                             name="checkmark"
                             size={16}
-                            color="#10b981"
+                            color="#004aad"
                           />
                           <Text style={styles.listItemText}>{strength}</Text>
                         </View>
@@ -1541,7 +1541,7 @@ const styles = StyleSheet.create({
   historyStrengthsTitle: {
     fontSize: moderateScale(12),
     fontFamily: "Roboto",
-    color: "#10b981",
+    color: "#004aad",
     fontWeight: "600",
   },
   deleteButton: {

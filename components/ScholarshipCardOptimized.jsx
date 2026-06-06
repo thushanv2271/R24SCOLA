@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
   },
   linkText: {
-    color: "#007bff",
+    color: "#004aad",
     textDecorationLine: "underline",
   },
   professorContainer: {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e0e0e0",
   },
   button: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#004aad",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",

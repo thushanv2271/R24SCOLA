@@ -325,17 +325,6 @@ const ScholarshipHome = () => {
           />
           <View style={styles.iconsContainer}>
             <View style={styles.iconBackground}>
-              <TouchableOpacity
-                onPress={() =>
-                  username
-                    ? navigation.navigate("Profile", { username })
-                    : router.push("/login")
-                }
-              >
-                <Ionicons name="person" size={25} color="#a5a4a4" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.iconBackground}>
               <TouchableOpacity onPress={() => setShowNotificationModal(true)}>
                 <Ionicons name="notifications" size={25} color="#a5a4a4" />
                 {notifications && notifications.length > 0 && (
@@ -415,12 +404,14 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: "absolute",
-    top: "5%",
+    top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: "#f5f5f5",
-    padding: 10,
+    backgroundColor: "#f8fafc",
+    paddingTop: StatusBar.currentHeight || 30,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   headerRow: {
     flexDirection: "row",

@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   linkText: {
-    color: "#007bff",
+    color: "#004aad",
     textDecorationLine: "underline",
   },
   buttonContainer: {

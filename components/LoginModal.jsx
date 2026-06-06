@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loginButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#004aad",
   },
   cancelButton: {
     backgroundColor: "#6c757d",
