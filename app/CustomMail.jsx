@@ -6,9 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  TextInput,
   Dimensions,
-  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
@@ -19,6 +17,7 @@ import LoaderModal from "../components/JustMoment";
 import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import AlertModal from "../components/AlertModal";
+import CustomizeEmailMessageModal from "../components/CustomizeEmailMessageModal";
 
 const { width, height } = Dimensions.get("window");
 
@@ -262,79 +261,23 @@ export default function CustomMail() {
         </View>
       </ScrollView>
 
-      <Modal
-        animationType="slide"
-        transparent={false}
+      <CustomizeEmailMessageModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalScrollViewContent}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Customize Scholarship Email</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={emailMessage}
-                onChangeText={setEmailMessage}
-                placeholder="Enter your custom scholarship email message"
-                multiline
-                numberOfLines={10}
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleSaveEmailMessage}
-                >
-                  <Text style={styles.modalButtonText}>Save</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+        title="Customize Scholarship Email"
+        emailMessage={emailMessage}
+        setEmailMessage={setEmailMessage}
+        onClose={() => setModalVisible(false)}
+        onSave={handleSaveEmailMessage}
+      />
 
-      <Modal
-        animationType="slide"
-        transparent={false}
+      <CustomizeEmailMessageModal
         visible={jobModalVisible}
-        onRequestClose={() => setJobModalVisible(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalScrollViewContent}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Customize Job Email</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={jobEmailMessage}
-                onChangeText={setJobEmailMessage}
-                placeholder="Enter your custom job email message"
-                multiline
-                numberOfLines={10}
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setJobModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleSaveJobEmailMessage}
-                >
-                  <Text style={styles.modalButtonText}>Save</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+        title="Customize Job Email"
+        emailMessage={jobEmailMessage}
+        setEmailMessage={setJobEmailMessage}
+        onClose={() => setJobModalVisible(false)}
+        onSave={handleSaveJobEmailMessage}
+      />
 
       <AlertModal
         visible={alertConfig.visible}

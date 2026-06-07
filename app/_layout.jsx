@@ -40,78 +40,12 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="Instructions" options={{ headerShown: false }} />
           <Stack.Screen name="RegisterForm" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="ComputerScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="Chemistry" options={{ headerShown: false }} />
-          <Stack.Screen name="PChemistry" options={{ headerShown: false }} />
-          <Stack.Screen name="MChemistry" options={{ headerShown: false }} />
-          <Stack.Screen name="Community" options={{ headerShown: false }} />
-
-          <Stack.Screen name="Business" options={{ headerShown: false }} />
-          <Stack.Screen name="PBusiness" options={{ headerShown: false }} />
-          <Stack.Screen name="MBusiness" options={{ headerShown: false }} />
-
-          <Stack.Screen name="Engineering" options={{ headerShown: false }} />
-          <Stack.Screen name="PEngineering" options={{ headerShown: false }} />
-          <Stack.Screen name="JobInside" options={{ headerShown: false }} />
-          <Stack.Screen name="MEngineering" options={{ headerShown: false }} />
           <Stack.Screen name="Scholarships" options={{ headerShown: false }} />
           <Stack.Screen name="Itjobs" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="ScholarshipCreateNew"
-            options={{ headerShown: false }}
-          />
-
-          <Stack.Screen name="HealthScience" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="PHealthScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="MHealthScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="NaturalScience"
-            options={{ headerShown: false }}
-          />
-
-          <Stack.Screen
-            name="PNaturalScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="MNaturalScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="Statistics" options={{ headerShown: false }} />
-          <Stack.Screen name="Info" options={{ headerShown: false }} />
-          <Stack.Screen name="PStatistics" options={{ headerShown: false }} />
-          <Stack.Screen name="MStatistics" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="MComputerScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="PComputerScience"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ScholarshipCalculator"
-            options={{ headerShown: false }}
-          />
-
+          <Stack.Screen name="ScholarshipCalculator" options={{ headerShown: false }} />
           <Stack.Screen name="Profile" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="BachelorsInside"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="MastersInside" options={{ headerShown: false }} />
           <Stack.Screen name="CustomMail" options={{ headerShown: false }} />
-          <Stack.Screen name="PhdInside" options={{ headerShown: false }} />
-          <Stack.Screen name="Premium" options={{ headerShown: false }} />
+          <Stack.Screen name="PrivacyPolicy" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
         <ToastNotification />

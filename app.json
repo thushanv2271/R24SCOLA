@@ -16,7 +16,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.thusha2271.scholarships",
-      "versionCode": 42,
+      "versionCode": 45,
       "targetSdkVersion": 35,
       "compileSdkVersion": 35,
       "minSdkVersion": 24
@@ -36,15 +36,23 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "ndkVersion": "28.0.12433566"
+          }
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "googleClientIdAndroid": "165483938092-7j7i7sroo527310ssoca4uq78sstcu1u.apps.googleusercontent.com",
-      "googleClientIdIos": "YOUR_IOS_CLIENT_ID",
-      "googleClientIdWeb": "YOUR_WEB_CLIENT_ID",
+      "googleClientIdAndroid": "",
+      "googleClientIdIos": "",
+      "googleClientIdWeb": "",
       "eas": {
         "projectId": "12cfea4a-1181-4147-a5fb-f43838d91572"
       }

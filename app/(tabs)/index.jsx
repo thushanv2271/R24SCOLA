@@ -65,27 +65,23 @@ const ScholarshipHome = () => {
   const navigation = useNavigation();
   const [paidMember, setPaidMember] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const { notifications } = useContext(AuthContext);
+  const { notifications, user } = useContext(AuthContext);
 
-  // Fetch username from AsyncStorage if not in route params
+  // Resolve username: route params → AuthContext → AsyncStorage
   useEffect(() => {
     const fetchUsernameFromStorage = async () => {
       try {
-        if (paramsUsername) {
-          setUsername(paramsUsername);
-          return;
-        }
+        if (paramsUsername) { setUsername(paramsUsername); return; }
+        if (user?.username) { setUsername(user.username); return; }
         const storedUsername = await AsyncStorage.getItem("username");
-        if (storedUsername) {
-          setUsername(storedUsername);
-        }
+        if (storedUsername) setUsername(storedUsername);
       } catch (error) {
         console.error("Error fetching username from storage:", error);
       }
     };
 
     fetchUsernameFromStorage();
-  }, [paramsUsername]);
+  }, [paramsUsername, user]);
 
   useEffect(() => {
     const fetchPaidStatus = async () => {
@@ -101,9 +97,10 @@ const ScholarshipHome = () => {
   }, [username]);
 
   useEffect(() => {
+    let timer;
     const loadData = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => { timer = setTimeout(resolve, 2000); });
         setLoading(false);
       } catch (error) {
         console.error(error);
@@ -112,6 +109,7 @@ const ScholarshipHome = () => {
     };
 
     loadData();
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleSidebar = () => {
@@ -124,10 +122,13 @@ const ScholarshipHome = () => {
     setSidebarVisible(!sidebarVisible);
   };
 
+  const refreshTimer = React.useRef(null);
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 2000);
+    refreshTimer.current = setTimeout(() => setRefreshing(false), 2000);
   };
+
+  useEffect(() => () => clearTimeout(refreshTimer.current), []);
 
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 50],
@@ -156,7 +157,7 @@ const ScholarshipHome = () => {
       params: { username },
     },
     { title: "Scholarships", icon: "school", screen: "Scholarships" },
-    { title: "Jobs", icon: "briefcase", screen: "JobInside" },
+    { title: "Jobs", icon: "briefcase", screen: "Itjobs" },
     { title: "Favourites", icon: "heart", screen: "favourites" },
     { title: "Edit Mail", icon: "create", screen: "CustomMail" },
   ];
@@ -265,9 +266,7 @@ const ScholarshipHome = () => {
     {
       type: "mainActions",
       data: [
-        { title: "Jobs", icon: "briefcase", screen: "JobInside" },
-        // { title: "Create new", icon: "briefcase", screen: "ScholarshipCreateNew" },
-        // { title: "Circle", icon: "briefcase", screen: "JobInside" },
+        { title: "Jobs", icon: "briefcase", screen: "Itjobs" },
         {
           title: "Check Your Eligibility",
           icon: "checkmark-circle",
@@ -282,33 +281,6 @@ const ScholarshipHome = () => {
         },
       ],
     },
-    {
-      type: "academicPathways",
-      data: [
-        {
-          title: "Request for Bachelor's",
-          icon: "school",
-          screen: "BachelorsInside",
-          color: "#1E88E5",
-          description: "Start your undergraduate journey with funding support",
-        },
-        {
-          title: "Request for Masters",
-          icon: "book",
-          screen: "MastersInside",
-          color: "#43A047",
-          description: "Advance your expertise with graduate scholarships",
-        },
-        {
-          title: "Request for PhD",
-          icon: "flask",
-          screen: "PhdInside",
-          color: "#F4511E",
-          description: "Secure funding for groundbreaking research",
-        },
-      ],
-    },
-    { type: "services", icon: "cog" },
   ];
 
   return (

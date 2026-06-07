@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import {
   Modal,
   View,
@@ -7,136 +7,201 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { authAPI } from "../services/apiService";
+import { Ionicons } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
 const CustomizeEmailMessageModal = ({
   visible,
+  title = "Customize Email Message",
   emailMessage,
   setEmailMessage,
-  userEmail,
   onClose,
-  setLoading,
-  setEditedData,
-  onShowAlert,
+  onSave,
 }) => {
-  const handleSaveEmailMessage = async () => {
-    try {
-      setLoading(true);
-      const updatedData = await authAPI.updateEmailMessage(
-        userEmail,
-        emailMessage,
-      );
-      setEditedData(updatedData);
-      setEmailMessage(updatedData?.scholarshipEmailMessage || emailMessage);
-      onClose();
-      if (onShowAlert) {
-        onShowAlert("Success", "Email message updated successfully", "success");
-      }
-    } catch (error) {
-      console.error("Error updating email message:", error);
-      if (onShowAlert) {
-        onShowAlert("Error", "Failed to update email message", "error");
-      }
-    } finally {
-      setLoading(false);
+  const slideAnim = useRef(new Animated.Value(height)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 65,
+        friction: 11,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: height,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
     }
-  };
+  }, [visible]);
 
   return (
     <Modal
-      animationType="slide"
+      animationType="none"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Customize Email Message</Text>
-          <TextInput
-            style={styles.modalInput}
-            value={emailMessage}
-            onChangeText={setEmailMessage}
-            placeholder="Enter your custom email message"
-            multiline
-            numberOfLines={4}
-          />
-          <View style={styles.modalButtons}>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.cancelButton]}
-              onPress={onClose}
-            >
-              <Text style={styles.modalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.saveButton]}
-              onPress={handleSaveEmailMessage}
-            >
-              <Text style={styles.modalButtonText}>Save</Text>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+          {/* Drag handle */}
+          <View style={styles.dragHandle} />
+
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>{title}</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+              <Ionicons name="close" size={20} color="#64748b" />
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+
+          <View style={styles.divider} />
+
+          {/* Text area */}
+          <Text style={styles.label}>Your message</Text>
+          <TextInput
+            style={styles.input}
+            value={emailMessage}
+            onChangeText={setEmailMessage}
+            placeholder="Write your custom email message here..."
+            placeholderTextColor="#94a3b8"
+            multiline
+            textAlignVertical="top"
+            autoFocus={false}
+          />
+
+          {/* Buttons */}
+          <View style={styles.buttons}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.saveBtn} onPress={onSave} activeOpacity={0.85}>
+              <Text style={styles.saveBtnText}>Save Message</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  overlay: {
     flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+  },
+  sheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    maxHeight: height * 0.85,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#e2e8f0",
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#0f172a",
+    fontFamily: "Roboto",
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: "#f1f5f9",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  modalContent: {
-    width: width * 0.97,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: width * 0.05,
-    alignItems: "center",
+  divider: {
+    height: 1,
+    backgroundColor: "#f1f5f9",
+    marginBottom: 16,
   },
-  modalTitle: {
-    fontSize: width * 0.05,
-    fontWeight: "bold",
-    color: "#1f2937",
-    marginBottom: height * 0.02,
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#475569",
+    fontFamily: "Roboto",
+    marginBottom: 8,
   },
-  modalInput: {
-    width: "100%",
-    height: height * 0.45,
-    borderColor: "#d1d5db",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: width * 0.03,
-    marginBottom: height * 0.06,
-    fontSize: width * 0.04,
-    textAlignVertical: "top",
-    backgroundColor: "#f9fafb",
+  input: {
+    flex: 0,
+    height: height * 0.32,
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    fontFamily: "Roboto",
+    color: "#0f172a",
+    backgroundColor: "#f8fafc",
+    lineHeight: 22,
+    marginBottom: 20,
   },
-  modalButtons: {
+  buttons: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+    gap: 12,
   },
-  modalButton: {
+  cancelBtn: {
     flex: 1,
-    paddingVertical: height * 0.015,
-    borderRadius: 8,
-    marginHorizontal: width * 0.02,
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: "#f1f5f9",
     alignItems: "center",
   },
-  cancelButton: {
-    backgroundColor: "#6b7280",
+  cancelBtnText: {
+    color: "#475569",
+    fontWeight: "600",
+    fontSize: 15,
+    fontFamily: "Roboto",
   },
-  saveButton: {
+  saveBtn: {
+    flex: 2,
+    paddingVertical: 13,
+    borderRadius: 12,
     backgroundColor: "#004aad",
+    alignItems: "center",
   },
-  modalButtonText: {
+  saveBtnText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: width * 0.04,
+    fontWeight: "700",
+    fontSize: 15,
+    fontFamily: "Roboto",
   },
 });
 

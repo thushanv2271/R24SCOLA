@@ -23,7 +23,6 @@ import { sendScholarshipEmail, sendJobEmail } from "../service/emailService";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AlertModal from "../../components/AlertModal";
 
 const FavoriteItemsList = () => {
   const { user, refreshFavorites } = useContext(AuthContext);
@@ -33,26 +32,12 @@ const FavoriteItemsList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [requestedScholarships, setRequestedScholarships] = useState(new Set());
   const [requestedJobs, setRequestedJobs] = useState(new Set());
+  const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const navigation = useNavigation();
   const scaleFactor = screenWidth / 375;
   const scale = (size) => Math.min(size * scaleFactor, size * 1.5);
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
-    title: "",
-    message: "",
-    type: "info",
-    actions: [],
-  });
-
-  const showAlert = (title, message, type = "info", actions = []) => {
-    setAlertConfig({ visible: true, title, message, type, actions });
-  };
-
-  const closeAlert = () => {
-    setAlertConfig({ ...alertConfig, visible: false });
-  };
 
   // Load requested scholarships from AsyncStorage when the component mounts
   useEffect(() => {
@@ -65,11 +50,6 @@ const FavoriteItemsList = () => {
         }
       } catch (error) {
         console.error("Failed to load requested scholarships:", error);
-        showAlert(
-          "Error",
-          "Could not load requested scholarships data.",
-          "error",
-        );
       }
     };
 
@@ -82,7 +62,6 @@ const FavoriteItemsList = () => {
         }
       } catch (error) {
         console.error("Failed to load requested jobs:", error);
-        showAlert("Error", "Could not load requested jobs data.", "error");
       }
     };
 
@@ -100,11 +79,6 @@ const FavoriteItemsList = () => {
         );
       } catch (error) {
         console.error("Failed to save requested scholarships:", error);
-        showAlert(
-          "Error",
-          "Could not save requested scholarships data.",
-          "error",
-        );
       }
     };
     saveRequestedScholarships();
@@ -120,7 +94,6 @@ const FavoriteItemsList = () => {
         );
       } catch (error) {
         console.error("Failed to save requested jobs:", error);
-        showAlert("Error", "Could not save requested jobs data.", "error");
       }
     };
     saveRequestedJobs();
@@ -143,7 +116,7 @@ const FavoriteItemsList = () => {
           zIndex: 100,
           backgroundColor: "#f8fafc",
           paddingTop: StatusBar.currentHeight || 30,
-          paddingHorizontal: 10,
+          paddingHorizontal: 16,
           paddingBottom: 10,
         },
         headerRow: {
@@ -172,6 +145,31 @@ const FavoriteItemsList = () => {
           width: 150,
           height: 50,
         },
+        fab: {
+          position: "absolute",
+          bottom: 24,
+          right: 20,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          backgroundColor: "#004aad",
+          paddingVertical: 12,
+          paddingHorizontal: 18,
+          borderRadius: 30,
+          elevation: 6,
+          shadowColor: "#004aad",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.35,
+          shadowRadius: 8,
+          zIndex: 20,
+        },
+        fabText: {
+          color: "#fff",
+          fontSize: 14,
+          fontWeight: "700",
+          fontFamily: "Roboto",
+          textBreakStrategy: "simple",
+        },
         title: {
           marginTop: scale(80),
           fontFamily: "Poppins_700Bold",
@@ -183,112 +181,231 @@ const FavoriteItemsList = () => {
         },
         card: {
           backgroundColor: "#fff",
-          top: scale(12),
-          borderRadius: scale(12),
-          marginVertical: scale(8),
-          padding: scale(12),
+          borderRadius: 14,
+          marginVertical: 6,
+          padding: 14,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: scale(2) },
-          shadowOpacity: 0.2,
-          shadowRadius: scale(5),
-          elevation: scale(4),
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 2,
         },
-        cardHeader: {
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: scale(10),
-        },
-        imageContainer: {
-          width: scale(80),
-          height: scale(80),
-          borderRadius: scale(8),
-          backgroundColor: "#f0f0f0",
-          justifyContent: "center",
-          alignItems: "center",
-          overflow: "hidden",
-        },
-        cardTitle: {
-          fontFamily: "Poppins_600SemiBold",
-          fontSize: scale(16),
-          fontWeight: "600",
-          color: "#333",
-          textBreakStrategy: "simple",
-        },
-        cardSubtitle: {
-          fontFamily: "Poppins_400Regular",
-          fontSize: scale(14),
-          color: "#666",
-          fontStyle: "italic",
-          textBreakStrategy: "simple",
-        },
-        buttonContainer: {
+        removeRow: {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          marginTop: scale(10),
+          marginBottom: 8,
         },
-        button: {
-          backgroundColor: "#004aad",
-          paddingVertical: scale(10),
-          paddingHorizontal: scale(16),
-          borderRadius: scale(30),
+        typeBadge: {
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-          marginRight: scale(10),
+          gap: 4,
+          paddingVertical: 3,
+          paddingHorizontal: 8,
+          borderRadius: 20,
         },
-        buttonRequested: {
-          backgroundColor: "#002961",
+        typeBadgeScholarship: {
+          backgroundColor: "#004aad",
         },
-        buttonText: {
-          fontSize: scale(16),
+        typeBadgeJob: {
+          backgroundColor: "#166534",
+        },
+        typeBadgeText: {
+          fontSize: 10,
           fontWeight: "700",
           fontFamily: "Roboto",
           color: "#fff",
           textBreakStrategy: "simple",
         },
-        requestAllText: {
-          fontSize: scale(16),
-          fontFamily: "Roboto",
-          color: "#004aad",
-          textDecorationLine: "underline",
-          textAlign: "center",
-          marginTop: scale(10),
-          marginHorizontal: scale(10),
-        },
-        requestAllTextDisabled: {
-          color: "#cccccc",
-          textDecorationLine: "none",
-        },
-        actionButtonsContainer: {
+        removeTextBtn: {
           flexDirection: "row",
-          justifyContent: "space-around",
           alignItems: "center",
-          marginTop: scale(5),
-          marginHorizontal: scale(10),
+          gap: 4,
         },
-        actionButton: {
-          flex: 1,
-          marginHorizontal: scale(5),
-        },
-        removeAllText: {
-          fontSize: scale(16),
+        removeText: {
+          fontSize: 12,
+          fontWeight: "600",
           fontFamily: "Roboto",
-          color: "#ff4d4d",
-          textDecorationLine: "underline",
-          textAlign: "center",
-          marginTop: scale(10),
+          color: "#ef4444",
+          textBreakStrategy: "simple",
         },
-        removeAllTextDisabled: {
-          color: "#cccccc",
-          textDecorationLine: "none",
+        dashedDivider: {
+          borderBottomWidth: 1,
+          borderBottomColor: "#e2e8f0",
+          borderStyle: "dashed",
+          marginBottom: 12,
         },
-        removeButton: {
-          backgroundColor: "#ff4d4d",
-          padding: scale(10),
-          borderRadius: scale(28),
+        cardHeader: {
+          flexDirection: "row",
+          alignItems: "flex-start",
+          marginBottom: 10,
+        },
+        imageContainer: {
+          width: 64,
+          height: 64,
+          borderRadius: 10,
+          backgroundColor: "#f1f5f9",
           justifyContent: "center",
           alignItems: "center",
+          overflow: "hidden",
+        },
+        cardInfo: {
+          flex: 1,
+          paddingLeft: 12,
+        },
+        cardTitle: {
+          fontFamily: "Roboto",
+          fontSize: 14,
+          fontWeight: "700",
+          color: "#1e293b",
+          textBreakStrategy: "simple",
+          marginBottom: 2,
+        },
+        cardSubtitle: {
+          fontFamily: "Roboto",
+          fontSize: 12,
+          color: "#64748b",
+          textBreakStrategy: "simple",
+          marginBottom: 6,
+        },
+        tagsRow: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 4,
+        },
+        tag: {
+          backgroundColor: "#f1f5f9",
+          borderRadius: 10,
+          paddingHorizontal: 8,
+          paddingVertical: 2,
+        },
+        tagText: {
+          fontSize: 11,
+          color: "#475569",
+          fontFamily: "Roboto",
+          textBreakStrategy: "simple",
+        },
+        cardActions: {
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          marginTop: 4,
+        },
+        requestBtn: {
+          backgroundColor: "#004aad",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          paddingVertical: 7,
+          paddingHorizontal: 16,
+          borderRadius: 20,
+        },
+        requestBtnText: {
+          fontSize: 13,
+          fontWeight: "600",
+          fontFamily: "Roboto",
+          color: "#fff",
+          textBreakStrategy: "simple",
+        },
+        requestedBadge: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 5,
+        },
+        requestedText: {
+          fontSize: 13,
+          fontWeight: "600",
+          fontFamily: "Roboto",
+          color: "#10b981",
+          textBreakStrategy: "simple",
+        },
+        menuBtn: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: "#f1f5f9",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        tabBar: {
+          flexDirection: "row",
+          marginTop: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: "#e2e8f0",
+        },
+        tabItem: {
+          flex: 1,
+          alignItems: "center",
+          paddingBottom: 10,
+        },
+        tabLabel: {
+          fontSize: scale(14),
+          fontWeight: "600",
+          fontFamily: "Roboto",
+          color: "#94a3b8",
+          textBreakStrategy: "simple",
+        },
+        tabLabelActive: {
+          color: "#004aad",
+        },
+        tabCount: {
+          fontSize: scale(12),
+          fontWeight: "700",
+          color: "#004aad",
+        },
+        tabUnderline: {
+          position: "absolute",
+          bottom: 0,
+          left: "20%",
+          right: "20%",
+          height: 2,
+          backgroundColor: "#004aad",
+          borderRadius: 2,
+        },
+        menuBackdrop: {
+          position: "absolute",
+          top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 150,
+        },
+        dropdown: {
+          position: "absolute",
+          top: (StatusBar.currentHeight || 30) + 120,
+          right: 16,
+          backgroundColor: "#fff",
+          borderRadius: 12,
+          paddingVertical: 4,
+          minWidth: 180,
+          elevation: 16,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.18,
+          shadowRadius: 12,
+          zIndex: 200,
+        },
+        dropdownItem: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+        },
+        dropdownText: {
+          fontSize: 14,
+          fontWeight: "600",
+          fontFamily: "Roboto",
+          color: "#004aad",
+          textBreakStrategy: "simple",
+        },
+        dropdownTextDanger: {
+          color: "#ef4444",
+        },
+        dropdownTextDisabled: {
+          color: "#cbd5e1",
+        },
+        dropdownDivider: {
+          height: 1,
+          backgroundColor: "#f1f5f9",
+          marginHorizontal: 12,
         },
         emptyText: {
           textAlign: "center",
@@ -297,44 +414,6 @@ const FavoriteItemsList = () => {
           fontSize: scale(16),
           marginTop: screenHeight * 0.2,
           textBreakStrategy: "simple",
-        },
-        tabContainer: {
-          flexDirection: "row",
-          backgroundColor: "#fff",
-          borderRadius: scale(30),
-          padding: scale(4),
-          marginTop: scale(10),
-          marginBottom: scale(10),
-          elevation: 2,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-        tabButton: {
-          flex: 1,
-          paddingVertical: scale(10),
-          paddingHorizontal: scale(20),
-          borderRadius: scale(26),
-          alignItems: "center",
-          justifyContent: "center",
-        },
-        tabButtonActive: {
-          backgroundColor: "#004aad",
-        },
-        tabButtonInactive: {
-          backgroundColor: "transparent",
-        },
-        tabText: {
-          fontFamily: "Poppins_600SemiBold",
-          fontSize: scale(14),
-          fontWeight: "600",
-        },
-        tabTextActive: {
-          color: "#fff",
-        },
-        tabTextInactive: {
-          color: "#666",
         },
       }),
     [scale, screenWidth, screenHeight],
@@ -349,7 +428,7 @@ const FavoriteItemsList = () => {
       const data = await authAPI.getFavorites(username);
       setFavoriteScholarships(data);
     } catch (error) {
-      showAlert("Error", "Could not fetch favorite scholarships.", "error");
+      console.error("Could not fetch favorite scholarships:", error);
     } finally {
       setRefreshing(false);
     }
@@ -360,7 +439,7 @@ const FavoriteItemsList = () => {
       const data = await authAPI.getJobFavorites(username);
       setFavoriteJobs(data);
     } catch (error) {
-      showAlert("Error", "Could not fetch favorite jobs.", "error");
+      console.error("Could not fetch favorite jobs:", error);
     } finally {
       setRefreshing(false);
     }
@@ -378,26 +457,15 @@ const FavoriteItemsList = () => {
   };
 
   const handleRequestAllScholarships = async () => {
-    if (!user?.username) {
-      showAlert("Error", "Please log in to request scholarships.", "error");
-      return;
-    }
+    if (!user?.username) return;
 
-    // Filter out already requested scholarships and those without valid professor emails
     const scholarshipsToRequest = favoriteScholarships.filter(
       (scholarship) =>
         !requestedScholarships.has(scholarship.id) &&
         scholarship.contactProfessors?.[0]?.email,
     );
 
-    if (scholarshipsToRequest.length === 0) {
-      showAlert(
-        "Info",
-        "No new scholarships to request or missing professor emails.",
-        "info",
-      );
-      return;
-    }
+    if (scholarshipsToRequest.length === 0) return;
 
     // Collect all professor emails
     const professorEmails = scholarshipsToRequest
@@ -431,39 +499,19 @@ const FavoriteItemsList = () => {
         newRequested.add(scholarship.id),
       );
       setRequestedScholarships(newRequested);
-
-      showAlert(
-        "Success",
-        `${scholarshipsToRequest.length} scholarship${
-          scholarshipsToRequest.length > 1 ? "s" : ""
-        } requested successfully!`,
-        "success",
-      );
     } catch (error) {
       console.error("Failed to send scholarship request email:", error);
-      showAlert("Error", "Failed to send scholarship request email.", "error");
     }
   };
 
   const handleRequestAllJobs = async () => {
-    if (!user?.username) {
-      showAlert("Error", "Please log in to request jobs.", "error");
-      return;
-    }
+    if (!user?.username) return;
 
-    // Filter out already requested jobs and those without valid contact emails
     const jobsToRequest = favoriteJobs.filter(
       (job) => !requestedJobs.has(job.id) && job.contactProfessors?.[0]?.email,
     );
 
-    if (jobsToRequest.length === 0) {
-      showAlert(
-        "Info",
-        "No new jobs to request or missing contact emails.",
-        "info",
-      );
-      return;
-    }
+    if (jobsToRequest.length === 0) return;
 
     // Collect all contact emails
     const contactEmails = jobsToRequest
@@ -495,87 +543,34 @@ const FavoriteItemsList = () => {
       const newRequested = new Set(requestedJobs);
       jobsToRequest.forEach((job) => newRequested.add(job.id));
       setRequestedJobs(newRequested);
-
-      showAlert(
-        "Success",
-        `${jobsToRequest.length} job${jobsToRequest.length > 1 ? "s" : ""} requested successfully!`,
-        "success",
-      );
     } catch (error) {
       console.error("Failed to send job request email:", error);
-      showAlert("Error", "Failed to send job request email.", "error");
     }
   };
 
   const handleRemoveAll = async () => {
     const isJob = selectedTab === "jobs";
     const itemsToRemove = isJob ? favoriteJobs : favoriteScholarships;
-
-    if (itemsToRemove.length === 0) {
-      showAlert(
-        "Info",
-        `No ${isJob ? "jobs" : "scholarships"} to remove.`,
-        "info",
+    if (itemsToRemove.length === 0) return;
+    try {
+      await Promise.all(
+        itemsToRemove.map((item) =>
+          isJob
+            ? authAPI.removeJobFavorite(user.username, item.id)
+            : authAPI.removeFavorite(user.username, item.id),
+        ),
       );
-      return;
+      if (isJob) {
+        setFavoriteJobs([]);
+        await AsyncStorage.setItem("favoriteJobs", JSON.stringify([]));
+      } else {
+        setFavoriteScholarships([]);
+        await AsyncStorage.setItem("favoriteScholarships", JSON.stringify([]));
+      }
+      refreshFavorites();
+    } catch (error) {
+      console.error("Error removing all favorites:", error);
     }
-
-    showAlert(
-      "Confirm",
-      `Are you sure you want to remove all ${itemsToRemove.length} ${isJob ? "job" : "scholarship"}${itemsToRemove.length > 1 ? "s" : ""} from favorites?`,
-      "warning",
-      [
-        {
-          text: "Cancel",
-          onPress: closeAlert,
-          style: "cancel",
-        },
-        {
-          text: "Remove All",
-          onPress: async () => {
-            closeAlert();
-            try {
-              // Remove all items from backend
-              const deletePromises = itemsToRemove.map((item) =>
-                isJob
-                  ? authAPI.removeJobFavorite(user.username, item.id)
-                  : authAPI.removeFavorite(user.username, item.id),
-              );
-
-              await Promise.all(deletePromises);
-
-              // Update local state
-              if (isJob) {
-                setFavoriteJobs([]);
-                await AsyncStorage.setItem("favoriteJobs", JSON.stringify([]));
-              } else {
-                setFavoriteScholarships([]);
-                await AsyncStorage.setItem(
-                  "favoriteScholarships",
-                  JSON.stringify([]),
-                );
-              }
-
-              // Trigger refresh in other components
-              refreshFavorites();
-
-              showAlert(
-                "Success",
-                `All ${isJob ? "jobs" : "scholarships"} removed from favorites!`,
-                "success",
-              );
-            } catch (error) {
-              console.error("Error removing all favorites:", error);
-              showAlert(
-                "Error",
-                `Could not remove all ${isJob ? "jobs" : "scholarships"} from favorites.`,
-                "error",
-              );
-            }
-          },
-        },
-      ],
-    );
   };
 
   useFocusEffect(
@@ -627,21 +622,9 @@ const FavoriteItemsList = () => {
         );
       }
 
-      // Trigger refresh in other components
       refreshFavorites();
-
-      showAlert(
-        "Success",
-        `${isJob ? "Job" : "Scholarship"} removed from favorites!`,
-        "success",
-      );
     } catch (error) {
       console.error("Error removing favorite:", error);
-      showAlert(
-        "Error",
-        `Could not remove ${isJob ? "job" : "scholarship"} from favorites.`,
-        "error",
-      );
     }
   };
 
@@ -655,10 +638,7 @@ const FavoriteItemsList = () => {
 
     const handleRequestItem = async () => {
       const professor = item.contactProfessors?.[0];
-      if (!professor?.email || !user?.username) {
-        showAlert("Error", "Missing email information.", "error");
-        return;
-      }
+      if (!professor?.email || !user?.username) return;
 
       try {
         if (isJob) {
@@ -673,7 +653,6 @@ const FavoriteItemsList = () => {
             newSet.add(item.id);
             return newSet;
           });
-          showAlert("Success", "Job request sent successfully!", "success");
         } else {
           await sendScholarshipEmail(
             professor.email,
@@ -686,23 +665,29 @@ const FavoriteItemsList = () => {
             newSet.add(item.id);
             return newSet;
           });
-          showAlert(
-            "Success",
-            "Scholarship request sent successfully!",
-            "success",
-          );
         }
       } catch (error) {
-        showAlert(
-          "Error",
-          `Failed to send ${isJob ? "job" : "scholarship"} request.`,
-          "error",
-        );
+        console.error(`Failed to send ${isJob ? "job" : "scholarship"} request:`, error);
       }
     };
 
     return (
       <View style={styles.card}>
+        {/* Top row: type badge + remove */}
+        <View style={styles.removeRow}>
+          <View style={[styles.typeBadge, isJob ? styles.typeBadgeJob : styles.typeBadgeScholarship]}>
+            <Ionicons name={isJob ? "briefcase" : "school"} size={10} color="#fff" />
+            <Text style={styles.typeBadgeText}>{isJob ? "Job" : "Scholarship"}</Text>
+          </View>
+          <TouchableOpacity style={styles.removeTextBtn} onPress={() => handleRemoveFavorite(item)}>
+            <Ionicons name="trash-outline" size={14} color="#ef4444" />
+            <Text style={styles.removeText}>Remove</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.dashedDivider} />
+
+        {/* Content row */}
         <View style={styles.cardHeader}>
           <View style={styles.imageContainer}>
             {imageUrl ? (
@@ -712,49 +697,40 @@ const FavoriteItemsList = () => {
                   cache: FastImage.cacheControl.immutable,
                   priority: FastImage.priority.normal,
                 }}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: scale(8),
-                }}
+                style={{ width: "100%", height: "100%", borderRadius: scale(8) }}
                 resizeMode={FastImage.resizeMode.cover}
               />
             ) : (
-              <MaterialIcons
-                name="image-not-supported"
-                size={scale(40)}
-                color="#888"
-              />
+              <MaterialIcons name="image-not-supported" size={scale(32)} color="#aaa" />
             )}
           </View>
-          <View style={{ flex: 1, paddingLeft: scale(12) }}>
-            <Text style={styles.cardTitle}>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardTitle} numberOfLines={2}>
               {item.title || `Untitled ${isJob ? "Job" : "Scholarship"}`}
             </Text>
-            <Text style={styles.cardSubtitle}>
-              {item.university ||
-                `Unknown ${isJob ? "Organization" : "University"}`}
+            <Text style={styles.cardSubtitle} numberOfLines={1}>
+              {item.university || `Unknown ${isJob ? "Organization" : "University"}`}
             </Text>
+            <View style={styles.tagsRow}>
+              {item.country ? <View style={styles.tag}><Text style={styles.tagText}>{item.country}</Text></View> : null}
+              {item.major ? <View style={styles.tag}><Text style={styles.tagText}>{item.major}</Text></View> : null}
+            </View>
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, isRequested && styles.buttonRequested]}
-            onPress={handleRequestItem}
-          >
-            <Text style={styles.buttonText}>
-              {isRequested
-                ? "Requested"
-                : `Request ${isJob ? "Job" : "Scholarship"}`}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => handleRemoveFavorite(item)}
-          >
-            <MaterialIcons name="delete" size={scale(24)} color="#fff" />
-          </TouchableOpacity>
+        {/* Action row */}
+        <View style={styles.cardActions}>
+          {isRequested ? (
+            <View style={styles.requestedBadge}>
+              <Ionicons name="checkmark-circle" size={14} color="#10b981" />
+              <Text style={styles.requestedText}>Requested</Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.requestBtn} onPress={handleRequestItem}>
+              <Text style={styles.requestBtnText}>Send Request</Text>
+              <Ionicons name="send" size={12} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -763,14 +739,6 @@ const FavoriteItemsList = () => {
   if (!user || !user.username) {
     return (
       <View style={styles.container}>
-        <AlertModal
-          visible={alertConfig.visible}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          type={alertConfig.type}
-          actions={alertConfig.actions}
-          onClose={closeAlert}
-        />
         <Text style={styles.emptyText}>
           Please log in to view your favorites.
         </Text>
@@ -787,14 +755,6 @@ const FavoriteItemsList = () => {
 
   return (
     <View style={styles.container}>
-      <AlertModal
-        visible={alertConfig.visible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        actions={alertConfig.actions}
-        onClose={closeAlert}
-      />
       <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.headerRow}>
@@ -804,96 +764,83 @@ const FavoriteItemsList = () => {
             resizeMode={FastImage.resizeMode.contain}
           />
           <TouchableOpacity
-            style={styles.iconBackground}
-            onPress={() => navigation.navigate("CustomMail")}
+            style={styles.menuBtn}
+            onPress={() => setShowMenu((v) => !v)}
           >
-            <Ionicons name="create" size={25} color="#a5a4a4" />
+            <Ionicons name="ellipsis-vertical" size={24} color="#1e293b" />
           </TouchableOpacity>
         </View>
 
-        {/* Tab Selector */}
-        <View style={styles.tabContainer}>
+        {/* Underline tab bar */}
+        <View style={styles.tabBar}>
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              selectedTab === "scholarships"
-                ? styles.tabButtonActive
-                : styles.tabButtonInactive,
-            ]}
+            style={styles.tabItem}
             onPress={() => setSelectedTab("scholarships")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === "scholarships"
-                  ? styles.tabTextActive
-                  : styles.tabTextInactive,
-              ]}
-            >
+            <Text style={[styles.tabLabel, selectedTab === "scholarships" && styles.tabLabelActive]}>
               Scholarships
+              {favoriteScholarships.length > 0
+                ? <Text style={styles.tabCount}> {favoriteScholarships.length}</Text>
+                : null}
             </Text>
+            {selectedTab === "scholarships" && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              selectedTab === "jobs"
-                ? styles.tabButtonActive
-                : styles.tabButtonInactive,
-            ]}
+            style={styles.tabItem}
             onPress={() => setSelectedTab("jobs")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === "jobs"
-                  ? styles.tabTextActive
-                  : styles.tabTextInactive,
-              ]}
-            >
+            <Text style={[styles.tabLabel, selectedTab === "jobs" && styles.tabLabelActive]}>
               Jobs
+              {favoriteJobs.length > 0
+                ? <Text style={styles.tabCount}> {favoriteJobs.length}</Text>
+                : null}
             </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity
-            onPress={handleRequestAll}
-            disabled={currentData.length === 0}
-            style={styles.actionButton}
-          >
-            <Text
-              style={[
-                styles.requestAllText,
-                currentData.length === 0 && styles.requestAllTextDisabled,
-              ]}
-            >
-              Request All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleRemoveAll}
-            disabled={currentData.length === 0}
-            style={styles.actionButton}
-          >
-            <Text
-              style={[
-                styles.removeAllText,
-                currentData.length === 0 && styles.removeAllTextDisabled,
-              ]}
-            >
-              Remove All
-            </Text>
+            {selectedTab === "jobs" && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Dropdown menu */}
+      {showMenu && (
+        <>
+          <TouchableOpacity
+            style={styles.menuBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          />
+          <View style={styles.dropdown}>
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              disabled={currentData.length === 0}
+              onPress={() => { handleRequestAll(); setShowMenu(false); }}
+            >
+              <Ionicons name="send" size={16} color={currentData.length === 0 ? "#cbd5e1" : "#004aad"} />
+              <Text style={[styles.dropdownText, currentData.length === 0 && styles.dropdownTextDisabled]}>
+                Request All
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.dropdownDivider} />
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              disabled={currentData.length === 0}
+              onPress={() => { handleRemoveAll(); setShowMenu(false); }}
+            >
+              <Ionicons name="trash-outline" size={16} color={currentData.length === 0 ? "#cbd5e1" : "#ef4444"} />
+              <Text style={[styles.dropdownText, styles.dropdownTextDanger, currentData.length === 0 && styles.dropdownTextDisabled]}>
+                Remove All
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
       <FlatList
         data={currentData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{
-          paddingTop: scale(170),
-          paddingBottom: scale(20),
+          paddingTop: scale(130),
+          paddingBottom: scale(100),
         }}
         refreshControl={
           <RefreshControl
@@ -910,6 +857,15 @@ const FavoriteItemsList = () => {
           </Text>
         )}
       />
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate("CustomMail")}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="create" size={22} color="#fff" />
+        <Text style={styles.fabText}>Edit Mail</Text>
+      </TouchableOpacity>
     </View>
   );
 };

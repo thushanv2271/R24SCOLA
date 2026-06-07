@@ -19,7 +19,6 @@ import LoaderModal from "../../components/JustMoment";
 import AlertModal from "../../components/AlertModal";
 
 const { width, height } = Dimensions.get("window");
-const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api/Users";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -264,6 +263,17 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Privacy Policy */}
+        <TouchableOpacity
+          onPress={() => router.push("/PrivacyPolicy")}
+          style={styles.privacyButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="shield-checkmark-outline" size={18} color="#6b7280" />
+          <Text style={styles.privacyButtonText}>Privacy Policy</Text>
+          <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+        </TouchableOpacity>
+
         {/* Logout Button */}
         <TouchableOpacity
           onPress={handleLogout}
@@ -456,6 +466,23 @@ const styles = StyleSheet.create({
     fontSize: width * 0.032,
     fontWeight: "600",
     fontFamily: "Roboto",
+  },
+  privacyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: height * 0.014,
+    paddingHorizontal: width * 0.06,
+    marginHorizontal: width * 0.02,
+    marginBottom: height * 0.012,
+    gap: width * 0.02,
+  },
+  privacyButtonText: {
+    color: "#6b7280",
+    fontSize: width * 0.038,
+    fontFamily: "Roboto",
+    flex: 1,
+    textAlign: "center",
   },
   logoutButton: {
     backgroundColor: "#ef4444",

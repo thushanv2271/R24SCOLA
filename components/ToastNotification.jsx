@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import notificationService from "@/services/NotificationService";
@@ -7,7 +7,7 @@ const { width } = Dimensions.get("window");
 
 const ToastNotification = () => {
   const [notifications, setNotifications] = useState([]);
-  const slideAnim = new Animated.Value(0);
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const unsubscribe = notificationService.subscribe((notification) => {

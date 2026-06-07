@@ -238,6 +238,15 @@ const ScholarshipApp = () => {
         }
       };
 
+      const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      };
+
       return (
         <View style={styles.card}>
           <FlatList
@@ -248,7 +257,7 @@ const ScholarshipApp = () => {
             keyExtractor={(image, index) => `${item.id}-image-${index}`}
             renderItem={({ item: imageUri }) => (
               <FastImage
-                source={{ 
+                source={{
                   uri: imageUri,
                   cache: FastImage.cacheControl.immutable,
                   priority: FastImage.priority.normal,
@@ -261,6 +270,9 @@ const ScholarshipApp = () => {
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>{item.title}</Text>
             <Text style={styles.cardSubtitle}>{item.university}</Text>
+            <Text style={styles.cardDate}>
+              Posted: {formatDate(item.createdAt)}
+            </Text>
             <View style={styles.cardFooter}>
               <Text style={styles.cardFunding}>Jobs</Text>
               <Text style={styles.cardFunding}>{item.country}</Text>
@@ -271,10 +283,8 @@ const ScholarshipApp = () => {
               >
                 <FontAwesome
                   name={favoriteJobs.includes(item.id) ? "heart" : "heart-o"}
-                  size={25}
-                  color={
-                    favoriteJobs.includes(item.id) ? "red" : "black"
-                  }
+                  size={32}
+                  color={favoriteJobs.includes(item.id) ? "red" : "#555"}
                 />
               </TouchableOpacity>
             </View>
@@ -383,6 +393,7 @@ const ScholarshipApp = () => {
           <Image
             source={require("../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}
+            resizeMode="contain"
           />
 
           <View style={styles.iconsContainer}>
@@ -538,18 +549,20 @@ const ScholarshipApp = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8fafc",
     padding: "2%",
     paddingTop: StatusBar.currentHeight || 50,
   },
   headerContainer: {
     position: "absolute",
-    top: 25,
+    top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: "#f5f5f5",
-    padding: "2%",
+    backgroundColor: "#f8fafc",
+    paddingTop: StatusBar.currentHeight || 30,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   headerRow: {
     flexDirection: "row",
@@ -579,6 +592,8 @@ const styles = StyleSheet.create({
     marginBottom: "4%",
     overflow: "hidden",
     elevation: 8,
+    borderTopWidth: 4,
+    borderTopColor: "#166534",
   },
   loaderContainer: {
     flex: 1,
@@ -600,7 +615,14 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     color: "#666",
+    marginBottom: "1%",
+  },
+  cardDate: {
+    fontSize: screenWidth * 0.03,
+    color: "#666",
     marginBottom: "2%",
+    fontFamily: "Roboto",
+    textBreakStrategy: "simple",
   },
   cardFooter: {
     flexDirection: "row",
@@ -614,7 +636,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     color: "white",
-    backgroundColor: "#1A237E", // Changed from #004aad (blue) to green
+    backgroundColor: "#166534",
     paddingHorizontal: "2.5%",
     paddingVertical: "2%",
     borderRadius: 20,
@@ -624,8 +646,8 @@ const styles = StyleSheet.create({
     padding: "4%",
   },
   logo: {
-    width: screenWidth * 0.37,
-    height: screenHeight * 0.06,
+    width: 150,
+    height: 50,
   },
   dropdownContent: {
     marginTop: "2%",
@@ -647,13 +669,13 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   linkText: {
-    color: "#004aad", // Changed from #004aad (blue) to green
+    color: "#166534",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     textDecorationLine: "underline",
   },
   button: {
-    backgroundColor: "#218838", // Changed from #004aad (blue) to green
+    backgroundColor: "#166534",
     paddingVertical: "2.5%",
     paddingHorizontal: "4%",
     borderRadius: 30,
@@ -667,7 +689,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   filterbutton: {
-    backgroundColor: "#218838", // Changed from #004aad (blue) to green
+    backgroundColor: "#166534",
     paddingVertical: "4.5%",
     paddingHorizontal: "4%",
     borderRadius: 30,
@@ -701,7 +723,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#004aad", // Changed from #004aad (blue) to green
+    color: "#166534",
   },
   professorContainer: {
     marginBottom: "2%",
@@ -750,7 +772,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   filterOptionSelected: {
-    backgroundColor: "#004aad", // Changed from #004aad (blue) to green
+    backgroundColor: "#166534",
   },
   closeButton: {
     alignSelf: "flex-end",
@@ -769,12 +791,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#004aad", // Changed from #004aad (blue) to green
+    color: "#166534",
     textDecorationLine: "underline",
     textAlign: "center",
   },
   likeButton: {
-    padding: "1%",
+    padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalOverlay: {
     flex: 1,

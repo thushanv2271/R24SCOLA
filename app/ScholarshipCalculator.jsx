@@ -700,7 +700,7 @@ const ScholarshipPossibilityCalculator = () => {
                   onPress={fetchPastResults}
                   disabled={loadingHistory}
                 >
-                  <MaterialIcons name="history" size={20} color="#4a90e2" />
+                  <MaterialIcons name="history" size={20} color="#004aad" />
                   <Text style={styles.historyButtonText}>
                     {loadingHistory ? "Loading..." : "View Past Results"}
                   </Text>
@@ -726,7 +726,7 @@ const ScholarshipPossibilityCalculator = () => {
                     <MaterialIcons
                       name="assessment"
                       size={32}
-                      color="#4a90e2"
+                      color="#004aad"
                     />
                     <Text style={styles.modalTitle}>
                       Scholarship Eligibility Report
@@ -769,7 +769,7 @@ const ScholarshipPossibilityCalculator = () => {
                       <FontAwesome5
                         name="chart-bar"
                         size={18}
-                        color="#4a90e2"
+                        color="#004aad"
                       />
                       <Text style={styles.sectionTitle}>Score Breakdown</Text>
                     </View>
@@ -875,10 +875,10 @@ const ScholarshipPossibilityCalculator = () => {
                         <FontAwesome5
                           name="lightbulb"
                           size={18}
-                          color="#8b5cf6"
+                          color="#004aad"
                         />
                         <Text
-                          style={[styles.sectionTitle, { color: "#8b5cf6" }]}
+                          style={[styles.sectionTitle, { color: "#004aad" }]}
                         >
                           Next Steps
                         </Text>
@@ -902,7 +902,7 @@ const ScholarshipPossibilityCalculator = () => {
                     onPress={() => setIsModalVisible(false)}
                   >
                     <LinearGradient
-                      colors={["#4a90e2", "#357abd"]}
+                      colors={["#004aad", "#357abd"]}
                       style={styles.closeButtonGradient}
                     >
                       <Text style={styles.closeButtonText}>Close Report</Text>
@@ -932,8 +932,16 @@ const ScholarshipPossibilityCalculator = () => {
                 >
                   {/* Header */}
                   <View style={styles.modalHeader}>
-                    <MaterialIcons name="history" size={32} color="#4a90e2" />
-                    <Text style={styles.modalTitle}>Calculation History</Text>
+                    <View style={styles.modalHeaderLeft}>
+                      <MaterialIcons name="history" size={26} color="#004aad" />
+                      <Text style={styles.modalTitle}>Calculation History</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setIsHistoryModalVisible(false)}
+                      style={styles.modalCloseBtn}
+                    >
+                      <MaterialIcons name="close" size={22} color="#64748b" />
+                    </TouchableOpacity>
                   </View>
 
                   {pastResults.length === 0 ? (
@@ -953,14 +961,13 @@ const ScholarshipPossibilityCalculator = () => {
                           key={result.id || index}
                           style={styles.historyCard}
                         >
+                          {/* Card Header Row */}
                           <View style={styles.historyCardHeader}>
                             <View style={styles.historyScoreCircle}>
                               <Text style={styles.historyScoreText}>
                                 {Math.round(result.totalScore)}
                               </Text>
-                              <Text style={styles.historyScoreLabel}>
-                                Score
-                              </Text>
+                              <Text style={styles.historyScoreLabel}>Score</Text>
                             </View>
                             <View style={styles.historyCardInfo}>
                               <Text style={styles.historyDate}>
@@ -968,49 +975,25 @@ const ScholarshipPossibilityCalculator = () => {
                               </Text>
                               <View style={styles.historyDetails}>
                                 <View style={styles.historyDetailItem}>
-                                  <MaterialIcons
-                                    name="school"
-                                    size={16}
-                                    color="#64748b"
-                                  />
-                                  <Text style={styles.historyDetailText}>
-                                    GPA: {result.gpa}
-                                  </Text>
+                                  <MaterialIcons name="school" size={14} color="#64748b" />
+                                  <Text style={styles.historyDetailText}>GPA: {result.gpa}</Text>
                                 </View>
                                 {result.ielts && (
                                   <View style={styles.historyDetailItem}>
-                                    <MaterialIcons
-                                      name="language"
-                                      size={16}
-                                      color="#64748b"
-                                    />
-                                    <Text style={styles.historyDetailText}>
-                                      IELTS: {result.ielts}
-                                    </Text>
+                                    <MaterialIcons name="language" size={14} color="#64748b" />
+                                    <Text style={styles.historyDetailText}>IELTS: {result.ielts}</Text>
                                   </View>
                                 )}
                                 {result.country && (
                                   <View style={styles.historyDetailItem}>
-                                    <MaterialIcons
-                                      name="place"
-                                      size={16}
-                                      color="#64748b"
-                                    />
-                                    <Text style={styles.historyDetailText}>
-                                      {result.country.toUpperCase()}
-                                    </Text>
+                                    <MaterialIcons name="place" size={14} color="#64748b" />
+                                    <Text style={styles.historyDetailText}>{result.country.toUpperCase()}</Text>
                                   </View>
                                 )}
                                 {result.studyField && (
                                   <View style={styles.historyDetailItem}>
-                                    <MaterialIcons
-                                      name="book"
-                                      size={16}
-                                      color="#64748b"
-                                    />
-                                    <Text style={styles.historyDetailText}>
-                                      {result.studyField}
-                                    </Text>
+                                    <MaterialIcons name="book" size={14} color="#64748b" />
+                                    <Text style={styles.historyDetailText}>{result.studyField}</Text>
                                   </View>
                                 )}
                               </View>
@@ -1019,13 +1002,14 @@ const ScholarshipPossibilityCalculator = () => {
                               style={styles.deleteButton}
                               onPress={() => deleteResult(result.id)}
                             >
-                              <MaterialIcons
-                                name="delete"
-                                size={24}
-                                color="#ef4444"
-                              />
+                              <MaterialIcons name="delete-outline" size={22} color="#ef4444" />
                             </TouchableOpacity>
                           </View>
+
+                          {/* Divider */}
+                          {(result.feedback || (result.strengths && result.strengths.length > 0)) && (
+                            <View style={styles.historyDivider} />
+                          )}
 
                           {/* Feedback */}
                           {result.feedback && (
@@ -1056,7 +1040,7 @@ const ScholarshipPossibilityCalculator = () => {
                     onPress={() => setIsHistoryModalVisible(false)}
                   >
                     <LinearGradient
-                      colors={["#4a90e2", "#357abd"]}
+                      colors={["#004aad", "#357abd"]}
                       style={styles.closeButtonGradient}
                     >
                       <Text style={styles.closeButtonText}>Close</Text>
@@ -1164,7 +1148,7 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(30),
   },
   button: {
-    backgroundColor: "#4a90e2",
+    backgroundColor: "#004aad",
     paddingVertical: moderateScale(14),
     paddingHorizontal: moderateScale(30),
     borderRadius: moderateScale(30),
@@ -1172,7 +1156,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "70%",
     maxWidth: scale(300),
-    shadowColor: "#4a90e2",
+    shadowColor: "#004aad",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1209,13 +1193,28 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
     marginBottom: verticalScale(20),
-    gap: 10,
+    paddingBottom: verticalScale(14),
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+  },
+  modalHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  modalCloseBtn: {
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalTitle: {
-    fontSize: moderateScale(22),
-    fontWeight: "bold",
+    fontSize: moderateScale(18),
+    fontWeight: "700",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     color: "#1e293b",
@@ -1255,7 +1254,7 @@ const styles = StyleSheet.create({
     padding: moderateScale(15),
     marginBottom: verticalScale(20),
     borderLeftWidth: 4,
-    borderLeftColor: "#4a90e2",
+    borderLeftColor: "#004aad",
   },
   feedbackText: {
     fontSize: moderateScale(15),
@@ -1378,7 +1377,7 @@ const styles = StyleSheet.create({
     width: moderateScale(24),
     height: moderateScale(24),
     borderRadius: moderateScale(12),
-    backgroundColor: "#8b5cf6",
+    backgroundColor: "#004aad",
     color: "#fff",
     textAlign: "center",
     lineHeight: moderateScale(24),
@@ -1399,17 +1398,19 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(30),
     overflow: "hidden",
     alignSelf: "center",
-    width: "70%",
-    maxWidth: scale(250),
+    width: "60%",
+    maxWidth: scale(220),
+    marginTop: verticalScale(20),
+    marginBottom: verticalScale(4),
     elevation: 4,
-    shadowColor: "#4a90e2",
+    shadowColor: "#004aad",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
   closeButtonGradient: {
-    paddingVertical: moderateScale(14),
-    paddingHorizontal: moderateScale(30),
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(24),
     alignItems: "center",
   },
   closeButtonText: {
@@ -1429,7 +1430,7 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(30),
     marginTop: verticalScale(12),
     borderWidth: 1.5,
-    borderColor: "#4a90e2",
+    borderColor: "#004aad",
     gap: 8,
     width: "70%",
     maxWidth: scale(300),
@@ -1438,7 +1439,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
     fontWeight: "600",
     fontFamily: "Roboto",
-    color: "#4a90e2",
+    color: "#004aad",
   },
   emptyHistoryContainer: {
     alignItems: "center",
@@ -1464,63 +1465,74 @@ const styles = StyleSheet.create({
   },
   historyCard: {
     backgroundColor: "#fff",
-    borderRadius: moderateScale(16),
-    padding: moderateScale(16),
+    borderRadius: moderateScale(14),
+    padding: moderateScale(14),
     borderWidth: 1,
     borderColor: "#e2e8f0",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
   historyCardHeader: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 12,
-    marginBottom: verticalScale(12),
   },
   historyScoreCircle: {
-    width: moderateScale(70),
-    height: moderateScale(70),
-    borderRadius: moderateScale(35),
-    backgroundColor: "#4a90e2",
+    width: moderateScale(56),
+    height: moderateScale(56),
+    borderRadius: moderateScale(28),
+    backgroundColor: "#004aad",
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
   },
   historyScoreText: {
-    fontSize: moderateScale(24),
+    fontSize: moderateScale(18),
     fontWeight: "bold",
     fontFamily: "Roboto",
     color: "#fff",
   },
   historyScoreLabel: {
-    fontSize: moderateScale(10),
+    fontSize: moderateScale(9),
     fontFamily: "Roboto",
     color: "#fff",
-    opacity: 0.9,
+    opacity: 0.85,
   },
   historyCardInfo: {
     flex: 1,
-    justifyContent: "center",
   },
   historyDate: {
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(11),
     fontFamily: "Roboto",
     color: "#94a3b8",
-    marginBottom: verticalScale(6),
+    marginBottom: verticalScale(5),
   },
   historyDetails: {
-    gap: verticalScale(4),
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
   },
   historyDetailItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 3,
+    backgroundColor: "#f1f5f9",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   historyDetailText: {
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(11),
     fontFamily: "Roboto",
-    color: "#64748b",
+    color: "#475569",
+  },
+  historyDivider: {
+    height: 1,
+    backgroundColor: "#e2e8f0",
+    marginVertical: verticalScale(10),
   },
   historyFeedback: {
     backgroundColor: "#f8fafc",
@@ -1529,7 +1541,7 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(8),
   },
   historyFeedbackText: {
-    fontSize: moderateScale(13),
+    fontSize: moderateScale(12),
     fontFamily: "Roboto",
     color: "#475569",
     lineHeight: moderateScale(18),
@@ -1545,11 +1557,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   deleteButton: {
-    padding: moderateScale(8),
+    width: moderateScale(34),
+    height: moderateScale(34),
     borderRadius: moderateScale(8),
-    backgroundColor: "#fee2e2",
+    backgroundColor: "#fff0f0",
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
   },
 });
 

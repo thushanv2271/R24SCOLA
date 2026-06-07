@@ -65,10 +65,9 @@ module.exports = {
       typedRoutes: true,
     },
     extra: {
-      googleClientIdAndroid:
-        "165483938092-7j7i7sroo527310ssoca4uq78sstcu1u.apps.googleusercontent.com",
-      googleClientIdIos: "YOUR_IOS_CLIENT_ID",
-      googleClientIdWeb: "YOUR_WEB_CLIENT_ID",
+      googleClientIdAndroid: process.env.GOOGLE_CLIENT_ID_ANDROID,
+      googleClientIdIos: process.env.GOOGLE_CLIENT_ID_IOS,
+      googleClientIdWeb: process.env.GOOGLE_CLIENT_ID_WEB,
       eas: {
         projectId: "12cfea4a-1181-4147-a5fb-f43838d91572",
       },

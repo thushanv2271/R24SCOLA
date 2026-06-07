@@ -18,8 +18,6 @@ import AlertModal from "../components/AlertModal";
 import { AuthContext } from "../components/AuthContext";
 import { authAPI } from "../services/apiService";
 
-const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api/Users";
-
 export default function Profile() {
   const { username } = useLocalSearchParams(); // Get the username from query parameters
   const { favoritesRefreshTrigger } = useContext(AuthContext);
@@ -99,21 +97,10 @@ export default function Profile() {
         }
 
         try {
-          const [scholarshipsResponse, jobsResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/favorites`, {
-              method: "GET",
-              headers: { Accept: "application/json" },
-            }),
-            fetch(
-              `${API_BASE_URL}/${encodeURIComponent(username)}/job-favorites`,
-              { method: "GET", headers: { Accept: "application/json" } },
-            ),
+          const [scholarships, jobs] = await Promise.all([
+            authAPI.getFavorites(username),
+            authAPI.getJobFavorites(username),
           ]);
-
-          const scholarships = scholarshipsResponse.ok
-            ? await scholarshipsResponse.json()
-            : [];
-          const jobs = jobsResponse.ok ? await jobsResponse.json() : [];
 
           setFavoriteScholarshipsCount(
             Array.isArray(scholarships) ? scholarships.length : 0,
@@ -131,7 +118,7 @@ export default function Profile() {
   // Logout Function
   const handleLogout = async () => {
     try {
-      await AsyncStorage.multiRemove(["username", "userPassword", "userToken"]);
+      await AsyncStorage.multiRemove(["username", "userToken"]);
       console.log("User logged out");
       router.replace("/login");
     } catch (error) {

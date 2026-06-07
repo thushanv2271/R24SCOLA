@@ -67,7 +67,6 @@ export const AuthProvider = ({ children }) => {
         "userToken",
         "isLoggedIn",
         "userID",
-        "userPassword",
       ]);
       notificationService.info("Logged Out", "You have been logged out");
     } catch (error) {

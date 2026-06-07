@@ -1,66 +1,78 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Dimensions,
   Animated,
+  Dimensions,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { PRIMARY_BLUE, PRIMARY_DARK_BLUE, COLORS } from "../constants/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const { ALERT_INFO_BG } = COLORS;
 
 const AlertModal = memo(
   ({ visible, title, message, type = "info", onClose, actions = [] }) => {
-    const scaleValue = React.useRef(new Animated.Value(0)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
+    const scale = useRef(new Animated.Value(0.88)).current;
+    const [modalVisible, setModalVisible] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (visible) {
-        Animated.spring(scaleValue, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }).start();
+        setModalVisible(true);
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scale, {
+            toValue: 1,
+            damping: 14,
+            stiffness: 180,
+            useNativeDriver: true,
+          }),
+        ]).start();
       } else {
-        scaleValue.setValue(0);
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 0.88,
+            duration: 160,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setModalVisible(false);
+        });
       }
     }, [visible]);
 
     const getIconConfig = () => {
       switch (type) {
         case "success":
-          return {
-            name: "check-circle",
-            color: COLORS.SUCCESS,
-            bgColor: COLORS.ALERT_SUCCESS_BG,
-          };
+          return { name: "check-circle", color: "#10b981", bgColor: "#d1fae5" };
         case "error":
-          return {
-            name: "error",
-            color: COLORS.ERROR,
-            bgColor: COLORS.ALERT_ERROR_BG,
-          };
+          return { name: "error", color: "#ef4444", bgColor: "#fee2e2" };
         case "warning":
-          return {
-            name: "warning",
-            color: COLORS.WARNING,
-            bgColor: COLORS.ALERT_WARNING_BG,
-          };
-        case "info":
+          return { name: "warning", color: "#f59e0b", bgColor: "#fef3c7" };
         default:
-          return { name: "info", color: PRIMARY_BLUE, bgColor: ALERT_INFO_BG };
+          return { name: "info", color: PRIMARY_BLUE, bgColor: "#dbeafe" };
       }
     };
 
-    const iconConfig = getIconConfig();
+    const getButtonColor = (action) => {
+      if (action.destructive) return "#ef4444";
+      if (action.secondary) return "#64748b";
+      return PRIMARY_BLUE;
+    };
 
-    // Default actions if none provided
+    const iconConfig = getIconConfig();
     const defaultActions =
       actions.length > 0
         ? actions
@@ -68,145 +80,109 @@ const AlertModal = memo(
 
     return (
       <Modal
-        animationType="fade"
+        animationType="none"
         transparent={true}
-        visible={visible}
+        visible={modalVisible}
         onRequestClose={onClose}
       >
-        <View style={styles.modalOverlay}>
+        <Animated.View style={[styles.overlay, { opacity }]}>
           <Animated.View
-            style={[
-              styles.modalContent,
-              {
-                transform: [{ scale: scaleValue }],
-              },
-            ]}
+            style={[styles.card, { transform: [{ scale }] }]}
           >
-            {/* Icon */}
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: iconConfig.bgColor },
-              ]}
-            >
-              <MaterialIcons
-                name={iconConfig.name}
-                size={48}
-                color={iconConfig.color}
-              />
+            <View style={[styles.iconWrap, { backgroundColor: iconConfig.bgColor }]}>
+              <MaterialIcons name={iconConfig.name} size={36} color={iconConfig.color} />
             </View>
 
-            {/* Title */}
-            {title && <Text style={styles.title}>{title}</Text>}
+            {title ? <Text style={styles.title}>{title}</Text> : null}
+            {message ? <Text style={styles.message}>{message}</Text> : null}
 
-            {/* Message */}
-            {message && <Text style={styles.message}>{message}</Text>}
-
-            {/* Actions */}
-            <View style={styles.actionsContainer}>
+            <View style={styles.actions}>
               {defaultActions.map((action, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.actionButton}
+                  style={[styles.btn, { backgroundColor: getButtonColor(action) }]}
+                  activeOpacity={0.8}
                   onPress={() => {
                     action.onPress?.();
-                    if (!action.keepOpen) {
-                      onClose();
-                    }
+                    if (!action.keepOpen) onClose();
                   }}
                 >
-                  <LinearGradient
-                    colors={
-                      action.primary
-                        ? [PRIMARY_BLUE, PRIMARY_DARK_BLUE]
-                        : action.destructive
-                          ? ["#ef4444", "#dc2626"]
-                          : ["#9ca3af", "#6b7280"]
-                    }
-                    style={styles.actionButtonGradient}
-                  >
-                    <Text style={styles.actionButtonText}>{action.text}</Text>
-                  </LinearGradient>
+                  <Text style={styles.btnText}>{action.text}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </Animated.View>
-        </View>
+        </Animated.View>
       </Modal>
     );
   },
 );
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
   },
-  modalContent: {
+  card: {
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 24,
     width: "100%",
-    maxWidth: 400,
+    maxWidth: 360,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
     elevation: 10,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  iconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#1e293b",
-    marginBottom: 8,
     textAlign: "center",
     fontFamily: "Roboto",
+    marginBottom: 6,
+    textBreakStrategy: "simple",
   },
   message: {
-    fontSize: 15,
+    fontSize: 14,
     color: "#64748b",
     textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: 21,
     fontFamily: "Roboto",
+    marginBottom: 22,
+    textBreakStrategy: "simple",
   },
-  actionsContainer: {
+  actions: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
     width: "100%",
   },
-  actionButton: {
+  btn: {
     flex: 1,
+    paddingVertical: 12,
     borderRadius: 12,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  actionButtonGradient: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     alignItems: "center",
+    justifyContent: "center",
   },
-  actionButtonText: {
+  btnText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "700",
     fontFamily: "Roboto",
+    textBreakStrategy: "simple",
   },
 });
 

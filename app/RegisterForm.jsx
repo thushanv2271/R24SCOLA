@@ -51,10 +51,12 @@ export default function RegisterForm() {
 
       setIsModalVisible(true);
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         router.push("/login");
         setIsModalVisible(false);
       }, 3000);
+
+      return () => clearTimeout(timer);
     } catch (error) {
       // Handle duplicate email error from backend
       const errorMsg = error.message || "Registration failed";
