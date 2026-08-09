@@ -32,6 +32,7 @@ module.exports = {
       favicon: "./assets/images/favicon.png",
     },
     plugins: [
+      "./plugins/withNdk16kbSupport.js",
       "expo-router",
       [
         "expo-splash-screen",
