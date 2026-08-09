@@ -17,10 +17,9 @@ module.exports = {
       },
       package: "com.thusha2271.scholarships",
       versionCode: 6, // Incremented for new release
-      targetSdkVersion: 35,
-      compileSdkVersion: 35,
-      // Configuration for 16 KB page size support
-      buildToolsVersion: "35.0.0",
+      targetSdkVersion: 36,
+      compileSdkVersion: 36,
+      buildToolsVersion: "36.0.0",
       minSdkVersion: 23,
       config: {
         // Enable 16 KB page size support
@@ -48,9 +47,9 @@ module.exports = {
         {
           android: {
             // Ensure compatibility with 16 KB page sizes
-            compileSdkVersion: 35,
-            targetSdkVersion: 35,
-            buildToolsVersion: "35.0.0",
+            compileSdkVersion: 36,
+            targetSdkVersion: 36,
+            buildToolsVersion: "36.0.0",
             // Enable 16 KB page alignment
             enableProguardInReleaseBuilds: true,
             // This ensures proper memory alignment

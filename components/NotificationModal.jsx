@@ -7,232 +7,315 @@ import {
   Pressable,
   Modal,
   FlatList,
-  Dimensions,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "./AuthContext";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const ICON_MAP = {
+  login: "person-circle",
+  scholarship: "school",
+  deadline: "alarm",
+  application: "document-text",
+  info: "information-circle",
+};
+
+const COLOR_MAP = {
+  login: "#004aad",
+  scholarship: "#004aad",
+  deadline: "#f59e0b",
+  application: "#8b5cf6",
+  info: "#64748b",
+};
+
+const getTimeAgo = (timestamp) => {
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMs / 3600000);
+  const days = Math.floor(diffMs / 86400000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+};
+
+const NotificationItem = memo(({ item }) => {
+  const color = COLOR_MAP[item.type] ?? "#64748b";
+  const icon = ICON_MAP[item.type] ?? "notifications";
+  return (
+    <View style={styles.item}>
+      <View style={[styles.iconWrap, { backgroundColor: color + "18" }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <View style={styles.itemBody}>
+        <Text style={styles.itemTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
+        {item.description ? (
+          <Text style={styles.itemDesc} numberOfLines={2}>
+            {item.description}
+          </Text>
+        ) : null}
+      </View>
+      <Text style={styles.itemTime}>{getTimeAgo(item.timestamp)}</Text>
+    </View>
+  );
+});
 
 const NotificationModal = memo(({ visible, onClose }) => {
   const { notifications, clearNotifications } = useContext(AuthContext);
-
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case "login":
-        return "checkmark-circle";
-      case "scholarship":
-        return "school";
-      case "deadline":
-        return "timer";
-      case "application":
-        return "document";
-      default:
-        return "notifications";
-    }
-  };
-
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case "login":
-        return "#004aad";
-      case "scholarship":
-        return "#004aad";
-      case "deadline":
-        return "#FF9800";
-      case "application":
-        return "#9C27B0";
-      default:
-        return "#6366f1";
-    }
-  };
-
-  const getTimeAgo = (timestamp) => {
-    const now = new Date();
-    const diffMs = now - new Date(timestamp);
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    return new Date(timestamp).toLocaleDateString();
-  };
-
-  const renderNotificationItem = ({ item }) => (
-    <View style={styles.notificationItem}>
-      <View
-        style={[
-          styles.iconBackground,
-          { backgroundColor: getNotificationColor(item.type) + "20" },
-        ]}
-      >
-        <Ionicons
-          name={getNotificationIcon(item.type)}
-          size={24}
-          color={getNotificationColor(item.type)}
-        />
-      </View>
-      <View style={styles.notificationContent}>
-        <Text style={styles.notificationTitle}>{item.title}</Text>
-        <Text style={styles.notificationDescription}>{item.description}</Text>
-      </View>
-      <Text style={styles.notificationTime}>{getTimeAgo(item.timestamp)}</Text>
-    </View>
-  );
-
-  const displayNotifications =
-    notifications && notifications.length > 0
-      ? notifications
-      : [
-          {
-            id: 0,
-            title: "No notifications yet",
-            description: "You're all caught up!",
-            type: "info",
-            timestamp: new Date(),
-          },
-        ];
+  const count = notifications?.length ?? 0;
 
   return (
     <Modal
       animationType="slide"
-      transparent={true}
+      transparent
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      {/* Modal Overlay */}
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        {/* Empty View to allow touches to pass through */}
-      </Pressable>
+      <Pressable style={styles.backdrop} onPress={onClose} />
 
-      {/* Modal Content */}
-      <View style={styles.modalContent}>
+      <View style={styles.sheet}>
+        {/* Drag handle */}
+        <View style={styles.handle} />
+
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>Notifications</Text>
-            <Text style={styles.headerSubtitle}>
-              {displayNotifications.length} update
-              {displayNotifications.length !== 1 ? "s" : ""}
-            </Text>
+            {count > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{count}</Text>
+              </View>
+            )}
           </View>
-          <View style={styles.headerActions}>
-            {notifications && notifications.length > 0 && (
+          <View style={styles.headerRight}>
+            {count > 0 && (
               <TouchableOpacity
+                style={styles.clearBtn}
                 onPress={clearNotifications}
-                style={styles.clearButton}
+                activeOpacity={0.75}
               >
-                <Ionicons name="trash" size={24} color="#FF6B6B" />
+                <Ionicons name="trash-outline" size={15} color="#ef4444" />
+                <Text style={styles.clearBtnText}>Clear all</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={28} color="#666" />
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="close" size={20} color="#64748b" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Notifications List */}
-        <FlatList
-          data={displayNotifications}
-          keyExtractor={(item) => item.id.toString()}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          renderItem={renderNotificationItem}
-        />
+        <View style={styles.divider} />
+
+        {/* List */}
+        {count === 0 ? (
+          <View style={styles.empty}>
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="notifications-off-outline" size={40} color="#94a3b8" />
+            </View>
+            <Text style={styles.emptyTitle}>You're all caught up</Text>
+            <Text style={styles.emptyDesc}>No new notifications right now.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => <NotificationItem item={item} />}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          />
+        )}
       </View>
     </Modal>
   );
 });
 
-// Styles
 const styles = StyleSheet.create({
-  modalOverlay: {
+  backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(15,23,42,0.45)",
   },
-  modalContent: {
+  sheet: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#fff",
+    backgroundColor: "#f8fafc",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    height: "70%",
-    padding: 20,
+    maxHeight: "75%",
+    paddingBottom: 28,
+    elevation: 24,
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#cbd5e1",
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 16,
   },
   header: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    marginBottom: 14,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1a1a1a",
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: "#999",
-  },
-  headerActions: {
+  headerLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  clearButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: "#FFE6E6",
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0f172a",
+    fontFamily: "Roboto",
+  },
+  badge: {
+    backgroundColor: "#004aad",
+    borderRadius: 10,
+    minWidth: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  clearBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#fee2e2",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  clearBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#ef4444",
+    fontFamily: "Roboto",
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#e2e8f0",
+    marginHorizontal: 20,
+    marginBottom: 8,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 6,
+    paddingBottom: 8,
   },
-  notificationItem: {
+  item: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  iconBackground: {
-    width: 44,
-    height: 44,
+  iconWrap: {
+    width: 42,
+    height: 42,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    flexShrink: 0,
   },
-  notificationContent: {
+  itemBody: {
     flex: 1,
   },
-  notificationTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#1a1a1a",
-    marginBottom: 4,
+  itemTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1e293b",
+    fontFamily: "Roboto",
+    marginBottom: 3,
+    textBreakStrategy: "simple",
   },
-  notificationDescription: {
-    fontSize: 13,
-    color: "#666",
-    lineHeight: 18,
-  },
-  notificationTime: {
+  itemDesc: {
     fontSize: 12,
-    color: "#999",
-    marginLeft: 10,
+    color: "#64748b",
+    fontFamily: "Roboto",
+    lineHeight: 18,
+    textBreakStrategy: "simple",
+  },
+  itemTime: {
+    fontSize: 11,
+    color: "#94a3b8",
+    fontFamily: "Roboto",
+    marginLeft: 8,
+    marginTop: 2,
+    flexShrink: 0,
+  },
+  empty: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 48,
+    paddingHorizontal: 32,
+  },
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1e293b",
+    fontFamily: "Roboto",
+    marginBottom: 6,
+    textBreakStrategy: "simple",
+  },
+  emptyDesc: {
+    fontSize: 13,
+    color: "#94a3b8",
+    fontFamily: "Roboto",
+    textAlign: "center",
+    textBreakStrategy: "simple",
   },
 });
 

@@ -14,9 +14,16 @@ const apiCall = async (endpoint, options = {}, config = {}) => {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     const shouldUseAuth = config.requiresAuth !== false;
-    const token = shouldUseAuth
-      ? await AsyncStorage.getItem("userToken")
-      : null;
+    let token = null;
+    if (shouldUseAuth) {
+      token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        try {
+          const raw = await AsyncStorage.getItem("userData");
+          if (raw) token = JSON.parse(raw)?.token || null;
+        } catch (_) {}
+      }
+    }
 
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -71,7 +78,9 @@ const apiCall = async (endpoint, options = {}, config = {}) => {
       return null;
     }
 
-    return await response.json();
+    const text = await response.text();
+    if (!text || text.trim() === "") return null;
+    return JSON.parse(text);
   } catch (error) {
     const status = error?.status;
     if (!status || status >= 500) {

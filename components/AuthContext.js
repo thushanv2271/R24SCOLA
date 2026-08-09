@@ -36,6 +36,9 @@ export const AuthProvider = ({ children }) => {
     try {
       setUser(userData);
       await AsyncStorage.setItem("userData", JSON.stringify(userData));
+      if (userData?.token) {
+        await AsyncStorage.setItem("userToken", userData.token);
+      }
 
       // Show success notification
       notificationService.success(

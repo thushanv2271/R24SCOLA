@@ -40,7 +40,7 @@ import { MAJORS, COUNTRIES, FUNDING_TYPES } from "../constants/filterOptions";
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const modalHeight = screenHeight * 0.7; // 70% of screen height
+const modalHeight = screenHeight * 0.82;
 
 const ScholarshipApp = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -111,7 +111,7 @@ const ScholarshipApp = () => {
   const fetchFavorites = async () => {
     try {
       const data = await authAPI.getJobFavorites(user.username);
-      const favoriteIds = data.map((s) => s.id);
+      const favoriteIds = Array.isArray(data) ? data.map((s) => s.id) : [];
       setFavoriteJobs(favoriteIds);
       await AsyncStorage.setItem("favoriteJobs", JSON.stringify(favoriteIds));
     } catch (error) {
@@ -348,24 +348,33 @@ const ScholarshipApp = () => {
 
   const router = useRouter();
 
-  const renderFilterOption = (label, options, selected, setSelected) => (
-    <View style={styles.filterContainer}>
-      <Text style={styles.filterLabel}>{label}</Text>
-      <View style={styles.filterOptionsVertical}>
+  const activeFilterCount = [selectedMajor, selectedCountry, selectedFunding, selectedTest].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setSelectedMajor("");
+    setSelectedCountry("");
+    setSelectedFunding("");
+    setSelectedTest("");
+  };
+
+  const renderChipGroup = (label, options, selected, setSelected) => (
+    <View style={styles.chipGroup}>
+      <Text style={styles.chipGroupLabel}>{label}</Text>
+      <View style={styles.chipRow}>
         {options.map((item) => {
-          const displayText =
-            typeof item === "string" ? item : `${item.flag} ${item.name}`;
+          const displayText = typeof item === "string" ? item : `${item.flag} ${item.name}`;
           const value = typeof item === "string" ? item : item.name;
+          const isSelected = selected === value;
           return (
             <TouchableOpacity
-              key={typeof item === "string" ? item : item.name}
-              style={[
-                styles.filterOption,
-                selected === value && styles.filterOptionSelected,
-              ]}
-              onPress={() => setSelected(selected === value ? "" : value)}
+              key={value}
+              style={[styles.chip, isSelected && styles.chipSelected]}
+              onPress={() => setSelected(isSelected ? "" : value)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.filterOptionText}>{displayText}</Text>
+              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                {displayText}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -397,11 +406,17 @@ const ScholarshipApp = () => {
           />
 
           <View style={styles.iconsContainer}>
-            <View style={styles.iconBackground}>
-              <TouchableOpacity onPress={() => setShowFilterModal(true)}>
-                <Ionicons name="funnel" size={25} color="#a5a4a4" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.iconBackground, activeFilterCount > 0 && styles.iconBackgroundActive]}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <Ionicons name="funnel" size={22} color={activeFilterCount > 0 ? "#fff" : "#a5a4a4"} />
+              {activeFilterCount > 0 && (
+                <View style={styles.filterActiveBadge}>
+                  <Text style={styles.filterActiveBadgeText}>{activeFilterCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
             <View style={styles.iconBackground}>
               <TouchableOpacity
                 style={styles.iconButton}
@@ -435,45 +450,45 @@ const ScholarshipApp = () => {
           onPress={() => setShowFilterModal(false)}
         >
           <Animated.View
-            style={[
-              styles.bottomModalContent,
-              {
-                transform: [{ translateY: filterModalY }],
-              },
-            ]}
+            style={[styles.bottomModalContent, { transform: [{ translateY: filterModalY }] }]}
           >
-            <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
-              <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={true}
-              >
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setShowFilterModal(false)}
-                >
-                  <Ionicons name="close" size={30} color="gray" />
-                </TouchableOpacity>
-                <Text style={styles.modalTitle}>Filter Jobs</Text>
-                {renderFilterOption(
-                  "Major",
-                  majors,
-                  selectedMajor,
-                  setSelectedMajor
-                )}
-                {renderFilterOption(
-                  "Country",
-                  countries,
-                  selectedCountry,
-                  setSelectedCountry
-                )}
+            <TouchableOpacity activeOpacity={1} style={{ flex: 1 }}>
+              <View style={styles.dragHandle} />
 
-                <TouchableOpacity
-                  style={styles.filterbutton}
-                  onPress={() => setShowFilterModal(false)}
-                >
-                  <Text style={styles.buttonText}>Apply Filters</Text>
+              <View style={styles.filterHeader}>
+                <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.filterHeaderClose}>
+                  <Ionicons name="close" size={22} color="#374151" />
                 </TouchableOpacity>
+                <Text style={styles.filterHeaderTitle}>
+                  Filters {activeFilterCount > 0 && <Text style={styles.filterBadge}> {activeFilterCount}</Text>}
+                </Text>
+                <TouchableOpacity onPress={resetFilters} style={styles.filterHeaderReset}>
+                  <Text style={styles.filterHeaderResetText}>Reset all</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.filterDivider} />
+
+              <ScrollView
+                contentContainerStyle={styles.filterScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {renderChipGroup("Major", majors, selectedMajor, setSelectedMajor)}
+                <View style={styles.filterDivider} />
+                {renderChipGroup("Country", countries, selectedCountry, setSelectedCountry)}
               </ScrollView>
+
+              <View style={styles.filterFooter}>
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  onPress={() => setShowFilterModal(false)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.applyButtonText}>
+                    Show Results{filteredScholarships.length > 0 ? ` · ${filteredScholarships.length}` : ""}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           </Animated.View>
         </TouchableOpacity>
@@ -688,21 +703,6 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  filterbutton: {
-    backgroundColor: "#166534",
-    paddingVertical: "4.5%",
-    paddingHorizontal: "4%",
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: "9%",
-    marginBottom: "12%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3,
-  },
   buttonText: {
     fontSize: screenWidth * 0.04,
     fontWeight: "bold",
@@ -741,42 +741,157 @@ const styles = StyleSheet.create({
     marginVertical: "2%",
     paddingHorizontal: "2%",
   },
-  filterContainer: {
-    marginVertical: "2%",
-    paddingHorizontal: "2%",
-  },
-  filterLabel: {
-    fontSize: screenWidth * 0.045,
-    fontWeight: "bold",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-    marginBottom: "2%",
-  },
-  filterOptionsVertical: {
-    flexDirection: "column",
-    width: "100%",
-  },
-  filterOption: {
-    backgroundColor: "#e0e0e0",
-    padding: "2%",
-    height: screenHeight * 0.06,
-    marginBottom: "2%",
-    borderRadius: 18,
+  likeButton: {
+    padding: 12,
     justifyContent: "center",
     alignItems: "center",
   },
-  filterOptionText: {
-    color: "black",
-    fontSize: screenWidth * 0.035,
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
-  filterOptionSelected: {
+  bottomModalContent: {
+    width: "100%",
+    height: modalHeight,
+    backgroundColor: "white",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#d1d5db",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  filterHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  filterHeaderClose: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f3f4f6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filterHeaderTitle: {
+    fontSize: screenWidth * 0.047,
+    fontWeight: "700",
+    color: "#111827",
+    fontFamily: "Roboto",
+  },
+  filterBadge: {
+    color: "#166534",
+    fontWeight: "700",
+  },
+  filterHeaderReset: {
+    paddingHorizontal: 4,
+  },
+  filterHeaderResetText: {
+    fontSize: screenWidth * 0.037,
+    color: "#166534",
+    fontWeight: "600",
+    fontFamily: "Roboto",
+  },
+  filterDivider: {
+    height: 1,
+    backgroundColor: "#f0f0f0",
+  },
+  filterScrollContent: {
+    paddingBottom: 16,
+  },
+  chipGroup: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  chipGroupLabel: {
+    fontSize: screenWidth * 0.038,
+    fontWeight: "700",
+    color: "#374151",
+    fontFamily: "Roboto",
+    marginBottom: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#f3f4f6",
+    borderWidth: 1.5,
+    borderColor: "#e5e7eb",
+  },
+  chipSelected: {
+    backgroundColor: "#166534",
+    borderColor: "#166534",
+  },
+  chipText: {
+    fontSize: screenWidth * 0.035,
+    color: "#374151",
+    fontFamily: "Roboto",
+    fontWeight: "500",
+  },
+  chipTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  filterFooter: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    backgroundColor: "#fff",
+  },
+  applyButton: {
+    backgroundColor: "#166534",
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
+    shadowColor: "#166534",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: screenWidth * 0.042,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+  },
+  iconBackgroundActive: {
     backgroundColor: "#166534",
   },
-  closeButton: {
-    alignSelf: "flex-end",
-    padding: "2%",
+  filterActiveBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: "#ef4444",
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 3,
+  },
+  filterActiveBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   messageText: {
     fontSize: screenWidth * 0.04,
@@ -793,35 +908,6 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
     color: "#166534",
     textDecorationLine: "underline",
-    textAlign: "center",
-  },
-  likeButton: {
-    padding: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  bottomModalContent: {
-    width: "100%",
-    height: modalHeight,
-    backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  modalContent: {
-    flex: 1,
-    padding: "4%",
-  },
-  modalTitle: {
-    fontSize: screenWidth * 0.05,
-    fontWeight: "bold",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-    marginBottom: "4%",
     textAlign: "center",
   },
 });

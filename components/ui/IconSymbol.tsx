@@ -38,6 +38,7 @@ const MAPPING = {
   'arrow.up': 'arrow-upward',
   'arrow.down': 'arrow-downward',
   'graduationcap.fill': 'school',
+  'briefcase.fill': 'work',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

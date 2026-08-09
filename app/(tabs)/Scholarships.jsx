@@ -141,7 +141,7 @@ const ScholarshipApp = () => {
   const fetchFavorites = async () => {
     try {
       const data = await authAPI.getFavorites(user.username);
-      const favoriteIds = data.map((s) => s.id);
+      const favoriteIds = Array.isArray(data) ? data.map((s) => s.id) : [];
       setFavoriteScholarships(favoriteIds);
       await AsyncStorage.setItem(
         "favoriteScholarships",
@@ -193,7 +193,7 @@ const ScholarshipApp = () => {
 
   const handleReport = async (scholarshipId, description) => {
     try {
-      await authAPI.reportScholarship(scholarshipId, description);
+      await scholarshipAPI.reportScholarship(scholarshipId, description);
       showAlert("Success", "Report submitted successfully.", "success");
       setShowReportModal(false);
       setReportMessage("");

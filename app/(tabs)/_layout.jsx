@@ -47,6 +47,21 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="Jobs"
+        options={{
+          title: "Jobs",
+          tabBarIcon: ({ color, focused }) => (
+            <GooeyIcon
+              name="briefcase.fill"
+              size={28}
+              color={color}
+              focused={focused}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="favourites"
         options={{
           title: "Favourites",

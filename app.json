@@ -6,7 +6,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "scholarships",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -16,10 +16,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.thusha2271.scholarships",
-      "versionCode": 45,
-      "targetSdkVersion": 35,
-      "compileSdkVersion": 35,
-      "minSdkVersion": 24
+      "versionCode": 6,
+      "targetSdkVersion": 36,
+      "compileSdkVersion": 36,
+      "buildToolsVersion": "36.0.0",
+      "minSdkVersion": 23,
+      "config": {
+        "android.bundle.enableUncompressedNativeLibs": false
+      }
     },
     "web": {
       "bundler": "metro",
@@ -41,7 +45,13 @@
         "expo-build-properties",
         {
           "android": {
-            "ndkVersion": "28.0.12433566"
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0",
+            "enableProguardInReleaseBuilds": true,
+            "packagingOptions": {
+              "pickFirst": ["**/libc++_shared.so"]
+            }
           }
         }
       ]

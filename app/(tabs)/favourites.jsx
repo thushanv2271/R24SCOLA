@@ -182,8 +182,8 @@ const FavoriteItemsList = () => {
         card: {
           backgroundColor: "#fff",
           borderRadius: 14,
-          marginVertical: 6,
-          padding: 14,
+          marginVertical: 8,
+          padding: 16,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.08,
@@ -241,9 +241,9 @@ const FavoriteItemsList = () => {
           marginBottom: 10,
         },
         imageContainer: {
-          width: 64,
-          height: 64,
-          borderRadius: 10,
+          width: 90,
+          height: 90,
+          borderRadius: 12,
           backgroundColor: "#f1f5f9",
           justifyContent: "center",
           alignItems: "center",
@@ -251,22 +251,22 @@ const FavoriteItemsList = () => {
         },
         cardInfo: {
           flex: 1,
-          paddingLeft: 12,
+          paddingLeft: 14,
         },
         cardTitle: {
           fontFamily: "Roboto",
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: "700",
           color: "#1e293b",
           textBreakStrategy: "simple",
-          marginBottom: 2,
+          marginBottom: 4,
         },
         cardSubtitle: {
           fontFamily: "Roboto",
-          fontSize: 12,
+          fontSize: 13,
           color: "#64748b",
           textBreakStrategy: "simple",
-          marginBottom: 6,
+          marginBottom: 8,
         },
         tagsRow: {
           flexDirection: "row",
@@ -407,12 +407,28 @@ const FavoriteItemsList = () => {
           backgroundColor: "#f1f5f9",
           marginHorizontal: 12,
         },
-        emptyText: {
+        emptyContainer: {
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingVertical: 60,
+          paddingHorizontal: 32,
+        },
+        emptyTitle: {
+          fontSize: 18,
+          fontWeight: "700",
+          color: "#334155",
+          fontFamily: "Roboto",
+          marginTop: 16,
+          marginBottom: 8,
+          textBreakStrategy: "simple",
+        },
+        emptySubtext: {
+          fontSize: 14,
+          color: "#94a3b8",
+          fontFamily: "Roboto",
           textAlign: "center",
-          fontFamily: "Poppins_400Regular",
-          color: "#888",
-          fontSize: scale(16),
-          marginTop: screenHeight * 0.2,
+          lineHeight: 20,
           textBreakStrategy: "simple",
         },
       }),
@@ -850,11 +866,23 @@ const FavoriteItemsList = () => {
           />
         }
         ListEmptyComponent={() => (
-          <Text style={styles.emptyText}>
-            {refreshing
-              ? "Refreshing..."
-              : `No favorite ${selectedTab === "scholarships" ? "scholarships" : "jobs"} yet.`}
-          </Text>
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name={selectedTab === "scholarships" ? "school-outline" : "briefcase-outline"}
+              size={64}
+              color="#cbd5e1"
+            />
+            <Text style={styles.emptyTitle}>
+              {refreshing
+                ? "Loading..."
+                : `No favourite ${selectedTab === "scholarships" ? "scholarships" : "jobs"} yet`}
+            </Text>
+            <Text style={styles.emptySubtext}>
+              {refreshing
+                ? "Fetching your favourites…"
+                : `Tap the heart icon on any ${selectedTab === "scholarships" ? "scholarship" : "job"} to save it here.`}
+            </Text>
+          </View>
         )}
       />
 
