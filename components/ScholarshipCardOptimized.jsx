@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import FastImage from "react-native-fast-image";
+import { Image } from "expo-image";
 
 const ScholarshipCardOptimized = ({
   item,
@@ -31,15 +31,13 @@ const ScholarshipCardOptimized = ({
         style={styles.imageCarousel}
       >
         {item.images?.map((imageUri, index) => (
-          <FastImage
+          <Image
             key={`${item.id}-image-${index}`}
-            source={{
-              uri: imageUri,
-              priority: FastImage.priority.normal,
-              cache: FastImage.cacheControl.immutable,
-            }}
+            source={{ uri: imageUri }}
             style={styles.cardImage}
-            resizeMode={FastImage.resizeMode.cover}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            priority="normal"
           />
         ))}
       </ScrollView>

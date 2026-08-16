@@ -6,7 +6,7 @@ module.exports = {
     icon: "./assets/images/icon.png",
     scheme: "scholarships",
     userInterfaceStyle: "automatic",
-    newArchEnabled: false,
+    newArchEnabled: true,
     ios: {
       supportsTablet: true,
     },
@@ -17,14 +17,7 @@ module.exports = {
       },
       package: "com.thusha2271.scholarships",
       versionCode: 6, // Incremented for new release
-      targetSdkVersion: 36,
-      compileSdkVersion: 36,
-      buildToolsVersion: "36.0.0",
-      minSdkVersion: 23,
-      config: {
-        // Enable 16 KB page size support
-        "android.bundle.enableUncompressedNativeLibs": false,
-      },
+      edgeToEdgeEnabled: true,
     },
     web: {
       bundler: "metro",
@@ -32,7 +25,6 @@ module.exports = {
       favicon: "./assets/images/favicon.png",
     },
     plugins: [
-      "./plugins/withNdk16kbSupport.js",
       "expo-router",
       [
         "expo-splash-screen",
@@ -51,6 +43,7 @@ module.exports = {
             compileSdkVersion: 36,
             targetSdkVersion: 36,
             buildToolsVersion: "36.0.0",
+            minSdkVersion: 23,
             // Enable 16 KB page alignment
             enableProguardInReleaseBuilds: true,
             // This ensures proper memory alignment

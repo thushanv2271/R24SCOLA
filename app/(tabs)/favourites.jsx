@@ -14,7 +14,7 @@ import {
   useWindowDimensions,
   RefreshControl,
 } from "react-native";
-import FastImage from "react-native-fast-image";
+import { Image } from "expo-image";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 import { AuthContext } from "../../components/AuthContext";
@@ -707,14 +707,12 @@ const FavoriteItemsList = () => {
         <View style={styles.cardHeader}>
           <View style={styles.imageContainer}>
             {imageUrl ? (
-              <FastImage
-                source={{
-                  uri: imageUrl,
-                  cache: FastImage.cacheControl.immutable,
-                  priority: FastImage.priority.normal,
-                }}
+              <Image
+                source={{ uri: imageUrl }}
                 style={{ width: "100%", height: "100%", borderRadius: scale(8) }}
-                resizeMode={FastImage.resizeMode.cover}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                priority="normal"
               />
             ) : (
               <MaterialIcons name="image-not-supported" size={scale(32)} color="#aaa" />
@@ -774,10 +772,10 @@ const FavoriteItemsList = () => {
       <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.headerRow}>
-          <FastImage
+          <Image
             source={require("../../assets/images/OPPORTUNITIES.png")}
             style={styles.logo}
-            resizeMode={FastImage.resizeMode.contain}
+            contentFit="contain"
           />
           <TouchableOpacity
             style={styles.menuBtn}

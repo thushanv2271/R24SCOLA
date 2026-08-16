@@ -22,7 +22,7 @@ import {
   RefreshControl,
   Image,
 } from "react-native";
-import FastImage from 'react-native-fast-image';
+import { Image } from 'expo-image';
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "./service/itjobsfetch";
@@ -256,14 +256,12 @@ const ScholarshipApp = () => {
             data={item.images}
             keyExtractor={(image, index) => `${item.id}-image-${index}`}
             renderItem={({ item: imageUri }) => (
-              <FastImage
-                source={{
-                  uri: imageUri,
-                  cache: FastImage.cacheControl.immutable,
-                  priority: FastImage.priority.normal,
-                }}
+              <Image
+                source={{ uri: imageUri }}
                 style={styles.cardImage}
-                resizeMode={FastImage.resizeMode.cover}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                priority="normal"
               />
             )}
           />
