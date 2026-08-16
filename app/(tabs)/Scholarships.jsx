@@ -33,7 +33,6 @@ import { authAPI, scholarshipAPI } from "../../services/apiService";
 import LoaderModal from "../../components/JustMoment";
 import BottomModal from "../../components/BottomModal";
 import NotificationModal from "../../components/NotificationModal";
-import { useNavigation } from "@react-navigation/native";
 import AlertModal from "../../components/AlertModal";
 import notificationService from "../../services/NotificationService";
 import {
@@ -68,7 +67,6 @@ const ScholarshipApp = () => {
   const [selectedScholarshipId, setSelectedScholarshipId] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterModalY = useRef(new Animated.Value(screenHeight)).current;
-  const navigation = useNavigation();
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",

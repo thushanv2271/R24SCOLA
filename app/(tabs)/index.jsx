@@ -17,7 +17,6 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../components/AuthContext";
 import { authAPI } from "../../services/apiService";
 import LoaderModal from "../../components/JustMoment";
@@ -62,7 +61,6 @@ const ScholarshipHome = () => {
   const router = useRouter();
   const { username: paramsUsername = "" } = useLocalSearchParams();
   const [username, setUsername] = useState(paramsUsername);
-  const navigation = useNavigation();
   const [paidMember, setPaidMember] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const { notifications, user } = useContext(AuthContext);
@@ -169,7 +167,10 @@ const ScholarshipHome = () => {
         if (item.action) {
           item.action();
         } else {
-          navigation.navigate(item.screen, item.params || {});
+          router.push({
+            pathname: item.screen === "index" ? "/" : `/${item.screen}`,
+            params: item.params || {},
+          });
         }
         toggleSidebar();
       }}
@@ -240,7 +241,7 @@ const ScholarshipHome = () => {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.card}
-                  onPress={() => navigation.navigate(item.screen)}
+                  onPress={() => router.push(`/${item.screen}`)}
                 >
                   <Text style={styles.cardTitle}>{item.title}</Text>
                   <Ionicons name={item.icon} size={40} color="#FFC107" />

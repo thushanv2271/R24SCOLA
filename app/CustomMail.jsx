@@ -15,7 +15,6 @@ import { authAPI } from "../services/apiService";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoaderModal from "../components/JustMoment";
 import { router } from "expo-router";
-import { useNavigation } from "@react-navigation/native";
 import AlertModal from "../components/AlertModal";
 import CustomizeEmailMessageModal from "../components/CustomizeEmailMessageModal";
 
@@ -50,7 +49,6 @@ export default function CustomMail() {
   const [emailMessage, setEmailMessage] = useState("");
   const [jobEmailMessage, setJobEmailMessage] = useState("");
   const [selectedTab, setSelectedTab] = useState("scholarships");
-  const navigation = useNavigation();
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",

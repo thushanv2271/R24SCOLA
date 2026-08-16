@@ -17,7 +17,6 @@ import { Provider as PaperProvider } from "react-native-paper";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../components/AuthContext";
 import { calculatorAPI } from "../services/apiService";
 import AlertModal from "../components/AlertModal";
@@ -67,7 +66,6 @@ const ScholarshipPossibilityCalculator = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [strengths, setStrengths] = useState([]);
   const [improvements, setImprovements] = useState([]);
-  const navigation = useNavigation();
   const router = useRouter();
 
   const handleBackPress = () => {
@@ -601,7 +599,7 @@ const ScholarshipPossibilityCalculator = () => {
             />
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => navigation.navigate("CustomMail")}
+              onPress={() => router.push("/CustomMail")}
             >
               <Ionicons
                 name="create"

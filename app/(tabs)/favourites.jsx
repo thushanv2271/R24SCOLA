@@ -21,7 +21,6 @@ import { AuthContext } from "../../components/AuthContext";
 import { authAPI } from "../../services/apiService";
 import { sendScholarshipEmail, sendJobEmail } from "../service/emailService";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const FavoriteItemsList = () => {
@@ -35,7 +34,6 @@ const FavoriteItemsList = () => {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const navigation = useNavigation();
   const scaleFactor = screenWidth / 375;
   const scale = (size) => Math.min(size * scaleFactor, size * 1.5);
 
@@ -886,7 +884,7 @@ const FavoriteItemsList = () => {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate("CustomMail")}
+        onPress={() => router.push("/CustomMail")}
         activeOpacity={0.85}
       >
         <Ionicons name="create" size={22} color="#fff" />

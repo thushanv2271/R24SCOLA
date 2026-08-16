@@ -1,5 +1,3 @@
-import { DefaultTheme } from "@react-navigation/native";
-
 // Notification service to manage app-wide notifications
 export class NotificationService {
   static instance = null;
