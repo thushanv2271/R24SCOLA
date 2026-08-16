@@ -17,7 +17,6 @@ module.exports = {
       },
       package: "com.thusha2271.scholarships",
       versionCode: 6, // Incremented for new release
-      edgeToEdgeEnabled: true,
     },
     web: {
       bundler: "metro",
@@ -26,6 +25,9 @@ module.exports = {
     },
     plugins: [
       "expo-router",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser",
       [
         "expo-splash-screen",
         {
