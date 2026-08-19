@@ -45,7 +45,7 @@ module.exports = {
             compileSdkVersion: 36,
             targetSdkVersion: 36,
             buildToolsVersion: "36.0.0",
-            minSdkVersion: 23,
+            minSdkVersion: 24,
             // Enable 16 KB page alignment
             enableProguardInReleaseBuilds: true,
             // This ensures proper memory alignment
