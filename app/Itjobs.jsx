@@ -20,9 +20,8 @@ import {
   ScrollView,
   Dimensions,
   RefreshControl,
-  Image,
 } from "react-native";
-import { Image } from 'expo-image';
+import { Image } from "expo-image";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchScholarships } from "./service/itjobsfetch";
