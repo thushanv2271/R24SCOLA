@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
     marginTop: 20,
     textAlign: "center",
-    color: "#333",
+    color: "#111827",
   },
   description: {
     fontSize: 16,

@@ -32,9 +32,8 @@ import { AuthContext } from "../../components/AuthContext";
 import { authAPI, scholarshipAPI } from "../../services/apiService";
 import LoaderModal from "../../components/JustMoment";
 import BottomModal from "../../components/BottomModal";
-import NotificationModal from "../../components/NotificationModal";
 import AlertModal from "../../components/AlertModal";
-import notificationService from "../../services/NotificationService";
+import ScolaMenu from "../../components/ScolaMenu";
 import {
   MAJORS,
   COUNTRIES,
@@ -59,7 +58,9 @@ const ScholarshipApp = () => {
   const [sortOrder, setSortOrder] = useState(""); // New state for sort order
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -192,7 +193,6 @@ const ScholarshipApp = () => {
   const handleReport = async (scholarshipId, description) => {
     try {
       await scholarshipAPI.reportScholarship(scholarshipId, description);
-      showAlert("Success", "Report submitted successfully.", "success");
       setShowReportModal(false);
       setReportMessage("");
       setSelectedScholarshipId(null);
@@ -220,10 +220,6 @@ const ScholarshipApp = () => {
         data.length > previousScholarshipsCount
       ) {
         const newCount = data.length - previousScholarshipsCount;
-        notificationService.info(
-          `${newCount} New Scholarship${newCount > 1 ? "s" : ""}`,
-          `Found ${newCount} new scholarship opportunity available!`,
-        );
 
         // Add to notification history
         if (addNotification) {
@@ -280,13 +276,20 @@ const ScholarshipApp = () => {
   }, []);
 
   const filteredScholarships = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return scholarships.filter((item) => {
       const majorMatch = !selectedMajor || item.major === selectedMajor;
       const countryMatch = !selectedCountry || item.country === selectedCountry;
       const fundingMatch = !selectedFunding || item.funding === selectedFunding;
       const testMatch =
         !selectedTest || item.languageTests?.includes(selectedTest);
-      return majorMatch && countryMatch && fundingMatch && testMatch;
+      const searchMatch =
+        !query ||
+        item.title?.toLowerCase().includes(query) ||
+        item.university?.toLowerCase().includes(query) ||
+        item.major?.toLowerCase().includes(query) ||
+        item.country?.toLowerCase().includes(query);
+      return majorMatch && countryMatch && fundingMatch && testMatch && searchMatch;
     });
   }, [
     scholarships,
@@ -294,6 +297,7 @@ const ScholarshipApp = () => {
     selectedCountry,
     selectedFunding,
     selectedTest,
+    searchQuery,
   ]);
 
   const ScholarshipCard = React.memo(
@@ -601,23 +605,53 @@ const ScholarshipApp = () => {
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.iconBackground}
-              onPress={() => setShowNotificationModal(true)}
+              style={[styles.iconBackground, showSearchBar && styles.iconBackgroundActive]}
+              onPress={() => {
+                if (showSearchBar) setSearchQuery("");
+                setShowSearchBar((v) => !v);
+              }}
             >
-              <Ionicons name="notifications" size={25} color="#a5a4a4" />
+              <Ionicons
+                name={showSearchBar ? "close" : "search"}
+                size={22}
+                color={showSearchBar ? "#fff" : "#a5a4a4"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconBackground}
+              onPress={() => setMenuVisible(true)}
+            >
+              <Ionicons name="menu" size={27} color="#a5a4a4" />
             </TouchableOpacity>
           </View>
         </View>
+
+        {showSearchBar && (
+          <View style={styles.searchBarContainer}>
+            <Ionicons name="search" size={18} color="#94a3b8" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search scholarships, universities, majors..."
+              placeholderTextColor="#94a3b8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={18} color="#94a3b8" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </Animated.View>
 
       <BottomModal
         visible={showInfoModal}
         onClose={() => setShowInfoModal(false)}
       />
-      <NotificationModal
-        visible={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-      />
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
       <Modal
         visible={showFilterModal}
@@ -625,61 +659,61 @@ const ScholarshipApp = () => {
         animationType="none"
         onRequestClose={() => setShowFilterModal(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowFilterModal(false)}
-        >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setShowFilterModal(false)}
+          />
           <Animated.View
             style={[styles.bottomModalContent, { transform: [{ translateY: filterModalY }] }]}
           >
-            <TouchableOpacity activeOpacity={1} style={{ flex: 1 }}>
-              {/* Drag handle */}
-              <View style={styles.dragHandle} />
+            {/* Drag handle */}
+            <View style={styles.dragHandle} />
 
-              {/* Header */}
-              <View style={styles.filterHeader}>
-                <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.filterHeaderClose}>
-                  <Ionicons name="close" size={22} color="#374151" />
-                </TouchableOpacity>
-                <Text style={styles.filterHeaderTitle}>
-                  Filters {activeFilterCount > 0 && <Text style={styles.filterBadge}> {activeFilterCount}</Text>}
-                </Text>
-                <TouchableOpacity onPress={resetFilters} style={styles.filterHeaderReset}>
-                  <Text style={styles.filterHeaderResetText}>Reset all</Text>
-                </TouchableOpacity>
-              </View>
+            {/* Header */}
+            <View style={styles.filterHeader}>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.filterHeaderClose}>
+                <Ionicons name="close" size={22} color="#374151" />
+              </TouchableOpacity>
+              <Text style={styles.filterHeaderTitle}>
+                Filters {activeFilterCount > 0 && <Text style={styles.filterBadge}> {activeFilterCount}</Text>}
+              </Text>
+              <TouchableOpacity onPress={resetFilters} style={styles.filterHeaderReset}>
+                <Text style={styles.filterHeaderResetText}>Reset all</Text>
+              </TouchableOpacity>
+            </View>
 
+            <View style={styles.filterDivider} />
+
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={styles.filterScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {renderChipGroup("Sort by Date", sortOptions, sortOrder, setSortOrder)}
               <View style={styles.filterDivider} />
+              {renderChipGroup("Major", majors, selectedMajor, setSelectedMajor)}
+              <View style={styles.filterDivider} />
+              {renderChipGroup("Country", countries, selectedCountry, setSelectedCountry)}
+              <View style={styles.filterDivider} />
+              {renderChipGroup("Funding Type", fundingTypes, selectedFunding, setSelectedFunding)}
+            </ScrollView>
 
-              <ScrollView
-                contentContainerStyle={styles.filterScrollContent}
-                showsVerticalScrollIndicator={false}
+            {/* Sticky Apply Button */}
+            <View style={styles.filterFooter}>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={() => setShowFilterModal(false)}
+                activeOpacity={0.85}
               >
-                {renderChipGroup("Sort by Date", sortOptions, sortOrder, setSortOrder)}
-                <View style={styles.filterDivider} />
-                {renderChipGroup("Major", majors, selectedMajor, setSelectedMajor)}
-                <View style={styles.filterDivider} />
-                {renderChipGroup("Country", countries, selectedCountry, setSelectedCountry)}
-                <View style={styles.filterDivider} />
-                {renderChipGroup("Funding Type", fundingTypes, selectedFunding, setSelectedFunding)}
-              </ScrollView>
-
-              {/* Sticky Apply Button */}
-              <View style={styles.filterFooter}>
-                <TouchableOpacity
-                  style={styles.applyButton}
-                  onPress={() => setShowFilterModal(false)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.applyButtonText}>
-                    Show Results{filteredScholarships.length > 0 ? ` · ${filteredScholarships.length}` : ""}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
+                <Text style={styles.applyButtonText}>
+                  Show Results{filteredScholarships.length > 0 ? ` · ${filteredScholarships.length}` : ""}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </Animated.View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       <Modal
@@ -882,6 +916,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 5,
     elevation: 2,
+  },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 42,
+    marginTop: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Roboto",
+    color: "#111827",
+    padding: 0,
   },
   card: {
     backgroundColor: "#fff",

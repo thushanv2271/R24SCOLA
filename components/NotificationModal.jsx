@@ -125,6 +125,7 @@ const NotificationModal = memo(({ visible, onClose }) => {
           </View>
         ) : (
           <FlatList
+            style={{ flex: 1 }}
             data={notifications}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <NotificationItem item={item} />}
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
     maxHeight: "75%",
     paddingBottom: 28,
     elevation: 24,
-    shadowColor: "#0f172a",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0f172a",
+    color: "#111827",
     fontFamily: "Roboto",
   },
   badge: {
@@ -267,14 +268,14 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1e293b",
+    color: "#111827",
     fontFamily: "Roboto",
     marginBottom: 3,
     textBreakStrategy: "simple",
   },
   itemDesc: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#666",
     fontFamily: "Roboto",
     lineHeight: 18,
     textBreakStrategy: "simple",
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1e293b",
+    color: "#111827",
     fontFamily: "Roboto",
     marginBottom: 6,
     textBreakStrategy: "simple",

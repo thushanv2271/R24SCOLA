@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0f172a",
+    color: "#111827",
     fontFamily: "Roboto",
   },
   closeBtn: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#475569",
+    color: "#666",
     fontFamily: "Roboto",
     marginBottom: 8,
   },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 14,
     fontFamily: "Roboto",
-    color: "#0f172a",
+    color: "#111827",
     backgroundColor: "#f8fafc",
     lineHeight: 22,
     marginBottom: 20,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelBtnText: {
-    color: "#475569",
+    color: "#666",
     fontWeight: "600",
     fontSize: 15,
     fontFamily: "Roboto",

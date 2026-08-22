@@ -85,11 +85,12 @@ const FilterModal = ({
       animationType="none"
       onRequestClose={onClose}
     >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}
-      >
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={onClose}
+        />
         <Animated.View
           style={[
             styles.bottomModalContent,
@@ -98,7 +99,7 @@ const FilterModal = ({
             },
           ]}
         >
-          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+          <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filter Scholarships</Text>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -107,6 +108,7 @@ const FilterModal = ({
             </View>
 
             <ScrollView
+              style={{ flex: 1 }}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={true}
             >
@@ -131,9 +133,9 @@ const FilterModal = ({
                 )}
               </View>
             </ScrollView>
-          </TouchableOpacity>
+          </View>
         </Animated.View>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 };
@@ -152,6 +154,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   modalContent: {
+    flex: 1,
     padding: 20,
   },
   modalHeader: {
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
+    color: "#111827",
   },
   closeButton: {
     padding: 5,
@@ -178,7 +181,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 12,
-    color: "#333",
+    color: "#374151",
   },
   filterOptionsVertical: {
     flexDirection: "column",
@@ -194,11 +197,11 @@ const styles = StyleSheet.create({
   },
   filterOptionSelected: {
     backgroundColor: "#004aad",
-    borderColor: "#0056b3",
+    borderColor: "#004aad",
   },
   filterOptionText: {
     fontSize: 14,
-    color: "#333",
+    color: "#374151",
   },
   filterOptionTextSelected: {
     color: "white",
@@ -224,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#004aad",
   },
   resetButtonText: {
-    color: "#333",
+    color: "#666",
     fontSize: 16,
     fontWeight: "600",
   },

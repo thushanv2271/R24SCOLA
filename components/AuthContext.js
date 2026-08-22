@@ -40,12 +40,6 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.setItem("userToken", userData.token);
       }
 
-      // Show success notification
-      notificationService.success(
-        "Login Successful",
-        `Welcome back, ${userData.username || "User"}! 👋`,
-      );
-
       // Add to notification history
       addNotification({
         type: "login",
@@ -71,7 +65,6 @@ export const AuthProvider = ({ children }) => {
         "isLoggedIn",
         "userID",
       ]);
-      notificationService.info("Logged Out", "You have been logged out");
     } catch (error) {
       console.error("Error during logout:", error);
     }

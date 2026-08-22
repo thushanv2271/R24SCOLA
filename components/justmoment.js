@@ -63,13 +63,13 @@ const styles = StyleSheet.create({
   congratsText: {
     fontSize: 18, // Slightly smaller for better scaling
     fontWeight: 'bold',
-    color: '#333',
+    color: '#111827',
     marginBottom: 10,
   },
   messageText: {
     fontSize: 14, // Adjusted for readability on smaller screens
     textAlign: 'center',
-    color: '#555',
+    color: '#666',
     marginBottom: 20,
     lineHeight: 20,
   },

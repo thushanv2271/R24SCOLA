@@ -20,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AuthContext } from "../components/AuthContext";
 import { calculatorAPI } from "../services/apiService";
 import AlertModal from "../components/AlertModal";
+import ScolaMenu from "../components/ScolaMenu";
 
 const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
 
@@ -46,6 +47,7 @@ const ScholarshipPossibilityCalculator = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [pastResults, setPastResults] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",
@@ -534,7 +536,6 @@ const ScholarshipPossibilityCalculator = () => {
               setPastResults((prevResults) =>
                 prevResults.filter((result) => result.id !== resultId),
               );
-              showAlert("Success", "Result deleted successfully", "success");
             } catch (error) {
               console.error("Error deleting result:", error);
               showAlert("Error", "Failed to delete result", "error");
@@ -597,18 +598,31 @@ const ScholarshipPossibilityCalculator = () => {
               source={require("../assets/images/OPPORTUNITIES.png")}
               style={styles.logo}
             />
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => router.push("/CustomMail")}
-            >
-              <Ionicons
-                name="create"
-                size={moderateScale(24)}
-                color="#a5a4a4"
-              />
-            </TouchableOpacity>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => router.push("/CustomMail")}
+              >
+                <Ionicons
+                  name="create"
+                  size={moderateScale(24)}
+                  color="#a5a4a4"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setMenuVisible(true)}
+              >
+                <Ionicons
+                  name="menu"
+                  size={moderateScale(26)}
+                  color="#a5a4a4"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
+        <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
         <LinearGradient colors={["#f5f5f5", "#f5f5f5"]} style={styles.gradient}>
           <ScrollView
@@ -712,6 +726,7 @@ const ScholarshipPossibilityCalculator = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <ScrollView
+                style={{ flex: 1 }}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.modalScrollContent}
               >
@@ -921,6 +936,7 @@ const ScholarshipPossibilityCalculator = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <ScrollView
+                style={{ flex: 1 }}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.modalScrollContent}
               >
@@ -1098,6 +1114,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
     elevation: 2,
   },
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: moderateScale(8),
+  },
   logo: {
     width: scale(150),
     height: verticalScale(50),
@@ -1119,7 +1140,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#64748b",
+    color: "#666",
     textAlign: "center",
     marginBottom: verticalScale(20),
     fontWeight: "500",
@@ -1215,7 +1236,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#1e293b",
+    color: "#111827",
   },
   resultCircle: {
     width: moderateScale(140),
@@ -1258,7 +1279,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(15),
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#475569",
+    color: "#666",
     lineHeight: moderateScale(22),
   },
   breakdownSection: {
@@ -1283,7 +1304,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#1e293b",
+    color: "#111827",
   },
   scoreBarContainer: {
     marginBottom: verticalScale(12),
@@ -1303,14 +1324,14 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(13),
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#64748b",
+    color: "#666",
     fontWeight: "500",
   },
   scoreBarValue: {
     fontSize: moderateScale(13),
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#1e293b",
+    color: "#111827",
     fontWeight: "600",
   },
   progressBarBackground: {
@@ -1448,7 +1469,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(18),
     fontWeight: "600",
     fontFamily: "Roboto",
-    color: "#64748b",
+    color: "#666",
     marginTop: verticalScale(16),
   },
   emptyHistorySubtext: {
@@ -1525,7 +1546,7 @@ const styles = StyleSheet.create({
   historyDetailText: {
     fontSize: moderateScale(11),
     fontFamily: "Roboto",
-    color: "#475569",
+    color: "#666",
   },
   historyDivider: {
     height: 1,
@@ -1541,7 +1562,7 @@ const styles = StyleSheet.create({
   historyFeedbackText: {
     fontSize: moderateScale(12),
     fontFamily: "Roboto",
-    color: "#475569",
+    color: "#666",
     lineHeight: moderateScale(18),
   },
   historyStrengthsPreview: {

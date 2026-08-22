@@ -5,7 +5,7 @@ export const getDynamicStyles = (colorScheme) => StyleSheet.create({
     backgroundColor: colorScheme === 'light' ? '#fff' : '#fff',
   },
   title: {
-    color: colorScheme === 'light' ? '#000' : '#000',
+    color: colorScheme === 'light' ? '#111827' : '#111827',
     fontWeight: 'bold',
     fontSize: 23,
     fontFamily: "Roboto",
@@ -13,13 +13,13 @@ export const getDynamicStyles = (colorScheme) => StyleSheet.create({
   },
   input: {
     borderColor: colorScheme === 'light' ? '#ccc' : '#ccc',
-    color: colorScheme === 'light' ? '#000' : '#000',
+    color: colorScheme === 'light' ? '#111827' : '#111827',
     backgroundColor: colorScheme === 'light' ? '#f0f0f0' : '#f0f0f0',
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
   },
   switchText: {
-    color: colorScheme === 'light' ? 'blue' : 'blue',
+    color: colorScheme === 'light' ? '#004aad' : '#004aad',
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
   },
@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   errorText: {
-    color: 'red',
+    color: '#ef4444',
     fontSize: 12,
     fontFamily: "Roboto",
     textBreakStrategy: "simple",

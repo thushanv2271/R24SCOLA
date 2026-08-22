@@ -11,13 +11,14 @@ export default StyleSheet.create({
   },
   title: {
     marginTop: 80,
-    fontFamily: 'Poppins_700Bold',
-    color: '#333',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    color: '#111827',
     textAlign: 'center',
   },
   emptyText: {
     textAlign: 'center',
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Roboto',
     color: '#888',
   },
 
@@ -47,13 +48,14 @@ export default StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    color: '#333',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 4,
   },
   cardSubTitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Roboto',
     color: '#666',
     marginBottom: 8,
   },
@@ -66,7 +68,8 @@ export default StyleSheet.create({
   },
   cardFunding: {
     fontSize: 12,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
     color: 'white',
     backgroundColor: '#004aad',
     paddingHorizontal: 10,
@@ -105,7 +108,8 @@ export default StyleSheet.create({
   },
   dropDownToggleText: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
     color: '#004aad',
   },
   dropDownContent: {
@@ -117,14 +121,15 @@ export default StyleSheet.create({
   },
   dropDownText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Roboto',
     color: '#666',
     lineHeight: 20,
     marginBottom: 8,
   },
   boldText: {
-    fontFamily: 'Poppins_700Bold',
-    color: '#333',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    color: '#111827',
   },
   linkText: {
     color: '#004aad',
@@ -155,7 +160,8 @@ export default StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
     color: '#fff',
   },
 });

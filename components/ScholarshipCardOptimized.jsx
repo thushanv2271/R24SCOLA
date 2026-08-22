@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     marginBottom: 4,
-    color: "#333",
+    color: "#111827",
   },
   cardSubtitle: {
     fontSize: 14,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     color: "white",
-    backgroundColor: "#a6a6a6",
+    backgroundColor: "#004aad",
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   dropdownToggleText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#004aad",
   },
   dropdownContent: {
     marginTop: 8,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 8,
-    color: "#333",
+    color: "#666",
   },
   boldText: {
     fontWeight: "bold",

@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 20,
     textAlign: "center",
-    color: "#333", // Adjust text color for better contrast
+    color: "#111827", // Adjust text color for better contrast
   },
   description: {
     fontSize: 16,

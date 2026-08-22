@@ -4,11 +4,13 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
 } from "react";
 import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   StatusBar,
   useWindowDimensions,
@@ -22,6 +24,7 @@ import { authAPI } from "../../services/apiService";
 import { sendScholarshipEmail, sendJobEmail } from "../service/emailService";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ScolaMenu from "../../components/ScolaMenu";
 
 const FavoriteItemsList = () => {
   const { user, refreshFavorites } = useContext(AuthContext);
@@ -32,10 +35,28 @@ const FavoriteItemsList = () => {
   const [requestedScholarships, setRequestedScholarships] = useState(new Set());
   const [requestedJobs, setRequestedJobs] = useState(new Set());
   const [showMenu, setShowMenu] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const router = useRouter();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const scaleFactor = screenWidth / 375;
   const scale = (size) => Math.min(size * scaleFactor, size * 1.5);
+  const pageWidth = screenWidth - scale(10) * 2; // matches container's paddingHorizontal
+  const pagerRef = useRef(null);
+  const TABS = ["scholarships", "jobs"];
+
+  const goToTab = (tab) => {
+    setSelectedTab(tab);
+    pagerRef.current?.scrollTo({
+      x: TABS.indexOf(tab) * pageWidth,
+      animated: true,
+    });
+  };
+
+  const handlePagerScrollEnd = (e) => {
+    const page = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
+    const tab = TABS[page] ?? TABS[0];
+    if (tab !== selectedTab) setSelectedTab(tab);
+  };
 
   // Load requested scholarships from AsyncStorage when the component mounts
   useEffect(() => {
@@ -106,6 +127,10 @@ const FavoriteItemsList = () => {
           paddingHorizontal: scale(10),
           paddingBottom: scale(10),
         },
+        pagePaneDivider: {
+          borderRightWidth: 1,
+          borderRightColor: "#e2e8f0",
+        },
         headerContainer: {
           position: "absolute",
           top: 0,
@@ -170,43 +195,61 @@ const FavoriteItemsList = () => {
         },
         title: {
           marginTop: scale(80),
-          fontFamily: "Poppins_700Bold",
+          fontFamily: "Roboto",
           fontSize: scale(24),
           fontWeight: "700",
-          color: "#333",
+          color: "#111827",
           textAlign: "center",
           textBreakStrategy: "simple",
         },
         card: {
           backgroundColor: "#fff",
-          borderRadius: 14,
+          borderRadius: 16,
           marginVertical: 8,
-          padding: 16,
+          overflow: "hidden",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.08,
           shadowRadius: 4,
           elevation: 2,
         },
-        removeRow: {
+        imageBanner: {
+          width: "100%",
+          height: 150,
+          backgroundColor: "#f1f5f9",
+        },
+        bannerImage: {
+          width: "100%",
+          height: "100%",
+        },
+        bannerFallback: {
+          width: "100%",
+          height: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        bannerOverlayTop: {
+          position: "absolute",
+          top: 10,
+          left: 10,
+          right: 10,
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 8,
         },
         typeBadge: {
           flexDirection: "row",
           alignItems: "center",
           gap: 4,
-          paddingVertical: 3,
-          paddingHorizontal: 8,
+          paddingVertical: 4,
+          paddingHorizontal: 10,
           borderRadius: 20,
         },
         typeBadgeScholarship: {
           backgroundColor: "#004aad",
         },
         typeBadgeJob: {
-          backgroundColor: "#166534",
+          backgroundColor: "#004aad",
         },
         typeBadgeText: {
           fontSize: 10,
@@ -215,54 +258,29 @@ const FavoriteItemsList = () => {
           color: "#fff",
           textBreakStrategy: "simple",
         },
-        removeTextBtn: {
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 4,
-        },
-        removeText: {
-          fontSize: 12,
-          fontWeight: "600",
-          fontFamily: "Roboto",
-          color: "#ef4444",
-          textBreakStrategy: "simple",
-        },
-        dashedDivider: {
-          borderBottomWidth: 1,
-          borderBottomColor: "#e2e8f0",
-          borderStyle: "dashed",
-          marginBottom: 12,
-        },
-        cardHeader: {
-          flexDirection: "row",
-          alignItems: "flex-start",
-          marginBottom: 10,
-        },
-        imageContainer: {
-          width: 90,
-          height: 90,
-          borderRadius: 12,
-          backgroundColor: "#f1f5f9",
+        removeIconBtn: {
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: "rgba(0,0,0,0.45)",
           justifyContent: "center",
           alignItems: "center",
-          overflow: "hidden",
         },
-        cardInfo: {
-          flex: 1,
-          paddingLeft: 14,
+        cardBody: {
+          padding: 14,
         },
         cardTitle: {
           fontFamily: "Roboto",
-          fontSize: 15,
+          fontSize: 16,
           fontWeight: "700",
-          color: "#1e293b",
+          color: "#111827",
           textBreakStrategy: "simple",
           marginBottom: 4,
         },
         cardSubtitle: {
           fontFamily: "Roboto",
           fontSize: 13,
-          color: "#64748b",
+          color: "#666",
           textBreakStrategy: "simple",
           marginBottom: 8,
         },
@@ -270,6 +288,7 @@ const FavoriteItemsList = () => {
           flexDirection: "row",
           flexWrap: "wrap",
           gap: 4,
+          marginBottom: 10,
         },
         tag: {
           backgroundColor: "#f1f5f9",
@@ -279,7 +298,7 @@ const FavoriteItemsList = () => {
         },
         tagText: {
           fontSize: 11,
-          color: "#475569",
+          color: "#374151",
           fontFamily: "Roboto",
           textBreakStrategy: "simple",
         },
@@ -316,6 +335,11 @@ const FavoriteItemsList = () => {
           fontFamily: "Roboto",
           color: "#10b981",
           textBreakStrategy: "simple",
+        },
+        headerIcons: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
         },
         menuBtn: {
           width: 40,
@@ -604,9 +628,7 @@ const FavoriteItemsList = () => {
     }
   }, [refreshFavorites, user, fetchFavoriteScholarships, fetchFavoriteJobs]);
 
-  const handleRemoveFavorite = async (item) => {
-    const isJob = selectedTab === "jobs";
-
+  const handleRemoveFavorite = async (item, isJob) => {
     try {
       if (isJob) {
         await authAPI.removeJobFavorite(user.username, item.id);
@@ -642,10 +664,10 @@ const FavoriteItemsList = () => {
     }
   };
 
-  const renderItem = ({ item }) => {
+  const renderItem = (dataType) => ({ item }) => {
     const imageUrl =
       item.images && item.images.length > 0 ? item.images[0] : null;
-    const isJob = selectedTab === "jobs";
+    const isJob = dataType === "jobs";
     const isRequested = isJob
       ? requestedJobs.has(item.id)
       : requestedScholarships.has(item.id);
@@ -687,63 +709,88 @@ const FavoriteItemsList = () => {
 
     return (
       <View style={styles.card}>
-        {/* Top row: type badge + remove */}
-        <View style={styles.removeRow}>
-          <View style={[styles.typeBadge, isJob ? styles.typeBadgeJob : styles.typeBadgeScholarship]}>
-            <Ionicons name={isJob ? "briefcase" : "school"} size={10} color="#fff" />
-            <Text style={styles.typeBadgeText}>{isJob ? "Job" : "Scholarship"}</Text>
+        {/* Image banner */}
+        <View style={styles.imageBanner}>
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.bannerImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+            />
+          ) : (
+            <View style={styles.bannerFallback}>
+              <MaterialIcons name="image-not-supported" size={scale(36)} color="#94a3b8" />
+            </View>
+          )}
+
+          <View style={styles.bannerOverlayTop}>
+            <View style={[styles.typeBadge, isJob ? styles.typeBadgeJob : styles.typeBadgeScholarship]}>
+              <Ionicons name={isJob ? "briefcase" : "school"} size={10} color="#fff" />
+              <Text style={styles.typeBadgeText}>{isJob ? "Job" : "Scholarship"}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.removeIconBtn}
+              onPress={() => handleRemoveFavorite(item, isJob)}
+              accessibilityLabel="Remove from favourites"
+            >
+              <Ionicons name="trash-outline" size={16} color="#fff" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.removeTextBtn} onPress={() => handleRemoveFavorite(item)}>
-            <Ionicons name="trash-outline" size={14} color="#ef4444" />
-            <Text style={styles.removeText}>Remove</Text>
-          </TouchableOpacity>
         </View>
 
-        <View style={styles.dashedDivider} />
+        {/* Content */}
+        <View style={styles.cardBody}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {item.title || `Untitled ${isJob ? "Job" : "Scholarship"}`}
+          </Text>
+          <Text style={styles.cardSubtitle} numberOfLines={1}>
+            {item.university || `Unknown ${isJob ? "Organization" : "University"}`}
+          </Text>
+          <View style={styles.tagsRow}>
+            {item.country ? <View style={styles.tag}><Text style={styles.tagText}>{item.country}</Text></View> : null}
+            {item.major ? <View style={styles.tag}><Text style={styles.tagText}>{item.major}</Text></View> : null}
+          </View>
 
-        {/* Content row */}
-        <View style={styles.cardHeader}>
-          <View style={styles.imageContainer}>
-            {imageUrl ? (
-              <Image
-                source={{ uri: imageUrl }}
-                style={{ width: "100%", height: "100%", borderRadius: scale(8) }}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-                priority="normal"
-              />
+          {/* Action row */}
+          <View style={styles.cardActions}>
+            {isRequested ? (
+              <View style={styles.requestedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#10b981" />
+                <Text style={styles.requestedText}>Requested</Text>
+              </View>
             ) : (
-              <MaterialIcons name="image-not-supported" size={scale(32)} color="#aaa" />
+              <TouchableOpacity style={styles.requestBtn} onPress={handleRequestItem}>
+                <Text style={styles.requestBtnText}>Send Request</Text>
+                <Ionicons name="send" size={12} color="#fff" />
+              </TouchableOpacity>
             )}
           </View>
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle} numberOfLines={2}>
-              {item.title || `Untitled ${isJob ? "Job" : "Scholarship"}`}
-            </Text>
-            <Text style={styles.cardSubtitle} numberOfLines={1}>
-              {item.university || `Unknown ${isJob ? "Organization" : "University"}`}
-            </Text>
-            <View style={styles.tagsRow}>
-              {item.country ? <View style={styles.tag}><Text style={styles.tagText}>{item.country}</Text></View> : null}
-              {item.major ? <View style={styles.tag}><Text style={styles.tagText}>{item.major}</Text></View> : null}
-            </View>
-          </View>
         </View>
+      </View>
+    );
+  };
 
-        {/* Action row */}
-        <View style={styles.cardActions}>
-          {isRequested ? (
-            <View style={styles.requestedBadge}>
-              <Ionicons name="checkmark-circle" size={14} color="#10b981" />
-              <Text style={styles.requestedText}>Requested</Text>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.requestBtn} onPress={handleRequestItem}>
-              <Text style={styles.requestBtnText}>Send Request</Text>
-              <Ionicons name="send" size={12} color="#fff" />
-            </TouchableOpacity>
-          )}
-        </View>
+  const renderEmptyState = (dataType) => {
+    const isJob = dataType === "jobs";
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons
+          name={isJob ? "briefcase-outline" : "school-outline"}
+          size={64}
+          color="#cbd5e1"
+        />
+        <Text style={styles.emptyTitle}>
+          {refreshing
+            ? "Loading..."
+            : `No favourite ${isJob ? "jobs" : "scholarships"} yet`}
+        </Text>
+        <Text style={styles.emptySubtext}>
+          {refreshing
+            ? "Fetching your favourites…"
+            : `Tap the heart icon on any ${isJob ? "job" : "scholarship"} to save it here.`}
+        </Text>
       </View>
     );
   };
@@ -775,19 +822,27 @@ const FavoriteItemsList = () => {
             style={styles.logo}
             contentFit="contain"
           />
-          <TouchableOpacity
-            style={styles.menuBtn}
-            onPress={() => setShowMenu((v) => !v)}
-          >
-            <Ionicons name="ellipsis-vertical" size={24} color="#1e293b" />
-          </TouchableOpacity>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setShowMenu((v) => !v)}
+            >
+              <Ionicons name="ellipsis-vertical" size={24} color="#374151" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setMenuVisible(true)}
+            >
+              <Ionicons name="menu" size={24} color="#374151" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Underline tab bar */}
         <View style={styles.tabBar}>
           <TouchableOpacity
             style={styles.tabItem}
-            onPress={() => setSelectedTab("scholarships")}
+            onPress={() => goToTab("scholarships")}
           >
             <Text style={[styles.tabLabel, selectedTab === "scholarships" && styles.tabLabelActive]}>
               Scholarships
@@ -799,7 +854,7 @@ const FavoriteItemsList = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.tabItem}
-            onPress={() => setSelectedTab("jobs")}
+            onPress={() => goToTab("jobs")}
           >
             <Text style={[styles.tabLabel, selectedTab === "jobs" && styles.tabLabelActive]}>
               Jobs
@@ -846,41 +901,56 @@ const FavoriteItemsList = () => {
         </>
       )}
 
-      <FlatList
-        data={currentData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{
-          paddingTop: scale(130),
-          paddingBottom: scale(100),
-        }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#2e7d32"]}
+      <ScrollView
+        ref={pagerRef}
+        style={{ flex: 1 }}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handlePagerScrollEnd}
+        scrollEventThrottle={16}
+      >
+        <View style={[styles.pagePaneDivider, { width: pageWidth, height: "100%" }]}>
+          <FlatList
+            style={{ flex: 1 }}
+            data={favoriteScholarships}
+            renderItem={renderItem("scholarships")}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={{
+              paddingTop: scale(130),
+              paddingBottom: scale(100),
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#004aad"]}
+              />
+            }
+            ListEmptyComponent={() => renderEmptyState("scholarships")}
           />
-        }
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Ionicons
-              name={selectedTab === "scholarships" ? "school-outline" : "briefcase-outline"}
-              size={64}
-              color="#cbd5e1"
-            />
-            <Text style={styles.emptyTitle}>
-              {refreshing
-                ? "Loading..."
-                : `No favourite ${selectedTab === "scholarships" ? "scholarships" : "jobs"} yet`}
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {refreshing
-                ? "Fetching your favourites…"
-                : `Tap the heart icon on any ${selectedTab === "scholarships" ? "scholarship" : "job"} to save it here.`}
-            </Text>
-          </View>
-        )}
-      />
+        </View>
+        <View style={{ width: pageWidth, height: "100%" }}>
+          <FlatList
+            style={{ flex: 1 }}
+            data={favoriteJobs}
+            renderItem={renderItem("jobs")}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={{
+              paddingTop: scale(130),
+              paddingBottom: scale(100),
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#004aad"]}
+              />
+            }
+            ListEmptyComponent={() => renderEmptyState("jobs")}
+          />
+        </View>
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.fab}
@@ -890,6 +960,8 @@ const FavoriteItemsList = () => {
         <Ionicons name="create" size={22} color="#fff" />
         <Text style={styles.fabText}>Edit Mail</Text>
       </TouchableOpacity>
+
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </View>
   );
 };

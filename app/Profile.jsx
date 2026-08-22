@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
@@ -17,6 +16,7 @@ import { fetchUserByUsername, updateUser } from "../services/userService";
 import AlertModal from "../components/AlertModal";
 import { AuthContext } from "../components/AuthContext";
 import { authAPI } from "../services/apiService";
+import ScolaMenu from "../components/ScolaMenu";
 
 export default function Profile() {
   const { username } = useLocalSearchParams(); // Get the username from query parameters
@@ -24,6 +24,7 @@ export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
+  const [menuVisible, setMenuVisible] = useState(false);
   const [editedData, setEditedData] = useState({}); // State to hold edited user data
   const [favoriteScholarshipsCount, setFavoriteScholarshipsCount] = useState(0);
   const [favoriteJobsCount, setFavoriteJobsCount] = useState(0);
@@ -169,7 +170,6 @@ export default function Profile() {
       const updatedData = await updateUser(userId, dataToSend, token);
       setUserData(updatedData || dataToSend);
       setIsEditing(false);
-      showAlert("Success", "Profile updated successfully!", "success");
     } catch (error) {
       console.error("Error updating user data:", error);
       showAlert("Error", error.message || "Failed to update profile.", "error");
@@ -257,7 +257,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#004aad" />
       </SafeAreaView>
     );
@@ -265,78 +265,139 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        style={{ flex: 1 }}
+      >
         {/* Header with Icons */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleGoHome} style={styles.iconButton}>
-            <Ionicons name="home" size={24} color="#004aad" />
+            <Ionicons name="chevron-back" size={22} color="#004aad" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
-            <Ionicons name="log-out" size={24} color="red" />
-          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            My Profile
+          </Text>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity
+              onPress={() => setMenuVisible(true)}
+              style={styles.iconButton}
+            >
+              <Ionicons name="menu" size={22} color="#004aad" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+              <Ionicons name="log-out-outline" size={22} color="#ef4444" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Edit Button */}
-        {/* <TouchableOpacity style={styles.editButton} onPress={toggleEditMode}>
-          <Text style={styles.editButtonText}>{isEditing ? 'Cancel' : 'Edit'}</Text>
-        </TouchableOpacity> */}
+        {userData ? (
+          <>
+            {/* Profile Header Card */}
+            <View style={styles.headerCard}>
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarInitial}>
+                  {userData.username
+                    ? userData.username.charAt(0).toUpperCase()
+                    : "?"}
+                </Text>
+              </View>
+              <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+                {userData.username || "User"}
+              </Text>
+            </View>
 
-        {/* User Profile Card */}
-        <View style={styles.card}>
-          {userData ? (
-            <>
-              {/* Profile Picture */}
-              <View style={styles.profilePictureContainer}>
-                <Image
-                  source={{
-                    uri:
-                      userData.profilePicture ||
-                      "https://img.freepik.com/free-psd/contact-icon-illustration-isolated_23-2151903337.jpg",
-                  }}
-                  style={styles.profilePicture}
-                />
+            {/* Stats Section - Favorites */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <View style={styles.statIcon}>
+                  <Ionicons name="book" size={26} color="#004aad" />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={styles.statLabel} numberOfLines={1}>
+                    Scholarships
+                  </Text>
+                  <Text style={styles.statValue}>
+                    {favoriteScholarshipsCount}
+                  </Text>
+                </View>
               </View>
 
-              {/* Name and Title */}
-              <View style={styles.infoContainer}>
-                <Text style={styles.name}>{userData.name}</Text>
-                <Text style={styles.title}>{userData.title}</Text>
+              <View style={styles.statCard}>
+                <View style={styles.statIcon}>
+                  <Ionicons name="briefcase" size={26} color="#004aad" />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={styles.statLabel} numberOfLines={1}>
+                    Jobs
+                  </Text>
+                  <Text style={styles.statValue}>{favoriteJobsCount}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Personal Information Section */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionHeaderLeft}>
+                  <Ionicons name="person-circle" size={22} color="#004aad" />
+                  <Text style={styles.sectionTitle} numberOfLines={1}>
+                    Personal Information
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={toggleEditMode}
+                  style={styles.editPill}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={isEditing ? "close" : "pencil"}
+                    size={14}
+                    color="#004aad"
+                  />
+                  <Text style={styles.editPillText} numberOfLines={1}>
+                    {isEditing ? "Cancel" : "Edit"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
-              {/* Bio */}
-              <View style={styles.bioContainer}>
-                <Text style={styles.bio}>{userData.bio}</Text>
-              </View>
+              <View style={styles.infoCard}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label} numberOfLines={1}>
+                    Username
+                  </Text>
+                  <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
+                    {userData.username}
+                  </Text>
+                </View>
 
-              {/* Personal Information Section */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Personal Information</Text>
-                <View style={styles.sectionContent}>
-                  <Text style={styles.label}>Username:</Text>
-                  <Text style={styles.value}>{userData.username}</Text>
+                <View style={styles.divider} />
 
-                  <Text style={styles.label}>Favourite Scholarships:</Text>
-                  <Text style={styles.value}>{favoriteScholarshipsCount}</Text>
-
-                  <Text style={styles.label}>Favourite Jobs:</Text>
-                  <Text style={styles.value}>{favoriteJobsCount}</Text>
-
-                  <Text style={styles.label}>Age:</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label} numberOfLines={1}>
+                    Age
+                  </Text>
                   {isEditing ? (
                     <TextInput
                       style={styles.input}
-                      value={String(editedData.age)}
+                      value={String(editedData.age ?? "")}
                       onChangeText={(text) =>
-                        handleChange("age", parseInt(text, 10))
+                        handleChange("age", parseInt(text, 10) || 0)
                       }
                       keyboardType="numeric"
                     />
                   ) : (
-                    <Text style={styles.value}>{userData.age}</Text>
+                    <Text style={styles.value} numberOfLines={1}>
+                      {userData.age}
+                    </Text>
                   )}
+                </View>
 
-                  <Text style={styles.label}>Country:</Text>
+                <View style={styles.divider} />
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.label} numberOfLines={1}>
+                    Country
+                  </Text>
                   {isEditing ? (
                     <TextInput
                       style={styles.input}
@@ -344,8 +405,14 @@ export default function Profile() {
                       onChangeText={(text) => handleChange("country", text)}
                     />
                   ) : (
-                    <View style={styles.countryContainer}>
-                      <Text style={styles.value}>{userData.country}</Text>
+                    <View style={styles.countryValue}>
+                      <Text
+                        style={styles.value}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {userData.country}
+                      </Text>
                       <Text style={styles.flag}>
                         {getFlagEmoji(userData.country)}
                       </Text>
@@ -359,15 +426,25 @@ export default function Profile() {
                 <TouchableOpacity
                   style={styles.saveButton}
                   onPress={handleSave}
+                  activeOpacity={0.85}
                 >
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={18}
+                    color="#fff"
+                  />
+                  <Text style={styles.saveButtonText} numberOfLines={1}>
+                    Save Changes
+                  </Text>
                 </TouchableOpacity>
               )}
-            </>
-          ) : (
-            <Text style={styles.noDataText}>No user data found.</Text>
-          )}
-        </View>
+            </View>
+          </>
+        ) : (
+          <Text style={styles.noDataText}>No user data found.</Text>
+        )}
+
+        <View style={styles.spacer} />
       </ScrollView>
       <AlertModal
         visible={alertConfig.visible}
@@ -381,6 +458,7 @@ export default function Profile() {
         }
         onClose={closeAlert}
       />
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -390,8 +468,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8fafc",
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollViewContent: {
-    flexGrow: 1,
     padding: 16,
     paddingTop: 12,
   },
@@ -399,162 +482,237 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 20,
     paddingHorizontal: 4,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "700",
-    color: "#0f172a",
+    color: "#111827",
     fontFamily: "Roboto",
   },
-  iconButton: {
-    padding: 8,
-    borderRadius: 10,
-    backgroundColor: "#f1f5f9",
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
-  card: {
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerCard: {
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 24,
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
-    marginBottom: 20,
-  },
-  profilePictureContainer: {
-    alignItems: "center",
     marginBottom: 16,
   },
-  profilePicture: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 4,
     borderColor: "#e0f2fe",
-    backgroundColor: "#f1f5f9",
-  },
-  infoContainer: {
+    backgroundColor: "#004aad",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 14,
+  },
+  avatarInitial: {
+    fontSize: 38,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: "#fff",
   },
   name: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: "700",
-    color: "#0f172a",
+    color: "#111827",
     fontFamily: "Roboto",
-  },
-  title: {
-    fontSize: 16,
-    color: "#64748b",
-    fontFamily: "Roboto",
-    marginTop: 4,
-  },
-  bioContainer: {
-    marginBottom: 20,
-  },
-  bio: {
-    fontSize: 15,
     textAlign: "center",
-    color: "#475569",
-    fontFamily: "Roboto",
-    fontStyle: "italic",
+    textTransform: "capitalize",
   },
-  section: {
-    marginBottom: 20,
+  statsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: 12,
-    fontFamily: "Roboto",
-  },
-  sectionContent: {
+  statCard: {
+    flex: 1,
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  label: {
-    fontSize: 14,
-    color: "#64748b",
-    marginBottom: 6,
-    fontWeight: "500",
+  statIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#f0f9ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  statContent: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 13,
     fontFamily: "Roboto",
+    color: "#666",
+    fontWeight: "500",
   },
-  value: {
-    fontSize: 16,
-    color: "#0f172a",
-    marginBottom: 14,
+  statValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: "#111827",
+    marginTop: 2,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+  sectionHeaderLeft: {
+    flex: 1,
+    flexShrink: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginRight: 8,
+  },
+  sectionTitle: {
+    flexShrink: 1,
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: "#111827",
+    marginLeft: 8,
+  },
+  editPill: {
+    flexShrink: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#eff6ff",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  editPillText: {
+    fontSize: 13,
     fontWeight: "600",
     fontFamily: "Roboto",
+    color: "#004aad",
+  },
+  infoCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  label: {
+    fontSize: 15,
+    color: "#666",
+    fontWeight: "500",
+    fontFamily: "Roboto",
+    flex: 1,
+  },
+  value: {
+    fontSize: 15,
+    color: "#111827",
+    fontWeight: "600",
+    fontFamily: "Roboto",
+    flex: 1,
+    textAlign: "right",
+  },
+  countryValue: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+  flag: {
+    fontSize: 18,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#e2e8f0",
   },
   noDataText: {
     fontSize: 16,
     color: "#666",
+    fontFamily: "Roboto",
     textAlign: "center",
+    marginTop: 40,
   },
   input: {
-    height: 44,
+    flex: 1,
+    height: 40,
     borderColor: "#cbd5e1",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 12,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "Roboto",
+    color: "#111827",
     backgroundColor: "#f8fafc",
-  },
-  editButton: {
-    alignSelf: "flex-end",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: "#004aad",
-    borderRadius: 10,
-    marginBottom: 16,
-    shadowColor: "#004aad",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  editButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-    fontFamily: "Roboto",
+    textAlign: "right",
   },
   saveButton: {
-    alignSelf: "flex-end",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     backgroundColor: "#004aad",
-    borderRadius: 10,
-    marginTop: 12,
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginTop: 14,
     shadowColor: "#004aad",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveButtonText: {
     color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
+    fontWeight: "700",
+    fontSize: 15,
     fontFamily: "Roboto",
   },
-  countryContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  flag: {
-    fontSize: 20,
-    marginLeft: 10,
+  spacer: {
+    height: 20,
   },
 });

@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1e293b",
+    color: "#111827",
     textAlign: "center",
     fontFamily: "Roboto",
     marginBottom: 6,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    color: "#64748b",
+    color: "#666",
     textAlign: "center",
     lineHeight: 21,
     fontFamily: "Roboto",

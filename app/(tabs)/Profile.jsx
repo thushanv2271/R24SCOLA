@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,16 +18,20 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoaderModal from "../../components/JustMoment";
 import AlertModal from "../../components/AlertModal";
+import ScolaMenu from "../../components/ScolaMenu";
+import NotificationModal from "../../components/NotificationModal";
 
 const { width, height } = Dimensions.get("window");
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, favoritesRefreshTrigger } = useContext(AuthContext);
+  const { user, logout, favoritesRefreshTrigger, notifications } =
+    useContext(AuthContext);
   const [paidMember, setPaidMember] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [favoriteScholarshipsCount, setFavoriteScholarshipsCount] = useState(0);
   const [favoriteJobsCount, setFavoriteJobsCount] = useState(0);
   const [username, setUsername] = useState(user?.username || "");
@@ -61,89 +66,63 @@ export default function ProfileScreen() {
     getUsername();
   }, [user?.username]);
 
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (username) {
-        try {
-          const data = await authAPI.getUserByUsername(username);
-          setPaidMember(data.paidMember);
-          setEditedData(data);
-        } catch (error) {
-          console.error("Error fetching user details:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-    fetchUserDetails();
+  const fetchUserDetails = useCallback(async () => {
+    if (!username) return;
+    try {
+      const data = await authAPI.getUserByUsername(username);
+      setPaidMember(data.paidMember);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [username]);
+
+  const fetchFavoriteCounts = useCallback(async () => {
+    if (!username) {
+      setFavoriteScholarshipsCount(0);
+      setFavoriteJobsCount(0);
+      return;
+    }
+
+    try {
+      const [scholarships, jobs] = await Promise.all([
+        authAPI.getFavorites(username),
+        authAPI.getJobFavorites(username),
+      ]);
+
+      setFavoriteScholarshipsCount(
+        Array.isArray(scholarships) ? scholarships.length : 0,
+      );
+      setFavoriteJobsCount(Array.isArray(jobs) ? jobs.length : 0);
+    } catch (error) {
+      console.error("Error fetching favorite counts:", error);
+      setFavoriteScholarshipsCount(0);
+      setFavoriteJobsCount(0);
+    }
   }, [username]);
 
   useEffect(() => {
-    const fetchFavoriteCounts = async () => {
-      if (!username) {
-        setFavoriteScholarshipsCount(0);
-        setFavoriteJobsCount(0);
-        return;
-      }
+    fetchUserDetails();
+  }, [fetchUserDetails]);
 
-      try {
-        const [scholarships, jobs] = await Promise.all([
-          authAPI.getFavorites(username),
-          authAPI.getJobFavorites(username),
-        ]);
-
-        setFavoriteScholarshipsCount(
-          Array.isArray(scholarships) ? scholarships.length : 0,
-        );
-        setFavoriteJobsCount(Array.isArray(jobs) ? jobs.length : 0);
-      } catch (error) {
-        console.error("Error fetching favorite counts:", error);
-        setFavoriteScholarshipsCount(0);
-        setFavoriteJobsCount(0);
-      }
-    };
-
+  useEffect(() => {
     fetchFavoriteCounts();
-  }, [username, favoritesRefreshTrigger]);
+  }, [fetchFavoriteCounts, favoritesRefreshTrigger]);
 
-  // Refetch favorites count when profile tab comes into focus
+  // Refetch profile data when the tab comes into focus
   useFocusEffect(
     useCallback(() => {
-      const fetchCounts = async () => {
-        if (!username) {
-          setFavoriteScholarshipsCount(0);
-          setFavoriteJobsCount(0);
-          return;
-        }
-
-        try {
-          const [scholarships, jobs] = await Promise.all([
-            authAPI.getFavorites(username),
-            authAPI.getJobFavorites(username),
-          ]);
-
-          setFavoriteScholarshipsCount(
-            Array.isArray(scholarships) ? scholarships.length : 0,
-          );
-          setFavoriteJobsCount(Array.isArray(jobs) ? jobs.length : 0);
-        } catch (error) {
-          console.error("Error fetching favorite counts on focus:", error);
-          // Set to 0 on error to prevent showing stale data
-          setFavoriteScholarshipsCount(0);
-          setFavoriteJobsCount(0);
-        }
-      };
-
-      fetchCounts();
-    }, [username]),
+      fetchUserDetails();
+      fetchFavoriteCounts();
+    }, [fetchUserDetails, fetchFavoriteCounts]),
   );
 
-  const handleChange = (field, value) => {
-    setEditedData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-  };
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchUserDetails(), fetchFavoriteCounts()]);
+    setRefreshing(false);
+  }, [fetchUserDetails, fetchFavoriteCounts]);
 
   const handleLogout = async () => {
     try {
@@ -165,28 +144,30 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header />
+      <Header
+        onNotificationPress={() => setShowNotificationModal(true)}
+        notificationCount={notifications?.length || 0}
+        onMenuPress={() => setMenuVisible(true)}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
         style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Profile Header Card */}
         <View style={styles.headerCard}>
-          <View style={styles.profilePictureContainer}>
-            <Image
-              source={{
-                uri:
-                  user?.profilePicture ||
-                  "https://img.freepik.com/free-psd/contact-icon-illustration-isolated_23-2151903337.jpg",
-              }}
-              style={styles.profilePicture}
-            />
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarInitial}>
+              {username ? username.charAt(0).toUpperCase() : "?"}
+            </Text>
           </View>
 
           <View style={styles.profileInfoContainer}>
-            <Text style={styles.name}>{user?.name}</Text>
-            <Text style={styles.title}>{user?.title}</Text>
-            {user?.bio && <Text style={styles.bio}>{user?.bio}</Text>}
+            <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+              {username || "User"}
+            </Text>
           </View>
         </View>
 
@@ -197,7 +178,9 @@ export default function ProfileScreen() {
               <Ionicons name="book" size={28} color="#004aad" />
             </View>
             <View style={styles.statContent}>
-              <Text style={styles.statLabel}>Scholarships</Text>
+              <Text style={styles.statLabel} numberOfLines={1}>
+                Scholarships
+              </Text>
               <Text style={styles.statValue}>{favoriteScholarshipsCount}</Text>
             </View>
           </View>
@@ -207,7 +190,9 @@ export default function ProfileScreen() {
               <Ionicons name="briefcase" size={28} color="#004aad" />
             </View>
             <View style={styles.statContent}>
-              <Text style={styles.statLabel}>Jobs</Text>
+              <Text style={styles.statLabel} numberOfLines={1}>
+                Jobs
+              </Text>
               <Text style={styles.statValue}>{favoriteJobsCount}</Text>
             </View>
           </View>
@@ -217,27 +202,28 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="person-circle" size={24} color="#004aad" />
-            <Text style={styles.sectionTitle}>Account Information</Text>
+            <Text style={styles.sectionTitle} numberOfLines={1}>
+              Account Information
+            </Text>
           </View>
 
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Username</Text>
-              <Text style={styles.value}>{username}</Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Email</Text>
-              <Text style={styles.value}>{user?.email || "Not provided"}</Text>
+              <Text style={styles.label} numberOfLines={1}>
+                Username
+              </Text>
+              <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
+                {username}
+              </Text>
             </View>
 
             {paidMember !== null && (
               <>
                 <View style={styles.divider} />
                 <View style={styles.infoRow}>
-                  <Text style={styles.label}>Member Status</Text>
+                  <Text style={styles.label} numberOfLines={1}>
+                    Member Status
+                  </Text>
                   <View
                     style={[
                       styles.badge,
@@ -247,6 +233,7 @@ export default function ProfileScreen() {
                     ]}
                   >
                     <Text
+                      numberOfLines={1}
                       style={[
                         styles.badgeText,
                         {
@@ -270,7 +257,9 @@ export default function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="shield-checkmark-outline" size={18} color="#6b7280" />
-          <Text style={styles.privacyButtonText}>Privacy Policy</Text>
+          <Text style={styles.privacyButtonText} numberOfLines={1}>
+            Privacy Policy
+          </Text>
           <Ionicons name="chevron-forward" size={16} color="#6b7280" />
         </TouchableOpacity>
 
@@ -299,6 +288,11 @@ export default function ProfileScreen() {
         }
         onClose={closeAlert}
       />
+      <NotificationModal
+        visible={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -306,7 +300,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#f5f5f5",
   },
   scrollViewContent: {
     paddingHorizontal: width * 0.04,
@@ -325,16 +319,22 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.03,
     alignItems: "center",
   },
-  profilePictureContainer: {
-    marginBottom: height * 0.02,
-  },
-  profilePicture: {
-    width: width * 0.35,
-    height: width * 0.35,
-    borderRadius: width * 0.175,
+  avatarCircle: {
+    width: width * 0.28,
+    height: width * 0.28,
+    borderRadius: width * 0.14,
     borderWidth: 4,
     borderColor: "#e0f2fe",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#004aad",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: height * 0.02,
+  },
+  avatarInitial: {
+    fontSize: width * 0.11,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: "#fff",
   },
   profileInfoContainer: {
     alignItems: "center",
@@ -344,22 +344,8 @@ const styles = StyleSheet.create({
     fontSize: width * 0.065,
     fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#0f172a",
-    marginTop: height * 0.01,
-  },
-  title: {
-    fontSize: width * 0.042,
-    fontFamily: "Roboto",
-    color: "#64748b",
-    marginTop: height * 0.005,
-  },
-  bio: {
-    fontSize: width * 0.038,
-    fontFamily: "Roboto",
-    textAlign: "center",
-    color: "#475569",
-    marginTop: height * 0.01,
-    fontStyle: "italic",
+    color: "#111827",
+    textTransform: "capitalize",
   },
   statsContainer: {
     flexDirection: "row",
@@ -394,14 +380,14 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: width * 0.034,
     fontFamily: "Roboto",
-    color: "#64748b",
+    color: "#666",
     fontWeight: "500",
   },
   statValue: {
     fontSize: width * 0.062,
     fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#0f172a",
+    color: "#111827",
     marginTop: height * 0.002,
   },
   section: {
@@ -417,7 +403,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.052,
     fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#0f172a",
+    color: "#111827",
     marginLeft: width * 0.03,
   },
   infoCard: {
@@ -439,7 +425,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: width * 0.04,
     fontFamily: "Roboto",
-    color: "#64748b",
+    color: "#666",
     fontWeight: "500",
     flex: 1,
   },
@@ -447,7 +433,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.043,
     fontWeight: "600",
     fontFamily: "Roboto",
-    color: "#0f172a",
+    color: "#111827",
     flex: 1,
     textAlign: "right",
   },
@@ -478,7 +464,7 @@ const styles = StyleSheet.create({
     gap: width * 0.02,
   },
   privacyButtonText: {
-    color: "#6b7280",
+    color: "#666",
     fontSize: width * 0.038,
     fontFamily: "Roboto",
     flex: 1,

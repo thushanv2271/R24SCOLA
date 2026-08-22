@@ -20,6 +20,7 @@ import {
   ScrollView,
   Dimensions,
   RefreshControl,
+  TextInput,
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
@@ -33,6 +34,7 @@ import LoaderModal from "../components/JustMoment";
 import BottomModal from "../components/BottomModal";
 import NotificationModal from "../components/NotificationModal";
 import AlertModal from "../components/AlertModal";
+import ScolaMenu from "../components/ScolaMenu";
 import { MAJORS, COUNTRIES, FUNDING_TYPES } from "../constants/filterOptions";
 
 // Create an animated version of FlatList
@@ -55,6 +57,9 @@ const ScholarshipApp = () => {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -202,13 +207,20 @@ const ScholarshipApp = () => {
   }, []);
 
   const filteredScholarships = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return scholarships.filter((item) => {
       const majorMatch = !selectedMajor || item.major === selectedMajor;
       const countryMatch = !selectedCountry || item.country === selectedCountry;
       const fundingMatch = !selectedFunding || item.funding === selectedFunding;
       const testMatch =
         !selectedTest || item.languageTests?.includes(selectedTest);
-      return majorMatch && countryMatch && fundingMatch && testMatch;
+      const searchMatch =
+        !query ||
+        item.title?.toLowerCase().includes(query) ||
+        item.university?.toLowerCase().includes(query) ||
+        item.major?.toLowerCase().includes(query) ||
+        item.country?.toLowerCase().includes(query);
+      return majorMatch && countryMatch && fundingMatch && testMatch && searchMatch;
     });
   }, [
     scholarships,
@@ -216,6 +228,7 @@ const ScholarshipApp = () => {
     selectedCountry,
     selectedFunding,
     selectedTest,
+    searchQuery,
   ]);
 
   const ScholarshipCard = React.memo(
@@ -414,22 +427,54 @@ const ScholarshipApp = () => {
                 </View>
               )}
             </TouchableOpacity>
-            <View style={styles.iconBackground}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => router.push("/")}
-              >
-                <Ionicons name="home" size={24} color="#a5a4a4" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.iconBackground, showSearchBar && styles.iconBackgroundActive]}
+              onPress={() => {
+                if (showSearchBar) setSearchQuery("");
+                setShowSearchBar((v) => !v);
+              }}
+            >
+              <Ionicons
+                name={showSearchBar ? "close" : "search"}
+                size={22}
+                color={showSearchBar ? "#fff" : "#a5a4a4"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconBackground}
+              onPress={() => setMenuVisible(true)}
+            >
+              <Ionicons name="menu" size={27} color="#a5a4a4" />
+            </TouchableOpacity>
           </View>
         </View>
+
+        {showSearchBar && (
+          <View style={styles.searchBarContainer}>
+            <Ionicons name="search" size={18} color="#94a3b8" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search jobs, companies, fields..."
+              placeholderTextColor="#94a3b8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={18} color="#94a3b8" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </Animated.View>
 
       <BottomModal
         visible={showInfoModal}
         onClose={() => setShowInfoModal(false)}
       />
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
       <NotificationModal
         visible={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
@@ -441,54 +486,54 @@ const ScholarshipApp = () => {
         animationType="none"
         onRequestClose={() => setShowFilterModal(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowFilterModal(false)}
-        >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setShowFilterModal(false)}
+          />
           <Animated.View
             style={[styles.bottomModalContent, { transform: [{ translateY: filterModalY }] }]}
           >
-            <TouchableOpacity activeOpacity={1} style={{ flex: 1 }}>
-              <View style={styles.dragHandle} />
+            <View style={styles.dragHandle} />
 
-              <View style={styles.filterHeader}>
-                <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.filterHeaderClose}>
-                  <Ionicons name="close" size={22} color="#374151" />
-                </TouchableOpacity>
-                <Text style={styles.filterHeaderTitle}>
-                  Filters {activeFilterCount > 0 && <Text style={styles.filterBadge}> {activeFilterCount}</Text>}
-                </Text>
-                <TouchableOpacity onPress={resetFilters} style={styles.filterHeaderReset}>
-                  <Text style={styles.filterHeaderResetText}>Reset all</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.filterHeader}>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.filterHeaderClose}>
+                <Ionicons name="close" size={22} color="#374151" />
+              </TouchableOpacity>
+              <Text style={styles.filterHeaderTitle}>
+                Filters {activeFilterCount > 0 && <Text style={styles.filterBadge}> {activeFilterCount}</Text>}
+              </Text>
+              <TouchableOpacity onPress={resetFilters} style={styles.filterHeaderReset}>
+                <Text style={styles.filterHeaderResetText}>Reset all</Text>
+              </TouchableOpacity>
+            </View>
 
+            <View style={styles.filterDivider} />
+
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={styles.filterScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {renderChipGroup("Major", majors, selectedMajor, setSelectedMajor)}
               <View style={styles.filterDivider} />
+              {renderChipGroup("Country", countries, selectedCountry, setSelectedCountry)}
+            </ScrollView>
 
-              <ScrollView
-                contentContainerStyle={styles.filterScrollContent}
-                showsVerticalScrollIndicator={false}
+            <View style={styles.filterFooter}>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={() => setShowFilterModal(false)}
+                activeOpacity={0.85}
               >
-                {renderChipGroup("Major", majors, selectedMajor, setSelectedMajor)}
-                <View style={styles.filterDivider} />
-                {renderChipGroup("Country", countries, selectedCountry, setSelectedCountry)}
-              </ScrollView>
-
-              <View style={styles.filterFooter}>
-                <TouchableOpacity
-                  style={styles.applyButton}
-                  onPress={() => setShowFilterModal(false)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.applyButtonText}>
-                    Show Results{filteredScholarships.length > 0 ? ` · ${filteredScholarships.length}` : ""}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
+                <Text style={styles.applyButtonText}>
+                  Show Results{filteredScholarships.length > 0 ? ` · ${filteredScholarships.length}` : ""}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </Animated.View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       {!checkingPaid && (
@@ -598,6 +643,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 5,
   },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 42,
+    marginTop: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Roboto",
+    color: "#111827",
+    padding: 0,
+  },
   card: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -605,7 +667,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     elevation: 8,
     borderTopWidth: 4,
-    borderTopColor: "#166534",
+    borderTopColor: "#004aad",
   },
   loaderContainer: {
     flex: 1,
@@ -648,7 +710,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     color: "white",
-    backgroundColor: "#166534",
+    backgroundColor: "#004aad",
     paddingHorizontal: "2.5%",
     paddingVertical: "2%",
     borderRadius: 20,
@@ -681,13 +743,13 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   linkText: {
-    color: "#166534",
+    color: "#004aad",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
     textDecorationLine: "underline",
   },
   button: {
-    backgroundColor: "#166534",
+    backgroundColor: "#004aad",
     paddingVertical: "2.5%",
     paddingHorizontal: "4%",
     borderRadius: 30,
@@ -720,7 +782,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#166534",
+    color: "#004aad",
   },
   professorContainer: {
     marginBottom: "2%",
@@ -786,7 +848,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
   },
   filterBadge: {
-    color: "#166534",
+    color: "#004aad",
     fontWeight: "700",
   },
   filterHeaderReset: {
@@ -794,7 +856,7 @@ const styles = StyleSheet.create({
   },
   filterHeaderResetText: {
     fontSize: screenWidth * 0.037,
-    color: "#166534",
+    color: "#004aad",
     fontWeight: "600",
     fontFamily: "Roboto",
   },
@@ -832,8 +894,8 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
   },
   chipSelected: {
-    backgroundColor: "#166534",
-    borderColor: "#166534",
+    backgroundColor: "#004aad",
+    borderColor: "#004aad",
   },
   chipText: {
     fontSize: screenWidth * 0.035,
@@ -853,13 +915,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   applyButton: {
-    backgroundColor: "#166534",
+    backgroundColor: "#004aad",
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     justifyContent: "center",
     elevation: 3,
-    shadowColor: "#166534",
+    shadowColor: "#004aad",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -871,7 +933,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
   },
   iconBackgroundActive: {
-    backgroundColor: "#166534",
+    backgroundColor: "#004aad",
   },
   filterActiveBadge: {
     position: "absolute",
@@ -903,7 +965,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#166534",
+    color: "#004aad",
     textDecorationLine: "underline",
     textAlign: "center",
   },

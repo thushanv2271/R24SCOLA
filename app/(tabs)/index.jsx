@@ -21,6 +21,7 @@ import { AuthContext } from "../../components/AuthContext";
 import { authAPI } from "../../services/apiService";
 import LoaderModal from "../../components/JustMoment";
 import NotificationModal from "../../components/NotificationModal";
+import ScolaMenu from "../../components/ScolaMenu";
 
 const { width, height } = Dimensions.get("window");
 
@@ -55,8 +56,7 @@ const ScholarshipHome = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(true);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
-  const sidebarAnim = useRef(new Animated.Value(-width * 0.75)).current;
+  const [menuVisible, setMenuVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const router = useRouter();
   const { username: paramsUsername = "" } = useLocalSearchParams();
@@ -110,16 +110,6 @@ const ScholarshipHome = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const toggleSidebar = () => {
-    const toValue = sidebarVisible ? -width * 0.75 : 0;
-    Animated.timing(sidebarAnim, {
-      toValue,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-    setSidebarVisible(!sidebarVisible);
-  };
-
   const refreshTimer = React.useRef(null);
   const onRefresh = () => {
     setRefreshing(true);
@@ -146,50 +136,18 @@ const ScholarshipHome = () => {
     return username;
   }
 
-  const sidebarItems = [
-    { title: "Home", icon: "home", screen: "index" },
-    {
-      title: "Profile",
-      icon: "person",
-      screen: "Profile",
-      params: { username },
-    },
-    { title: "Scholarships", icon: "school", screen: "Scholarships" },
-    { title: "Jobs", icon: "briefcase", screen: "Itjobs" },
-    { title: "Favourites", icon: "heart", screen: "favourites" },
-    { title: "Edit Mail", icon: "create", screen: "CustomMail" },
-  ];
-
-  const renderSidebarItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.sidebarItem}
-      onPress={() => {
-        if (item.action) {
-          item.action();
-        } else {
-          router.push({
-            pathname: item.screen === "index" ? "/" : `/${item.screen}`,
-            params: item.params || {},
-          });
-        }
-        toggleSidebar();
-      }}
-    >
-      <Ionicons name={item.icon} size={24} color="#fff" />
-      <Text style={styles.sidebarItemText}>{item.title}</Text>
-    </TouchableOpacity>
-  );
-
   const renderItem = ({ item }) => {
     switch (item.type) {
       case "mainHeader":
         return (
           <View style={[styles.mainHeader, { width: width * 0.9 }]}>
-            <View>
-              <Text style={styles.userName}>
+            <View style={styles.mainHeaderLeft}>
+              <Text style={styles.userName} numberOfLines={1}>
                 Hi, {getUserName(item.data.username)}
               </Text>
-              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.greeting} numberOfLines={1}>
+                {getGreeting()}
+              </Text>
             </View>
             <View style={styles.headerRight}>
               <View style={styles.accountStatus}>
@@ -199,11 +157,11 @@ const ScholarshipHome = () => {
                     { backgroundColor: isConnected ? "#4CAF50" : "#FF0000" },
                   ]}
                 />
-                <Text style={styles.statusText}>
+                <Text style={styles.statusText} numberOfLines={1}>
                   {isConnected ? "Active" : "Offline"}
                 </Text>
               </View>
-              <Text style={styles.cardTitle}>
+              <Text style={styles.cardTitle} numberOfLines={1}>
                 {paidMember ? "Premium Member" : "Basic Member"}
               </Text>
             </View>
@@ -226,7 +184,9 @@ const ScholarshipHome = () => {
                   cachePolicy="memory-disk"
                   priority="normal"
                 />
-                <Text style={styles.bannerText}>{banner.text}</Text>
+                <Text style={styles.bannerText} numberOfLines={2} ellipsizeMode="tail">
+                  {banner.text}
+                </Text>
               </View>
             ))}
           </ScrollView>
@@ -243,8 +203,15 @@ const ScholarshipHome = () => {
                   style={styles.card}
                   onPress={() => router.push(`/${item.screen}`)}
                 >
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Ionicons name={item.icon} size={40} color="#FFC107" />
+                  <Text style={styles.actionCardTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Ionicons
+                    name={item.icon}
+                    size={32}
+                    color="#FFC107"
+                    style={styles.cardIcon}
+                  />
                 </TouchableOpacity>
               )}
               keyExtractor={(item) => item.title}
@@ -309,34 +276,12 @@ const ScholarshipHome = () => {
             </View>
 
             <View style={styles.iconBackground}>
-              <TouchableOpacity onPress={toggleSidebar}>
+              <TouchableOpacity onPress={() => setMenuVisible(true)}>
                 <Ionicons name="menu" size={30} color="#a5a4a4" />
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </Animated.View>
-
-      <Animated.View
-        style={[
-          styles.sidebar,
-          {
-            transform: [{ translateX: sidebarAnim }],
-          },
-        ]}
-      >
-        <View style={styles.sidebarHeader}>
-          <Text style={styles.sidebarTitle}>Scola Menu</Text>
-          <TouchableOpacity onPress={toggleSidebar}>
-            <Ionicons name="close" size={35} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={sidebarItems}
-          renderItem={renderSidebarItem}
-          keyExtractor={(item) => item.title}
-          contentContainerStyle={styles.sidebarContent}
-        />
       </Animated.View>
 
       {loading ? (
@@ -362,6 +307,7 @@ const ScholarshipHome = () => {
         visible={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
       />
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </SafeAreaView>
   );
 };
@@ -440,11 +386,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     marginTop: 87,
-    height: 125,
+    minHeight: 125,
     backgroundColor: "#fff",
     margin: 10,
     borderRadius: 18,
     elevation: 3,
+  },
+  mainHeaderLeft: {
+    flex: 1,
+    marginRight: 8,
   },
   greeting: {
     fontSize: width * 0.04,
@@ -458,7 +408,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.044,
     fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#1a237e",
+    color: "#004aad",
     textBreakStrategy: "simple",
   },
   accountStatus: {
@@ -474,7 +424,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: "#666",
-    fontSize: width * 0.06,
+    fontSize: width * 0.03,
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
   },
@@ -500,6 +450,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 16,
     left: 16,
+    right: 16,
     color: "white",
     fontSize: 16,
     fontWeight: "700",
@@ -516,7 +467,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    height: 100,
+    minHeight: 100,
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -525,6 +476,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     marginBottom: 30,
     flex: 1,
+  },
+  actionCardTitle: {
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 8,
+    fontSize: width * 0.039,
+    color: "#004aad",
+    fontWeight: "800",
+    fontFamily: "Roboto",
+    textBreakStrategy: "simple",
+  },
+  cardIcon: {
+    flexShrink: 0,
   },
   cardTitle: {
     fontSize: width * 0.039,
@@ -581,7 +545,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#1A237E",
+    color: "#004aad",
     textBreakStrategy: "simple",
   },
   academicCardDescription: {
@@ -603,49 +567,9 @@ const styles = StyleSheet.create({
   academicExploreText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#004AAD",
+    color: "#004aad",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-  },
-  sidebar: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: width * 0.75,
-    backgroundColor: "#1A237E",
-    zIndex: 20,
-    paddingTop: StatusBar.currentHeight || 50,
-  },
-  sidebarHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.2)",
-  },
-  sidebarTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#fff",
-    fontFamily: "Roboto",
-  },
-  sidebarContent: {
-    padding: 16,
-  },
-  sidebarItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  sidebarItemText: {
-    fontSize: 16,
-    color: "#fff",
-    marginLeft: 16,
-    fontFamily: "Roboto",
-    fontWeight: "500",
   },
 });
 

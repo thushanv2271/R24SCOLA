@@ -17,6 +17,7 @@ import LoaderModal from "../components/JustMoment";
 import { router } from "expo-router";
 import AlertModal from "../components/AlertModal";
 import CustomizeEmailMessageModal from "../components/CustomizeEmailMessageModal";
+import ScolaMenu from "../components/ScolaMenu";
 
 const { width, height } = Dimensions.get("window");
 
@@ -49,6 +50,7 @@ export default function CustomMail() {
   const [emailMessage, setEmailMessage] = useState("");
   const [jobEmailMessage, setJobEmailMessage] = useState("");
   const [selectedTab, setSelectedTab] = useState("scholarships");
+  const [menuVisible, setMenuVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",
@@ -98,7 +100,6 @@ export default function CustomMail() {
       // Convert <br> to \n again when updating emailMessage
       setEmailMessage(convertToNewlines(updatedData.scholarshipEmailMessage));
       setModalVisible(false);
-      showAlert("Success", "Email message updated successfully", "success");
     } catch (error) {
       console.error("Error updating email message:", error);
       showAlert("Error", "Failed to update email message", "error");
@@ -119,7 +120,6 @@ export default function CustomMail() {
       setEditedData(updatedData);
       setJobEmailMessage(convertToNewlines(updatedData.jobEmailMessage));
       setJobModalVisible(false);
-      showAlert("Success", "Job email message updated successfully", "success");
     } catch (error) {
       console.error("Error updating job email message:", error);
       showAlert("Error", "Failed to update job email message", "error");
@@ -163,9 +163,18 @@ export default function CustomMail() {
                 />
               </TouchableOpacity>
             </View>
+            <View style={styles.iconBackground}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setMenuVisible(true)}
+              >
+                <Ionicons name="menu" size={moderateScale(27)} color="#a5a4a4" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Animated.View>
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.tabContainer}>
@@ -350,7 +359,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   tabTextInactive: {
-    color: "#6b7280",
+    color: "#666",
   },
   section: {
     marginBottom: verticalScale(20),
@@ -360,12 +369,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: moderateScale(16),
-    color: "#6b7280",
+    color: "#666",
     marginBottom: verticalScale(8),
   },
   value: {
     fontSize: moderateScale(18),
-    color: "#1f2937",
+    color: "#111827",
     marginBottom: verticalScale(8),
     fontWeight: "500",
   },
@@ -407,7 +416,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: moderateScale(20),
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#111827",
     marginBottom: verticalScale(16),
     marginTop: verticalScale(20),
   },
@@ -440,7 +449,7 @@ const styles = StyleSheet.create({
     textBreakStrategy: "simple",
   },
   cancelButton: {
-    backgroundColor: "#6b7280",
+    backgroundColor: "#666",
   },
   saveButton: {
     backgroundColor: "#004aad",

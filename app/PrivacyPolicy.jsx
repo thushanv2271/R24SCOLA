@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,19 +10,28 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import ScolaMenu from "../components/ScolaMenu";
 
 const { width } = Dimensions.get("window");
 
 export default function PrivacyPolicy() {
+  const [menuVisible, setMenuVisible] = useState(false);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1f2937" />
+          <Ionicons name="arrow-back" size={24} color="#111827" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Privacy Policy</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity
+          onPress={() => setMenuVisible(true)}
+          style={styles.backBtn}
+        >
+          <Ionicons name="menu" size={24} color="#111827" />
+        </TouchableOpacity>
       </View>
+      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.lastUpdated}>Last updated: June 2026</Text>
@@ -120,19 +129,19 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: width * 0.045,
     fontWeight: "700",
-    color: "#1f2937",
+    color: "#111827",
     fontFamily: "Roboto",
   },
   content: { padding: 20, paddingBottom: 40 },
   lastUpdated: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: "#94a3b8",
     marginBottom: 12,
     fontFamily: "Roboto",
   },
   intro: {
     fontSize: 14,
-    color: "#4b5563",
+    color: "#666",
     lineHeight: 22,
     marginBottom: 20,
     fontFamily: "Roboto",
@@ -141,21 +150,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1f2937",
+    color: "#111827",
     marginBottom: 8,
     fontFamily: "Roboto",
   },
   body: {
     fontSize: 14,
-    color: "#4b5563",
+    color: "#666",
     lineHeight: 22,
     fontFamily: "Roboto",
   },
   bulletRow: { flexDirection: "row", marginBottom: 6 },
-  bullet: { fontSize: 14, color: "#6b7280", marginRight: 8, marginTop: 1 },
+  bullet: { fontSize: 14, color: "#666", marginRight: 8, marginTop: 1 },
   bulletText: {
     fontSize: 14,
-    color: "#4b5563",
+    color: "#666",
     lineHeight: 22,
     flex: 1,
     fontFamily: "Roboto",

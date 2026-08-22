@@ -58,13 +58,13 @@ const styles = StyleSheet.create({
   congratsText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#111827',
     marginBottom: 10,
   },
   messageText: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#555',
+    color: '#666',
     marginBottom: 20,
     lineHeight: 22,
   },
