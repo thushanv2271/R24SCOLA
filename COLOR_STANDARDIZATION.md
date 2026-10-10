@@ -13,7 +13,7 @@
 ### After (Standardized in `constants/colors.js`):
 
 - **PRIMARY_DARK_BLUE (#004aad)** - Main buttons, dark accents
-- **PRIMARY_BLUE (#007bff)** - Links, secondary accents, loading indicators
+- **PRIMARY_BLUE (#004aad)** - Links, secondary accents, loading indicators (unified with the brand blue; the earlier #007bff value is retired)
 - **Alerts colored** with SUCCESS, ERROR, WARNING constants
 
 ---

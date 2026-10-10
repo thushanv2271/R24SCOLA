@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useContext, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,17 +10,30 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { PRIMARY_BLUE, PRIMARY_DARK_BLUE, COLORS } from "../constants/colors";
+import { useTheme } from "./ThemeContext";
+import { LanguageContext } from "./LanguageContext";
+import { playSound } from "../utils/feedback";
+import { haptic } from "./ui/motion";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const AlertModal = memo(
   ({ visible, title, message, type = "info", onClose, actions = [] }) => {
+    const { colors } = useTheme() || {};
+    const { t } = useContext(LanguageContext) || {};
     const opacity = useRef(new Animated.Value(0)).current;
     const scale = useRef(new Animated.Value(0.88)).current;
     const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
       if (visible) {
+        if (type === "success") {
+          playSound("success");
+          haptic("success");
+        } else if (type === "error") {
+          playSound("error");
+          haptic("error");
+        }
         setModalVisible(true);
         Animated.parallel([
           Animated.timing(opacity, {
@@ -67,16 +80,16 @@ const AlertModal = memo(
     };
 
     const getButtonColor = (action) => {
-      if (action.destructive) return "#ef4444";
-      if (action.secondary) return "#64748b";
-      return PRIMARY_BLUE;
+      if (action.destructive) return colors?.danger || "#ef4444";
+      if (action.secondary) return colors?.textSecondary || "#64748b";
+      return colors?.accent || PRIMARY_BLUE;
     };
 
     const iconConfig = getIconConfig();
     const defaultActions =
       actions.length > 0
         ? actions
-        : [{ text: "OK", onPress: onClose, primary: true }];
+        : [{ text: t ? t("common.ok") : "OK", onPress: onClose, primary: true }];
 
     return (
       <Modal
@@ -87,14 +100,22 @@ const AlertModal = memo(
       >
         <Animated.View style={[styles.overlay, { opacity }]}>
           <Animated.View
-            style={[styles.card, { transform: [{ scale }] }]}
+            style={[
+              styles.card,
+              colors && { backgroundColor: colors.surface },
+              { transform: [{ scale }] },
+            ]}
           >
             <View style={[styles.iconWrap, { backgroundColor: iconConfig.bgColor }]}>
               <MaterialIcons name={iconConfig.name} size={36} color={iconConfig.color} />
             </View>
 
-            {title ? <Text style={styles.title}>{title}</Text> : null}
-            {message ? <Text style={styles.message}>{message}</Text> : null}
+            {title ? (
+              <Text style={[styles.title, colors && { color: colors.textPrimary }]}>{title}</Text>
+            ) : null}
+            {message ? (
+              <Text style={[styles.message, colors && { color: colors.textSecondary }]}>{message}</Text>
+            ) : null}
 
             <View style={styles.actions}>
               {defaultActions.map((action, index) => (
@@ -102,6 +123,8 @@ const AlertModal = memo(
                   key={index}
                   style={[styles.btn, { backgroundColor: getButtonColor(action) }]}
                   activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={action.text}
                   onPress={() => {
                     action.onPress?.();
                     if (!action.keepOpen) onClose();
@@ -173,6 +196,7 @@ const styles = StyleSheet.create({
   btn: {
     flex: 1,
     paddingVertical: 12,
+    minHeight: 48,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",

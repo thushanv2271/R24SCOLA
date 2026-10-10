@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "./ThemeContext";
 import notificationService from "@/services/NotificationService";
 
 const { width } = Dimensions.get("window");
 
 const ToastNotification = () => {
+  const { colors } = useTheme();
   const [notifications, setNotifications] = useState([]);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -53,9 +55,9 @@ const ToastNotification = () => {
       case "success":
         return "#004aad";
       case "error":
-        return "#F44336";
+        return colors.danger;
       case "warning":
-        return "#FF9800";
+        return colors.warning;
       default:
         return "#004aad";
     }
@@ -73,12 +75,16 @@ const ToastNotification = () => {
         },
       ]}
     >
-      <View style={[styles.notification, { borderLeftColor: color }]}>
+      <View
+        style={[styles.notification, { borderLeftColor: color, backgroundColor: colors.surface }]}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+      >
         <Ionicons name={icon} size={24} color={color} style={styles.icon} />
         <View style={styles.content}>
-          <Text style={styles.title}>{notification.title}</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{notification.title}</Text>
           {notification.description && (
-            <Text style={styles.description}>{notification.description}</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{notification.description}</Text>
           )}
         </View>
       </View>

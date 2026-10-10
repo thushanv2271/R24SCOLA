@@ -41,3 +41,7 @@ yarn-error.*
 .vite-cache/
 
 app-example
+
+# Firebase config: supplied as an EAS file secret or a local file, never committed
+google-services.json
+GOOGLE_SERVICES_JSON.json

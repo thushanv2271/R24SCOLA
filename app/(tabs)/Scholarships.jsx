@@ -1,1346 +1,222 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-  useContext,
-  useCallback,
-} from "react";
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  Animated,
-  FlatList,
-  Modal,
-  Linking,
-  ScrollView,
-  Dimensions,
-  RefreshControl,
-  TextInput,
-} from "react-native";
-import { Image } from "expo-image";
-import { Ionicons, FontAwesome } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchScholarships } from "../service/ScholarshipService";
-import { sendScholarshipEmail } from "../service/emailService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AuthContext } from "../../components/AuthContext";
-import { authAPI, scholarshipAPI } from "../../services/apiService";
-import LoaderModal from "../../components/JustMoment";
-import BottomModal from "../../components/BottomModal";
-import AlertModal from "../../components/AlertModal";
-import ScolaMenu from "../../components/ScolaMenu";
-import {
-  MAJORS,
-  COUNTRIES,
-  FUNDING_TYPES,
-} from "../../constants/filterOptions";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { View, Text, ScrollView, BackHandler, InteractionManager, SafeAreaView, StatusBar, StyleSheet, useWindowDimensions } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { useTheme } from "../../components/ThemeContext";
+import { useExploreTab, setExploreTab, getExploreTab, getAllowedExploreTab, takeExploreSearch, takeExploreCategory, subscribeExplorePending } from "../../components/exploreTabStore";
+import UniversitiesPage from "../../components/screens/UniversitiesPage";
+import ScreenHeader from "../../components/blocks/ScreenHeader";
+import ExploreSwitch from "../../components/ui/ExploreSwitch";
+import ExploreSearchBar from "../../components/blocks/ExploreSearchBar";
+import { LanguageContext } from "../../components/LanguageContext";
+import { useInterest } from "../../components/InterestContext";
+import JobsPage from "../../components/screens/JobsPage";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
-// Create an animated version of FlatList
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const TABS = ["scholarships", "jobs"];
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const modalHeight = screenHeight * 0.82;
+// Explore = Universities and Jobs side by side in a swipeable pager, like the
+// Favourites screen. The switch, swiping, the Android Back button and the tab
+// bar icon all read/write the same shared value (exploreTabStore).
+export default function Explore() {
+  const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const tab = useExploreTab();
+  const { isBoth, showUniversities, showCompanies } = useInterest();
+  const pagerRef = useRef(null);
+  const placed = useRef(false);
+  const [jobsReady, setJobsReady] = useState(tab === "jobs");
+  const [headers, setHeaders] = useState({});
+  const setUniversitiesHeader = useCallback((cfg) => setHeaders((h) => ({ ...h, scholarships: cfg })), []);
+  const setJobsHeader = useCallback((cfg) => setHeaders((h) => ({ ...h, jobs: cfg })), []);
+  const header = headers[tab] || {};
+  const { t } = useContext(LanguageContext);
+  const [queries, setQueries] = useState({ scholarships: "", jobs: "" });
+  const [suggestions, setSuggestions] = useState({ scholarships: [], jobs: [] });
+  const [categoryRequests, setCategoryRequests] = useState({ scholarships: null, jobs: null });
+  const setUniversitiesQuery = useCallback((q) => setQueries((s) => ({ ...s, scholarships: q })), []);
+  const setJobsQuery = useCallback((q) => setQueries((s) => ({ ...s, jobs: q })), []);
+  const setUniversitiesSuggestions = useCallback((v) => setSuggestions((s) => ({ ...s, scholarships: v })), []);
+  const setJobsSuggestions = useCallback((v) => setSuggestions((s) => ({ ...s, jobs: v })), []);
+  const isJobs = tab === "jobs";
 
-const ScholarshipApp = () => {
-  const [scholarships, setScholarships] = useState([]);
-  const { user, favoritesRefreshTrigger, addNotification } =
-    useContext(AuthContext);
-  const [checkingPaid, setCheckingPaid] = useState(true);
-  const [selectedMajor, setSelectedMajor] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedFunding, setSelectedFunding] = useState("");
-  const [selectedTest, setSelectedTest] = useState("");
-  const [sortOrder, setSortOrder] = useState(""); // New state for sort order
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [showSearchBar, setShowSearchBar] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportMessage, setReportMessage] = useState("");
-  const [selectedScholarshipId, setSelectedScholarshipId] = useState(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const filterModalY = useRef(new Animated.Value(screenHeight)).current;
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
-    title: "",
-    message: "",
-    type: "info",
-    actions: [],
-  });
+  // The title/switch/search block floats over the pager. Each list reserves
+  // room for it (topInset) and scrolls normally; only the block is translated
+  // (on the UI thread, from the list offset), so the list itself is never
+  // moved while it scrolls -- moving both made the content shake.
+  const [topHeight, setTopHeight] = useState(0);
+  const collapse = useSharedValue(0);
+  const collapseMax = useSharedValue(1);
+  const measured = useRef(false);
+  const shiftStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -collapse.value }],
+  }));
 
-  const showAlert = (title, message, type = "info", actions = []) => {
-    setAlertConfig({ visible: true, title, message, type, actions });
-  };
-
-  const closeAlert = () => {
-    setAlertConfig({ ...alertConfig, visible: false });
-  };
-
-  // Use imported constants (not recreated on every render)
-  const majors = MAJORS;
-  const countries = COUNTRIES;
-  const fundingTypes = FUNDING_TYPES.map((ft) =>
-    ft === "full scholar" ? "Full" : "Partial",
-  );
-  const sortOptions = ["Ascending", "Descending"]; // Scholarship-specific sort options
-
-  const isPaidMember = user?.paidMember || false;
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 50],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  const [favoriteScholarships, setFavoriteScholarships] = useState([]);
-
-  useEffect(() => {
-    if (showFilterModal) {
-      Animated.timing(filterModalY, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(filterModalY, {
-        toValue: screenHeight,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showFilterModal]);
-
-  useEffect(() => {
-    const loadFavorites = async () => {
-      const favorites = await AsyncStorage.getItem("favoriteScholarships");
-      if (favorites) setFavoriteScholarships(JSON.parse(favorites));
-    };
-    loadFavorites();
-
-    if (user && user.username) fetchFavorites();
-  }, [user, favoritesRefreshTrigger]);
-
-  useEffect(() => {
-    AsyncStorage.setItem(
-      "favoriteScholarships",
-      JSON.stringify(favoriteScholarships),
-    ).catch((error) =>
-      console.error("Error saving favorite scholarships:", error),
-    );
-  }, [favoriteScholarships]);
-
-  const fetchFavorites = async () => {
-    try {
-      const data = await authAPI.getFavorites(user.username);
-      const favoriteIds = Array.isArray(data) ? data.map((s) => s.id) : [];
-      setFavoriteScholarships(favoriteIds);
-      await AsyncStorage.setItem(
-        "favoriteScholarships",
-        JSON.stringify(favoriteIds),
-      );
-    } catch (error) {
-      console.error("Error fetching favorites:", error);
-    }
-  };
-
-  const debounce = (func, wait) => {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  };
-
-  const handleFavorite = useCallback(
-    debounce(async (id) => {
-      const isFavorited = favoriteScholarships.includes(id);
-      const updatedFavorites = isFavorited
-        ? favoriteScholarships.filter((favId) => favId !== id)
-        : [...favoriteScholarships, id];
-
-      setFavoriteScholarships(updatedFavorites);
-
-      try {
-        if (isFavorited) {
-          await authAPI.removeFavorite(user.username, id);
-        } else {
-          await authAPI.addFavorite(user.username, id);
-        }
-      } catch (error) {
-        console.error(
-          `Error ${isFavorited ? "removing" : "adding"} favorite:`,
-          error,
-        );
-        setFavoriteScholarships(favoriteScholarships);
-        showAlert(
-          "Error",
-          `Could not ${isFavorited ? "remove" : "add"} favorite scholarship.`,
-          "error",
-        );
-      }
-    }, 300),
-    [favoriteScholarships, user?.username],
-  );
-
-  const handleReport = async (scholarshipId, description) => {
-    try {
-      await scholarshipAPI.reportScholarship(scholarshipId, description);
-      setShowReportModal(false);
-      setReportMessage("");
-      setSelectedScholarshipId(null);
-    } catch (error) {
-      console.error("Error submitting report:", error);
-      showAlert("Error", "Could not submit report.", "error");
-    }
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      let data;
-      if (sortOrder) {
-        const ascending = sortOrder === "Ascending";
-        data = await scholarshipAPI.sortByDate(ascending);
-      } else {
-        data = await scholarshipAPI.getAllScholarships();
-      }
-
-      // Check if there are new scholarships and show notification
-      const previousScholarshipsCount = scholarships.length;
-      if (
-        previousScholarshipsCount > 0 &&
-        data.length > previousScholarshipsCount
-      ) {
-        const newCount = data.length - previousScholarshipsCount;
-
-        // Add to notification history
-        if (addNotification) {
-          addNotification({
-            type: "scholarship",
-            title: `${newCount} New Scholarship${newCount > 1 ? "s" : ""}`,
-            description: `Found ${newCount} new scholarship opportunity${newCount > 1 ? "ties" : ""} available!`,
-          });
-        }
-      }
-
-      setScholarships(data);
-    } catch (error) {
-      console.error("Error fetching scholarships:", error.message);
-      showAlert(
-        "Error",
-        error.message || "Could not fetch scholarship data.",
-        "error",
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchData();
-  };
-
-  useEffect(() => {
-    const checkPaidStatus = async () => {
-      if (!user?.username) {
-        setCheckingPaid(false);
-        return;
-      }
-      try {
-        await authAPI.getUserByUsername(user.username);
-      } catch (error) {
-        console.error("Error checking paid status:", error);
-      } finally {
-        setCheckingPaid(false);
-      }
-    };
-    checkPaidStatus();
-  }, [user?.username]);
-
-  useEffect(() => {
-    if (!checkingPaid && isPaidMember) fetchData();
-  }, [isPaidMember, checkingPaid, sortOrder]);
-
-  useEffect(() => {
-    fetchData();
+  const handleTopLayout = useCallback((e) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (!h || measured.current) return;
+    measured.current = true;
+    collapseMax.value = h;
+    setTopHeight(h);
   }, []);
 
-  const filteredScholarships = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    return scholarships.filter((item) => {
-      const majorMatch = !selectedMajor || item.major === selectedMajor;
-      const countryMatch = !selectedCountry || item.country === selectedCountry;
-      const fundingMatch = !selectedFunding || item.funding === selectedFunding;
-      const testMatch =
-        !selectedTest || item.languageTests?.includes(selectedTest);
-      const searchMatch =
-        !query ||
-        item.title?.toLowerCase().includes(query) ||
-        item.university?.toLowerCase().includes(query) ||
-        item.major?.toLowerCase().includes(query) ||
-        item.country?.toLowerCase().includes(query);
-      return majorMatch && countryMatch && fundingMatch && testMatch && searchMatch;
+  // A different list has its own scroll position, so show the block again.
+  useEffect(() => {
+    collapse.value = withTiming(0, { duration: 220 });
+  }, [tab]);
+
+  useEffect(() => {
+    if (jobsReady) return;
+    const task = InteractionManager.runAfterInteractions(() => setJobsReady(true));
+    return () => task.cancel();
+  }, [jobsReady]);
+
+  useEffect(() => {
+    if (tab === "jobs") setJobsReady(true);
+    pagerRef.current?.scrollTo({
+      x: TABS.indexOf(tab) * width,
+      animated: placed.current,
     });
-  }, [
-    scholarships,
-    selectedMajor,
-    selectedCountry,
-    selectedFunding,
-    selectedTest,
-    searchQuery,
-  ]);
+    placed.current = true;
+  }, [tab, width]);
 
-  const ScholarshipCard = React.memo(
-    ({
-      item,
-      handleFavorite,
-      favoriteScholarships,
-      setSelectedScholarshipId,
-      setShowReportModal,
-    }) => {
-      const [isCourseVisible, setIsCourseVisible] = useState(false);
-      const [isUniversityVisible, setIsUniversityVisible] = useState(false);
-      const [isProfessorsVisible, setIsProfessorsVisible] = useState(false);
-
-      const handleRequestScholarship = async () => {
-        const professor = item.contactProfessors?.[0];
-        const result = await sendScholarshipEmail(
-          professor?.email,
-          user?.username,
-          item.title,
-          professor,
-        );
-        if (result && !result.success) {
-          showAlert("Error", result.error, "error");
-        }
-      };
-
-      const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-      };
-
-      return (
-        <View style={styles.card}>
-          <View style={styles.imageContainer}>
-            <FlatList
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              data={item.images}
-              keyExtractor={(image, index) => `${item.id}-image-${index}`}
-              renderItem={({ item: imageUri }) => (
-                <Image
-                  source={{ uri: imageUri }}
-                  style={styles.cardImage}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  priority="normal"
-                />
-              )}
-            />
-            <TouchableOpacity
-              style={styles.reportButton}
-              onPress={() => {
-                setSelectedScholarshipId(item.id);
-                setShowReportModal(true);
-              }}
-            >
-              <Ionicons name="flag-outline" size={20} color="white" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.university}</Text>
-            <Text style={styles.cardDate}>
-              Posted: {formatDate(item.createdAt)}
-            </Text>
-            <View style={styles.cardFooter}>
-              <Text style={styles.cardFunding}>{item.funding} Scholar</Text>
-              <Text style={styles.cardFunding}>{item.country}</Text>
-              <Text style={styles.cardFunding}>{item.major}</Text>
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  onPress={() => handleFavorite(item.id)}
-                  style={styles.likeButton}
-                >
-                  <FontAwesome
-                    name={
-                      favoriteScholarships.includes(item.id)
-                        ? "heart"
-                        : "heart-o"
-                    }
-                    size={32}
-                    color={
-                      favoriteScholarships.includes(item.id) ? "red" : "#555"
-                    }
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.dropdownToggle}
-              onPress={() => setIsUniversityVisible(!isUniversityVisible)}
-            >
-              <Text style={styles.dropdownToggleText}>University Details</Text>
-              <Ionicons
-                name={isUniversityVisible ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="gray"
-              />
-            </TouchableOpacity>
-            {isUniversityVisible && (
-              <View style={styles.dropdownContent}>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>University:</Text>{" "}
-                  {item.university}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Website:</Text>{" "}
-                  <Text
-                    style={styles.linkText}
-                    onPress={() => Linking.openURL(item.universityWebsite)}
-                  >
-                    {item.universityWebsite}
-                  </Text>
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Department Head:</Text>{" "}
-                  {item.departmentHead?.name} ({item.departmentHead?.position})
-                </Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.dropdownToggle}
-              onPress={() => setIsCourseVisible(!isCourseVisible)}
-            >
-              <Text style={styles.dropdownToggleText}>Course Details</Text>
-              <Ionicons
-                name={isCourseVisible ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="gray"
-              />
-            </TouchableOpacity>
-            {isCourseVisible && (
-              <View style={styles.dropdownContent}>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Major:</Text> {item.major}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Type:</Text> {item.type}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Level:</Text> {item.level}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Language Tests:</Text>{" "}
-                  {item.languageTests?.join(", ")}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Funding:</Text> {item.funding}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Course Value:</Text>{" "}
-                  {item.courseValue}
-                </Text>
-                <Text style={styles.dropdownText}>
-                  <Text style={styles.boldText}>Qualifications:</Text>{" "}
-                  {item.qualifications}
-                </Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.dropdownToggle}
-              onPress={() => setIsProfessorsVisible(!isProfessorsVisible)}
-            >
-              <Text style={styles.dropdownToggleText}>Professor Details</Text>
-              <Ionicons
-                name={isProfessorsVisible ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="gray"
-              />
-            </TouchableOpacity>
-            {isProfessorsVisible && (
-              <View style={styles.dropdownContent}>
-                {item.contactProfessors?.map((professor, index) => (
-                  <View
-                    key={`${item.id}-professor-${index}`}
-                    style={styles.professorContainer}
-                  >
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Name:</Text>{" "}
-                      {professor.name}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Position:</Text>{" "}
-                      {professor.position}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Email:</Text>{" "}
-                      {professor.email}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Research:</Text>{" "}
-                      {professor.research}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      <Text style={styles.boldText}>Office:</Text>{" "}
-                      {professor.office}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleRequestScholarship}
-            >
-              <Text style={styles.buttonText}>Request Scholarship</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    },
-    (prevProps, nextProps) =>
-      prevProps.item.id === nextProps.item.id &&
-      prevProps.item === nextProps.item &&
-      prevProps.favoriteScholarships === nextProps.favoriteScholarships,
-  );
-
-  const router = useRouter();
-
-  const activeFilterCount = [selectedMajor, selectedCountry, selectedFunding, selectedTest, sortOrder].filter(Boolean).length;
-
-  const resetFilters = () => {
-    setSelectedMajor("");
-    setSelectedCountry("");
-    setSelectedFunding("");
-    setSelectedTest("");
-    setSortOrder("");
+  const handleScrollEnd = (e) => {
+    const page = Math.round(e.nativeEvent.contentOffset.x / width);
+    setExploreTab(TABS[page] ?? TABS[0]);
   };
 
-  const renderChipGroup = (label, options, selected, setSelected) => (
-    <View style={styles.chipGroup}>
-      <Text style={styles.chipGroupLabel}>{label}</Text>
-      <View style={styles.chipRow}>
-        {options.map((item) => {
-          const displayText = typeof item === "string" ? item : `${item.flag} ${item.name}`;
-          const value = typeof item === "string" ? item : item.name;
-          const isSelected = selected === value;
-          return (
-            <TouchableOpacity
-              key={value}
-              style={[styles.chip, isSelected && styles.chipSelected]}
-              onPress={() => setSelected(isSelected ? "" : value)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                {displayText}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
-
-  const renderItem = useCallback(
-    ({ item }) => (
-      <ScholarshipCard
-        item={item}
-        handleFavorite={handleFavorite}
-        favoriteScholarships={favoriteScholarships}
-        setSelectedScholarshipId={setSelectedScholarshipId}
-        setShowReportModal={setShowReportModal}
-      />
-    ),
-    [
-      handleFavorite,
-      favoriteScholarships,
-      setSelectedScholarshipId,
-      setShowReportModal,
-    ],
+  // Back from Jobs goes to Universities rather than leaving Explore.
+  useFocusEffect(
+    useCallback(() => {
+      // A new search or category from Home replaces whatever Explore was
+      // showing: old text, category and other filters are all cleared.
+      const applyPending = () => {
+        const pending = takeExploreSearch();
+        const wanted = takeExploreCategory();
+        if (pending || wanted) {
+          setQueries({ scholarships: "", jobs: "", ...(pending ? { [pending.tab]: pending.query } : {}) });
+          const id = Date.now();
+          setCategoryRequests((s) => ({
+            ...s,
+            ...(pending ? { [pending.tab]: { category: "", subcategory: "", level: "", id } } : {}),
+            ...(wanted ? { [wanted.tab]: { category: wanted.category, subcategory: wanted.subcategory, level: wanted.level, id } } : {}),
+          }));
+        }
+      };
+      applyPending();
+      const unsubscribe = subscribeExplorePending(applyPending);
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (getExploreTab() === "jobs" && getAllowedExploreTab() === "both") {
+          setExploreTab("scholarships");
+          return true;
+        }
+        return false;
+      });
+      return () => {
+        sub.remove();
+        unsubscribe();
+      };
+    }, []),
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <Animated.View
-        style={[styles.headerContainer, { opacity: headerOpacity }]}
-      >
-        <View style={styles.headerRow}>
-          <Image
-            source={require("../../assets/images/OPPORTUNITIES.png")}
-            style={styles.logo}
-            contentFit="contain"
-          />
-          <View style={styles.iconsContainer}>
-            <TouchableOpacity
-              style={[styles.iconBackground, activeFilterCount > 0 && styles.iconBackgroundActive]}
-              onPress={() => setShowFilterModal(true)}
-            >
-              <Ionicons name="funnel" size={22} color={activeFilterCount > 0 ? "#fff" : "#a5a4a4"} />
-              {activeFilterCount > 0 && (
-                <View style={styles.filterActiveBadge}>
-                  <Text style={styles.filterActiveBadgeText}>{activeFilterCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconBackground, showSearchBar && styles.iconBackgroundActive]}
-              onPress={() => {
-                if (showSearchBar) setSearchQuery("");
-                setShowSearchBar((v) => !v);
-              }}
-            >
-              <Ionicons
-                name={showSearchBar ? "close" : "search"}
-                size={22}
-                color={showSearchBar ? "#fff" : "#a5a4a4"}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconBackground}
-              onPress={() => setMenuVisible(true)}
-            >
-              <Ionicons name="menu" size={27} color="#a5a4a4" />
-            </TouchableOpacity>
-          </View>
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground }}>
+      <StatusBar barStyle={colors.statusBarStyle === "light" ? "light-content" : "dark-content"} />
+      <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
+        <ScreenHeader icons={header.icons || []} onMenuPress={header.onMenuPress} />
+      </View>
 
-        {showSearchBar && (
-          <View style={styles.searchBarContainer}>
-            <Ionicons name="search" size={18} color="#94a3b8" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search scholarships, universities, majors..."
-              placeholderTextColor="#94a3b8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoFocus
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={18} color="#94a3b8" />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-      </Animated.View>
-
-      <BottomModal
-        visible={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-      />
-      <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
-
-      <Modal
-        visible={showFilterModal}
-        transparent={true}
-        animationType="none"
-        onRequestClose={() => setShowFilterModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={StyleSheet.absoluteFill}
-            activeOpacity={1}
-            onPress={() => setShowFilterModal(false)}
-          />
-          <Animated.View
-            style={[styles.bottomModalContent, { transform: [{ translateY: filterModalY }] }]}
-          >
-            {/* Drag handle */}
-            <View style={styles.dragHandle} />
-
-            {/* Header */}
-            <View style={styles.filterHeader}>
-              <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.filterHeaderClose}>
-                <Ionicons name="close" size={22} color="#374151" />
-              </TouchableOpacity>
-              <Text style={styles.filterHeaderTitle}>
-                Filters {activeFilterCount > 0 && <Text style={styles.filterBadge}> {activeFilterCount}</Text>}
-              </Text>
-              <TouchableOpacity onPress={resetFilters} style={styles.filterHeaderReset}>
-                <Text style={styles.filterHeaderResetText}>Reset all</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.filterDivider} />
-
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={styles.filterScrollContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {renderChipGroup("Sort by Date", sortOptions, sortOrder, setSortOrder)}
-              <View style={styles.filterDivider} />
-              {renderChipGroup("Major", majors, selectedMajor, setSelectedMajor)}
-              <View style={styles.filterDivider} />
-              {renderChipGroup("Country", countries, selectedCountry, setSelectedCountry)}
-              <View style={styles.filterDivider} />
-              {renderChipGroup("Funding Type", fundingTypes, selectedFunding, setSelectedFunding)}
-            </ScrollView>
-
-            {/* Sticky Apply Button */}
-            <View style={styles.filterFooter}>
-              <TouchableOpacity
-                style={styles.applyButton}
-                onPress={() => setShowFilterModal(false)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.applyButtonText}>
-                  Show Results{filteredScholarships.length > 0 ? ` · ${filteredScholarships.length}` : ""}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={showReportModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowReportModal(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowReportModal(false)}
+      <View style={styles.body}>
+        <ScrollView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          horizontal
+          pagingEnabled
+          scrollEnabled={false}
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          overScrollMode="never"
+          keyboardShouldPersistTaps="handled"
+          onMomentumScrollEnd={handleScrollEnd}
+          contentOffset={{ x: TABS.indexOf(tab) * width, y: 0 }}
         >
-          <TouchableOpacity activeOpacity={1} style={styles.reportModalContent}>
-            <Text style={styles.modalTitle}>Report Scholarship</Text>
-            <TextInput
-              style={styles.reportInput}
-              multiline
-              placeholder="Enter your report message..."
-              value={reportMessage}
-              onChangeText={setReportMessage}
-            />
-            <View style={styles.reportButtonContainer}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={() => {
-                  setShowReportModal(false);
-                  setReportMessage("");
-                  setSelectedScholarshipId(null);
-                }}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  reportMessage ? styles.submitButton : styles.disabledButton,
-                ]}
-                disabled={!reportMessage}
-                onPress={() =>
-                  handleReport(selectedScholarshipId, reportMessage)
-                }
-              >
-                <Text style={styles.buttonText}>Submit Report</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-
-      {!checkingPaid && (
-        <Text style={styles.resultCount}>
-          Results: {filteredScholarships.length}
-        </Text>
-      )}
-
-      {checkingPaid ? (
-        <View style={styles.loaderContainer}>
-          <LoaderModal />
-        </View>
-      ) : isPaidMember ? (
-        loading ? (
-          <View style={styles.loaderContainer}>
-            <LoaderModal />
+          <View style={{ width, height: "100%" }}>
+            {showUniversities && <UniversitiesPage categoryRequest={categoryRequests.scholarships} searchQuery={queries.scholarships} setSearchQuery={setUniversitiesQuery} onSuggestionsChange={setUniversitiesSuggestions} onHeaderChange={setUniversitiesHeader} collapse={collapse} collapseMax={collapseMax} topInset={topHeight} />}
           </View>
-        ) : (
-          <AnimatedFlatList
-            data={filteredScholarships}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id.toString()}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true },
-            )}
-            scrollEventThrottle={16}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-              />
-            }
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Ionicons name="search-outline" size={64} color="#cbd5e1" />
-                <Text style={styles.emptyTitle}>No scholarships found</Text>
-                <Text style={styles.emptySubtext}>
-                  No results match your current filters.{"\n"}Try adjusting or clearing them.
-                </Text>
-                <TouchableOpacity
-                  style={styles.clearFiltersBtn}
-                  onPress={() => {
-                    setSelectedMajor("");
-                    setSelectedCountry("");
-                    setSelectedFunding("");
-                    setSelectedTest("");
-                    setSortOrder("");
-                  }}
-                >
-                  <Text style={styles.clearFiltersBtnText}>Clear Filters</Text>
-                </TouchableOpacity>
-              </View>
-            }
-          />
-        )
-      ) : (
-        <AnimatedFlatList
-          data={filteredScholarships.slice(0, 20)}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true },
-          )}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-          initialNumToRender={5}
-          maxToRenderPerBatch={5}
-          windowSize={3}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={64} color="#cbd5e1" />
-              <Text style={styles.emptyTitle}>No scholarships found</Text>
-              <Text style={styles.emptySubtext}>
-                No results match your current filters.{"\n"}Try adjusting or clearing them.
-              </Text>
-              <TouchableOpacity
-                style={styles.clearFiltersBtn}
-                onPress={() => {
-                  setSelectedMajor("");
-                  setSelectedCountry("");
-                  setSelectedFunding("");
-                  setSelectedTest("");
-                  setSortOrder("");
-                }}
-              >
-                <Text style={styles.clearFiltersBtnText}>Clear Filters</Text>
-              </TouchableOpacity>
-            </View>
-          }
-        />
-      )}
-      <AlertModal
-        visible={alertConfig.visible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        actions={
-          alertConfig.actions.length > 0
-            ? alertConfig.actions
-            : [{ text: "OK", onPress: closeAlert }]
-        }
-        onClose={closeAlert}
-      />
+          <View style={{ width, height: "100%" }}>
+            {showCompanies && jobsReady && <JobsPage categoryRequest={categoryRequests.jobs} searchQuery={queries.jobs} setSearchQuery={setJobsQuery} onSuggestionsChange={setJobsSuggestions} onHeaderChange={setJobsHeader} collapse={collapse} collapseMax={collapseMax} topInset={topHeight} />}
+          </View>
+        </ScrollView>
 
+        <Animated.View
+          style={[
+            styles.fixedTop,
+            { backgroundColor: colors.screenBackground },
+            shiftStyle,
+          ]}
+          onLayout={handleTopLayout}
+        >
+          <View style={styles.titleRow}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
+              {t(isJobs ? "explore.companies" : "explore.universities")}
+            </Text>
+            {isBoth && (
+              <ExploreSwitch
+                value={tab}
+                onChange={setExploreTab}
+                labels={{ scholarships: t("explore.universities"), jobs: t("explore.companies") }}
+              />
+            )}
+          </View>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {t(isJobs ? "explore.companiesSubtitle" : "explore.universitiesSubtitle")}
+          </Text>
+          <ExploreSearchBar
+            value={queries[tab]}
+            onChangeText={isJobs ? setJobsQuery : setUniversitiesQuery}
+            placeholder={t(isJobs ? "explore.searchJobs" : "explore.searchUniversities")}
+            suggestions={suggestions[tab]}
+          />
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    padding: "2%",
-    paddingTop: StatusBar.currentHeight || 50,
+  header: {
+    zIndex: 2,
+    paddingTop: StatusBar.currentHeight || 30,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
   },
-  headerContainer: {
+  body: {
+    flex: 1,
+  },
+  fixedTop: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 10,
-    backgroundColor: "#f8fafc",
-    paddingTop: StatusBar.currentHeight || 30,
-    paddingHorizontal: 10,
-    paddingBottom: 10,
+    zIndex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  headerRow: {
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
   },
-  iconsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconBackground: {
-    backgroundColor: "#f1f5f9",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: 5,
-    elevation: 2,
-  },
-  searchBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f1f5f9",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 42,
-    marginTop: 10,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Roboto",
-    color: "#111827",
-    padding: 0,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginBottom: "4%",
-    overflow: "hidden",
-    elevation: 8,
-  },
-  imageContainer: {
-    position: "relative",
-  },
-  cardImage: {
-    width: screenWidth - screenWidth * 0.04,
-    height: screenHeight * 0.33,
-    borderRadius: 10,
-  },
-  reportButton: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 20,
-    padding: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  cardContent: {
-    padding: "3%",
-  },
-  cardTitle: {
-    fontSize: screenWidth * 0.045,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    marginBottom: "1%",
-    textBreakStrategy: "simple",
-  },
-  cardSubtitle: {
-    fontSize: screenWidth * 0.035,
-    color: "#666",
-    marginBottom: "1%",
+  title: {
+    fontSize: 24,
+    fontWeight: "800",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
   },
-  cardDate: {
-    fontSize: screenWidth * 0.03,
-    color: "#666",
-    marginBottom: "2%",
+  subtitle: {
+    fontSize: 12.5,
     fontFamily: "Roboto",
+    marginTop: 2,
     textBreakStrategy: "simple",
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  cardFunding: {
-    fontSize: screenWidth * 0.03,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    color: "white",
-    backgroundColor: "#004aad",
-    paddingHorizontal: "2.5%",
-    paddingVertical: "2%",
-    borderRadius: 20,
-    margin: "1%",
-    textBreakStrategy: "simple",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  subscribecontainer: {
-    padding: "4%",
-  },
-  logo: {
-    width: 150,
-    height: 50,
-  },
-  dropdownContent: {
-    marginTop: "2%",
-    padding: "2%",
-    backgroundColor: "white",
-    borderRadius: 5,
-    elevation: 2,
-  },
-  dropdownText: {
-    fontSize: screenWidth * 0.035,
-    lineHeight: screenWidth * 0.05,
-    marginBottom: "2%",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-  },
-  boldText: {
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-  },
-  linkText: {
-    color: "#004aad",
-    textDecorationLine: "underline",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-  },
-  button: {
-    backgroundColor: "#004aad",
-    paddingVertical: "2.5%",
-    paddingHorizontal: "4%",
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: "2%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  cancelButton: {
-    backgroundColor: "#666",
-    marginRight: "2%",
-  },
-  submitButton: {
-    backgroundColor: "#004aad",
-  },
-  disabledButton: {
-    backgroundColor: "#cccccc",
-  },
-  buttonText: {
-    fontSize: screenWidth * 0.04,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    color: "#fff",
-    textBreakStrategy: "simple",
-  },
-  dropdownToggle: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: "2%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  dropdownToggleText: {
-    fontSize: screenWidth * 0.04,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    color: "#004aad",
-    textBreakStrategy: "simple",
-  },
-  professorContainer: {
-    marginBottom: "2%",
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#334155",
-    fontFamily: "Roboto",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#94a3b8",
-    fontFamily: "Roboto",
-    textAlign: "center",
-    lineHeight: 21,
-    marginBottom: 24,
-  },
-  clearFiltersBtn: {
-    backgroundColor: "#004aad",
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 30,
-  },
-  clearFiltersBtnText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-    fontFamily: "Roboto",
-  },
-  resultCount: {
-    fontSize: screenWidth * 0.04,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    marginVertical: "2%",
-    paddingHorizontal: "2%",
-    textBreakStrategy: "simple",
-  },
-  // Filter modal — new professional design
-  dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#d1d5db",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  filterHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  filterHeaderClose: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#f3f4f6",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filterHeaderTitle: {
-    fontSize: screenWidth * 0.047,
-    fontWeight: "700",
-    color: "#111827",
-    fontFamily: "Roboto",
-  },
-  filterBadge: {
-    color: "#004aad",
-    fontWeight: "700",
-  },
-  filterHeaderReset: {
-    paddingHorizontal: 4,
-  },
-  filterHeaderResetText: {
-    fontSize: screenWidth * 0.037,
-    color: "#004aad",
-    fontWeight: "600",
-    fontFamily: "Roboto",
-  },
-  filterDivider: {
-    height: 1,
-    backgroundColor: "#f0f0f0",
-    marginHorizontal: 0,
-  },
-  filterScrollContent: {
-    paddingBottom: 16,
-  },
-  chipGroup: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  chipGroupLabel: {
-    fontSize: screenWidth * 0.038,
-    fontWeight: "700",
-    color: "#374151",
-    fontFamily: "Roboto",
-    marginBottom: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#f3f4f6",
-    borderWidth: 1.5,
-    borderColor: "#e5e7eb",
-  },
-  chipSelected: {
-    backgroundColor: "#004aad",
-    borderColor: "#004aad",
-  },
-  chipText: {
-    fontSize: screenWidth * 0.035,
-    color: "#374151",
-    fontFamily: "Roboto",
-    fontWeight: "500",
-  },
-  chipTextSelected: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  filterFooter: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    backgroundColor: "#fff",
-  },
-  applyButton: {
-    backgroundColor: "#004aad",
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
-    shadowColor: "#004aad",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  applyButtonText: {
-    color: "#fff",
-    fontSize: screenWidth * 0.042,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-  },
-  iconBackgroundActive: {
-    backgroundColor: "#004aad",
-  },
-  filterActiveBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    backgroundColor: "#ef4444",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 3,
-  },
-  filterActiveBadgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  messageText: {
-    fontSize: screenWidth * 0.04,
-    color: "#333333",
-    textAlign: "center",
-    marginBottom: "3%",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-  },
-  subscribeLink: {
-    fontSize: screenWidth * 0.04,
-    color: "#004aad",
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    textDecorationLine: "underline",
-    textAlign: "center",
-    textBreakStrategy: "simple",
-  },
-  likeButton: {
-    padding: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  bottomModalContent: {
-    width: "100%",
-    height: modalHeight,
-    backgroundColor: "white",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-  },
-  reportModalContent: {
-    width: "100%",
-    backgroundColor: "white",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    padding: "4%",
-    maxHeight: screenHeight * 0.5,
-  },
-  modalContent: {
-    flex: 1,
-    padding: "4%",
-  },
-  modalTitle: {
-    fontSize: screenWidth * 0.05,
-    fontWeight: "700",
-    fontFamily: "Roboto",
-    marginBottom: "4%",
-    textAlign: "center",
-    textBreakStrategy: "simple",
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  reportInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: "3%",
-    minHeight: 100,
-    marginBottom: "4%",
-    fontSize: screenWidth * 0.04,
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-  },
-  reportButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
   },
 });
-
-export default ScholarshipApp;

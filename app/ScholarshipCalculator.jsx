@@ -1,28 +1,32 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Modal,
-  SafeAreaView,
   StatusBar,
   Image,
   ScrollView,
   Dimensions,
-  Animated,
+  ActivityIndicator,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Provider as PaperProvider } from "react-native-paper";
-import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { AuthContext } from "../components/AuthContext";
+import { useTheme } from "../components/ThemeContext";
 import { calculatorAPI } from "../services/apiService";
 import AlertModal from "../components/AlertModal";
 import ScolaMenu from "../components/ScolaMenu";
-
-const API_BASE_URL = "https://webapplication2-old-pond-3577.fly.dev/api";
+import ScreenHeader from "../components/blocks/ScreenHeader";
+import LoaderModal from "../components/ui/LoaderModal";
+import PickerField from "../components/ui/PickerField";
+import { LanguageContext, getLocale } from "../components/LanguageContext";
+import ReAnimated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { useCountUp, haptic } from "../components/ui/motion";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const scale = (size) => (SCREEN_WIDTH / 375) * size;
@@ -33,8 +37,66 @@ const moderateScale = (size, factor = 0.5) =>
     size * 1.5,
   );
 
+const AnimatedGradient = ReAnimated.createAnimatedComponent(LinearGradient);
+
+const ScoreBar = ({ label, score, maxScore, icon }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const percentage = Math.max(0, Math.min(100, (score / maxScore) * 100));
+  const fill = useSharedValue(0);
+  useEffect(() => {
+    fill.value = withDelay(150, withTiming(percentage, { duration: 700, easing: Easing.out(Easing.cubic) }));
+  }, [percentage]);
+  const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value}%` }));
+  return (
+    <View
+      style={styles.scoreBarContainer}
+      accessible
+      accessibilityLabel={`${label}: ${score} / ${maxScore}`}
+    >
+      <View style={styles.scoreBarHeader}>
+        <View style={styles.scoreBarLabelContainer}>
+          <MaterialIcons name={icon} size={16} color={colors.textSecondary} />
+          <Text style={styles.scoreBarLabel}>{label}</Text>
+        </View>
+        <Text style={styles.scoreBarValue}>
+          {score}/{maxScore}
+        </Text>
+      </View>
+      <View style={styles.progressBarBackground}>
+        <AnimatedGradient
+          colors={
+            percentage >= 70
+              ? ["#004aad", "#0d64c8"]
+              : percentage >= 40
+                ? ["#eb6834", "#f0885c"]
+                : ["#ef4444", "#f87171"]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.progressBarFill, fillStyle]}
+        />
+      </View>
+    </View>
+  );
+};
+
+// Staged processing indicator shown while the eligibility engine runs.
+// Labels describe what the scoring algorithm genuinely does — profile
+// analysis, requirement checks, factor scoring, recommendations.
+const PROCESSING_STEP_MS = 700;
+const PROCESSING_STEPS = [
+  { icon: "person-circle-outline", labelKey: "calculator.stepProfile" },
+  { icon: "globe-outline", labelKey: "calculator.stepRequirements" },
+  { icon: "stats-chart-outline", labelKey: "calculator.stepScoring" },
+  { icon: "bulb-outline", labelKey: "calculator.stepRecommendations" },
+];
+
 const ScholarshipPossibilityCalculator = () => {
   const { user } = useContext(AuthContext);
+  const { t, language } = useContext(LanguageContext);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [gpa, setGpa] = useState(null);
   const [ielts, setIelts] = useState(null);
   const [country, setCountry] = useState(null);
@@ -47,6 +109,9 @@ const ScholarshipPossibilityCalculator = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [pastResults, setPastResults] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [calculationError, setCalculationError] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
@@ -55,7 +120,9 @@ const ScholarshipPossibilityCalculator = () => {
     type: "info",
     actions: [],
   });
+  const reportFromHistory = useRef(false);
   const [possibility, setPossibility] = useState(0);
+  const animatedPossibility = useCountUp(possibility, 900);
   const [feedback, setFeedback] = useState("");
   const [scoreBreakdown, setScoreBreakdown] = useState({
     gpaScore: 0,
@@ -68,10 +135,15 @@ const ScholarshipPossibilityCalculator = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [strengths, setStrengths] = useState([]);
   const [improvements, setImprovements] = useState([]);
+  const [answeredKeys, setAnsweredKeys] = useState({});
+  const scrollRef = useRef(null);
+  const sectionY = useRef({});
+  const fieldY = useRef({});
+  const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const handleBackPress = () => {
-    router?.back() || console.log("Navigation failed: router is undefined");
+    router?.back();
   };
 
   const showAlert = (title, message, type = "info", actions = []) => {
@@ -88,79 +160,254 @@ const ScholarshipPossibilityCalculator = () => {
     setAlertConfig({ ...alertConfig, visible: false });
   };
 
+  const clearFieldError = (field) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const countryLabel = (code) => t(`calculator.countries.${code}`, code);
+
   const countryOptions = [
-    { label: "USA", value: "usa" },
-    { label: "UK", value: "uk" },
-    { label: "Canada", value: "canada" },
-    { label: "Australia", value: "australia" },
-    { label: "Germany", value: "germany" },
-    { label: "France", value: "france" },
-    { label: "Japan", value: "japan" },
-    { label: "Netherlands", value: "netherlands" },
-    { label: "Sweden", value: "sweden" },
-    { label: "New Zealand", value: "newzealand" },
-  ];
+    "usa",
+    "uk",
+    "canada",
+    "australia",
+    "germany",
+    "france",
+    "japan",
+    "netherlands",
+    "sweden",
+    "newzealand",
+  ].map((code) => ({ label: countryLabel(code), value: code }));
 
   const gpaOptions = [
-    { label: "4.0 (Excellent)", value: 4.0 },
-    { label: "3.7-3.9 (Very Good)", value: 3.8 },
-    { label: "3.4-3.6 (Good)", value: 3.5 },
-    { label: "3.0-3.3 (Average)", value: 3.0 },
-    { label: "< 3.0 (Below Average)", value: 2.5 },
+    { label: t("calculator.opt.gpa40"), value: 4.0 },
+    { label: t("calculator.opt.gpa38"), value: 3.8 },
+    { label: t("calculator.opt.gpa35"), value: 3.5 },
+    { label: t("calculator.opt.gpa30"), value: 3.0 },
+    { label: t("calculator.opt.gpa25"), value: 2.5 },
   ];
 
   const ieltsOptions = [
-    { label: "8.0-9.0 (Expert)", value: 8.5 },
-    { label: "7.0-7.5 (Very Good)", value: 7.25 },
-    { label: "6.0-6.5 (Competent)", value: 6.25 },
-    { label: "5.0-5.5 (Modest)", value: 5.25 },
-    { label: "< 5.0 (Limited)", value: 4.5 },
-    { label: "Not Applicable", value: null },
+    { label: t("calculator.opt.ielts85"), value: 8.5 },
+    { label: t("calculator.opt.ielts725"), value: 7.25 },
+    { label: t("calculator.opt.ielts625"), value: 6.25 },
+    { label: t("calculator.opt.ielts525"), value: 5.25 },
+    { label: t("calculator.opt.ielts45"), value: 4.5 },
+    { label: t("calculator.opt.ieltsNA"), value: null },
   ];
 
   const researchOptions = [
-    { label: "High (Published Papers)", value: 3 },
-    { label: "Moderate (Research Experience)", value: 2 },
-    { label: "Basic (Some Projects)", value: 1 },
-    { label: "None", value: 0 },
+    { label: t("calculator.opt.research3"), value: 3 },
+    { label: t("calculator.opt.research2"), value: 2 },
+    { label: t("calculator.opt.research1"), value: 1 },
+    { label: t("calculator.opt.none"), value: 0 },
   ];
 
   const fieldOptions = [
-    { label: "STEM (Science, Tech, Eng, Math)", value: "stem" },
-    { label: "Business & Economics", value: "business" },
-    { label: "Arts & Humanities", value: "arts" },
-    { label: "Social Sciences", value: "social" },
-    { label: "Health Sciences", value: "health" },
+    { label: t("calculator.opt.stem"), value: "stem" },
+    { label: t("calculator.opt.business"), value: "business" },
+    { label: t("calculator.opt.arts"), value: "arts" },
+    { label: t("calculator.opt.social"), value: "social" },
+    { label: t("calculator.opt.health"), value: "health" },
   ];
 
   const extracurricularOptions = [
-    { label: "High (Leadership Roles)", value: 3 },
-    { label: "Moderate (Club Participation)", value: 2 },
-    { label: "Basic (Some Activities)", value: 1 },
-    { label: "None", value: 0 },
+    { label: t("calculator.opt.extra3"), value: 3 },
+    { label: t("calculator.opt.extra2"), value: 2 },
+    { label: t("calculator.opt.extra1"), value: 1 },
+    { label: t("calculator.opt.none"), value: 0 },
   ];
 
   const financialNeedOptions = [
-    { label: "High (Low Income)", value: 3 },
-    { label: "Moderate (Middle Income)", value: 2 },
-    { label: "Low (High Income)", value: 1 },
-    { label: "None (No Need)", value: 0 },
+    { label: t("calculator.opt.fin3"), value: 3 },
+    { label: t("calculator.opt.fin2"), value: 2 },
+    { label: t("calculator.opt.fin1"), value: 1 },
+    { label: t("calculator.opt.fin0"), value: 0 },
   ];
 
+  const answerMap = {
+    country,
+    gpa,
+    ielts,
+    studyField,
+    researchInterest,
+    extracurriculars,
+    financialNeed,
+  };
+
+  const setterMap = {
+    country: setCountry,
+    gpa: setGpa,
+    ielts: setIelts,
+    studyField: setStudyField,
+    researchInterest: setResearchInterest,
+    extracurriculars: setExtracurriculars,
+    financialNeed: setFinancialNeed,
+  };
+
+  const baseQuestions = {
+    country: {
+      key: "country",
+      icon: "flag-outline",
+      label: t("calculator.lblCountry"),
+      hint: t("calculator.q.countrySub"),
+      options: countryOptions,
+    },
+    studyField: {
+      key: "studyField",
+      icon: "book-outline",
+      label: t("calculator.lblField"),
+      hint: t("calculator.q.fieldSub"),
+      options: fieldOptions,
+    },
+    gpa: {
+      key: "gpa",
+      icon: "school-outline",
+      label: t("calculator.lblGpa"),
+      hint: t("calculator.q.gpaSub"),
+      options: gpaOptions,
+    },
+    ielts: {
+      key: "ielts",
+      icon: "language-outline",
+      label: t("calculator.lblIelts"),
+      hint: t("calculator.q.ieltsSub"),
+      options: ieltsOptions,
+    },
+    researchInterest: {
+      key: "researchInterest",
+      icon: "flask-outline",
+      label: t("calculator.lblResearch"),
+      hint: t("calculator.q.researchSub"),
+      options: researchOptions,
+    },
+    extracurriculars: {
+      key: "extracurriculars",
+      icon: "people-outline",
+      label: t("calculator.lblExtra"),
+      hint: t("calculator.q.extraSub"),
+      options: extracurricularOptions,
+    },
+    financialNeed: {
+      key: "financialNeed",
+      icon: "wallet-outline",
+      label: t("calculator.lblFinancial"),
+      hint: t("calculator.q.financialSub"),
+      options: financialNeedOptions,
+    },
+  };
+
+  const formSections = [
+    { id: "destination", icon: "earth", title: t("calculator.sectionDestination"), keys: ["country", "studyField"] },
+    { id: "academics", icon: "school", title: t("calculator.sectionAcademics"), keys: ["gpa", "ielts"] },
+    { id: "background", icon: "briefcase", title: t("calculator.sectionBackground"), keys: ["researchInterest", "extracurriculars", "financialNeed"] },
+  ].map((section) => ({
+    ...section,
+    keys: section.keys.filter((key) => !(key === "ielts" && country === "japan")),
+  }));
+
+  const requiredKeys = formSections.flatMap((section) => section.keys);
+  const answeredCount = requiredKeys.filter((key) => !!answeredKeys[key]).length;
+
+  // Dropdown values are strings; the raw answer (number / null) is looked up.
+  const optionKey = (value) => (value === null ? "na" : String(value));
+
+  useEffect(() => {
+    if (country === "japan") {
+      setIelts(null);
+      setAnsweredKeys((prev) => ({ ...prev, ielts: true }));
+    } else {
+      setAnsweredKeys((prev) => {
+        if (prev.ielts && ielts === null) {
+          const next = { ...prev };
+          delete next.ielts;
+          return next;
+        }
+        return prev;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
+
+  const handleSelectOption = (key, value) => {
+    setterMap[key](value);
+    setAnsweredKeys((prev) => ({ ...prev, [key]: true }));
+    clearFieldError(key);
+  };
+
+  const validateFields = () => {
+    const errors = {};
+    if (gpa === null) errors.gpa = t("calculator.errGpa");
+    if (country === null) errors.country = t("calculator.errCountry");
+    if (ielts === null && country !== "japan")
+      errors.ielts = t("calculator.errIelts");
+    if (researchInterest === null)
+      errors.researchInterest = t("calculator.errResearch");
+    if (studyField === null) errors.studyField = t("calculator.errField");
+    if (extracurriculars === null)
+      errors.extracurriculars = t("calculator.errExtra");
+    if (financialNeed === null)
+      errors.financialNeed = t("calculator.errFinancial");
+    return errors;
+  };
+
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [processingStep, setProcessingStep] = useState(0);
+  const processingTimers = useRef([]);
+
+  useEffect(
+    () => () => {
+      processingTimers.current.forEach(clearTimeout);
+    },
+    [],
+  );
+
   const calculatePossibility = () => {
-    if (
-      !gpa ||
-      (ielts === undefined && country !== "japan") ||
-      !country ||
-      !researchInterest ||
-      !studyField ||
-      !extracurriculars ||
-      !financialNeed
-    ) {
-      showAlert("Error", "Please complete all required fields", "error");
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstKey = requiredKeys.find((key) => errors[key]);
+      const section = formSections.find((sec) => sec.keys.includes(firstKey));
+      if (section) {
+        const y = (sectionY.current[section.id] || 0) + (fieldY.current[firstKey] || 0);
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - 24), animated: true });
+      }
       return;
     }
+    setFieldErrors({});
+    setCalculationError("");
 
+    // Walk through the processing steps, then run the actual scoring.
+    processingTimers.current.forEach(clearTimeout);
+    processingTimers.current = [];
+    setProcessingStep(0);
+    setIsCalculating(true);
+    PROCESSING_STEPS.forEach((_, index) => {
+      if (index === 0) return;
+      processingTimers.current.push(
+        setTimeout(() => setProcessingStep(index), index * PROCESSING_STEP_MS),
+      );
+    });
+    processingTimers.current.push(
+      setTimeout(
+        () => {
+          setIsCalculating(false);
+          // Small delay so the overlay fully dismisses before the results
+          // modal opens (stacked transparent modals misbehave on Android).
+          processingTimers.current.push(setTimeout(runCalculation, 300));
+        },
+        PROCESSING_STEPS.length * PROCESSING_STEP_MS + 400,
+      ),
+    );
+  };
+
+  const runCalculation = () => {
+    try {
     let score = 0;
     let feedbackText = [];
     let strengthsList = [];
@@ -183,9 +430,9 @@ const ScholarshipPossibilityCalculator = () => {
     const reqs = minRequirements[country];
     if (gpa < reqs.gpa) {
       feedbackText.push(
-        `Your GPA is below the minimum requirement (${reqs.gpa}) for ${country.toUpperCase()}.`,
+        t("calculator.fb.gpaBelowMin", { min: reqs.gpa, country: countryLabel(country) }),
       );
-      improvementsList.push(`Increase your GPA to at least ${reqs.gpa}`);
+      improvementsList.push(t("calculator.fb.gpaImproveMin", { min: reqs.gpa }));
       setPossibility(0);
       setFeedback(feedbackText.join("\n"));
       setIsModalVisible(true);
@@ -193,9 +440,9 @@ const ScholarshipPossibilityCalculator = () => {
     }
     if (reqs.ielts && ielts !== null && ielts < reqs.ielts) {
       feedbackText.push(
-        `Your IELTS score is below the minimum requirement (${reqs.ielts}) for ${country.toUpperCase()}.`,
+        t("calculator.fb.ieltsBelowMin", { min: reqs.ielts, country: countryLabel(country) }),
       );
-      improvementsList.push(`Aim for IELTS score of at least ${reqs.ielts}`);
+      improvementsList.push(t("calculator.fb.ieltsImproveMin", { min: reqs.ielts }));
       setPossibility(0);
       setFeedback(feedbackText.join("\n"));
       setIsModalVisible(true);
@@ -206,28 +453,26 @@ const ScholarshipPossibilityCalculator = () => {
     const gpaScore = Math.min((gpa - 2.0) / 2.0, 1) * 40;
     score += gpaScore;
     if (gpa >= 3.7) {
-      strengthsList.push("Excellent GPA - highly competitive");
+      strengthsList.push(t("calculator.fb.sGpaExcellent"));
     } else if (gpa >= 3.4) {
-      strengthsList.push("Strong GPA - good foundation");
+      strengthsList.push(t("calculator.fb.sGpaStrong"));
     } else if (gpa < 3.3) {
-      improvementsList.push(
-        "Consider improving GPA to 3.3+ for better chances",
-      );
+      improvementsList.push(t("calculator.fb.iGpaImprove"));
     }
 
     // IELTS Scoring (20 points max)
     let ieltsScore = 0;
     if (country === "japan" && ielts === null) {
       ieltsScore = 20;
-      strengthsList.push("IELTS not required for Japan");
+      strengthsList.push(t("calculator.fb.sIeltsJapan"));
     } else if (ielts !== null) {
       ieltsScore = Math.min((ielts - 4.0) / 5.0, 1) * 20;
       if (ielts >= 7.5) {
-        strengthsList.push("Outstanding IELTS score");
+        strengthsList.push(t("calculator.fb.sIeltsOutstanding"));
       } else if (ielts >= 7.0) {
-        strengthsList.push("Very good IELTS score");
+        strengthsList.push(t("calculator.fb.sIeltsVeryGood"));
       } else if (ielts < 6.5 && reqs.ielts) {
-        improvementsList.push("Aim for IELTS 6.5+ to be more competitive");
+        improvementsList.push(t("calculator.fb.iIeltsImprove"));
       }
     }
     score += ieltsScore;
@@ -236,31 +481,29 @@ const ScholarshipPossibilityCalculator = () => {
     const researchScore = (researchInterest / 3) * 15;
     score += researchScore;
     if (researchInterest === 3) {
-      strengthsList.push("Published research - major advantage");
+      strengthsList.push(t("calculator.fb.sResearchPublished"));
     } else if (researchInterest === 2) {
-      strengthsList.push("Research experience strengthens application");
+      strengthsList.push(t("calculator.fb.sResearchExperience"));
     } else if (researchInterest < 2 && studyField === "stem") {
-      improvementsList.push("Gain research experience for STEM scholarships");
+      improvementsList.push(t("calculator.fb.iResearchStem"));
     }
 
     // Extracurricular Activities (10 points max)
     const extraScore = (extracurriculars / 3) * 10;
     score += extraScore;
     if (extracurriculars === 3) {
-      strengthsList.push("Strong leadership and activity involvement");
+      strengthsList.push(t("calculator.fb.sExtraStrong"));
     } else if (extracurriculars < 2) {
-      improvementsList.push(
-        "Participate in extracurricular activities and leadership roles",
-      );
+      improvementsList.push(t("calculator.fb.iExtraImprove"));
     }
 
     // Financial Need (10 points max)
     const needScore = (financialNeed / 3) * 10;
     score += needScore;
     if (financialNeed === 3) {
-      strengthsList.push("High financial need may qualify for need-based aid");
+      strengthsList.push(t("calculator.fb.sFinancialHigh"));
     } else if (financialNeed === 0) {
-      improvementsList.push("Consider need-based scholarships if applicable");
+      improvementsList.push(t("calculator.fb.iFinancialNone"));
     }
 
     // Field Competitiveness Bonus (5 points max)
@@ -330,6 +573,7 @@ const ScholarshipPossibilityCalculator = () => {
 
     const finalScore = Math.min(Math.round(score), 100);
     setPossibility(finalScore);
+    haptic("success");
 
     // Store score breakdown
     setScoreBreakdown({
@@ -343,40 +587,24 @@ const ScholarshipPossibilityCalculator = () => {
 
     // Main feedback
     if (finalScore >= 85) {
-      feedbackText.push(
-        "🎯 Excellent! You're a very strong candidate for scholarships.",
-      );
+      feedbackText.push(t("calculator.fb.overallExcellent"));
     } else if (finalScore >= 70) {
-      feedbackText.push(
-        "✅ Good chances! Focus on creating a compelling application.",
-      );
+      feedbackText.push(t("calculator.fb.overallGood"));
     } else if (finalScore >= 50) {
-      feedbackText.push(
-        "⚠️ Moderate chances. Strengthen the areas below for better results.",
-      );
+      feedbackText.push(t("calculator.fb.overallModerate"));
     } else {
-      feedbackText.push(
-        "📈 Significant improvements needed to be competitive.",
-      );
+      feedbackText.push(t("calculator.fb.overallLow"));
     }
 
     // Generate recommendations based on profile
     if (finalScore >= 70) {
-      recommendationsList.push(
-        "Start preparing your application documents now",
-      );
-      recommendationsList.push(
-        "Research specific scholarship programs in your field",
-      );
-      recommendationsList.push(
-        "Reach out to professors or mentors for recommendation letters",
-      );
+      recommendationsList.push(t("calculator.fb.rPrepare"));
+      recommendationsList.push(t("calculator.fb.rResearch"));
+      recommendationsList.push(t("calculator.fb.rLetters"));
     }
 
     if (studyField === "stem") {
-      recommendationsList.push(
-        "Look into research-based fellowships and assistantships",
-      );
+      recommendationsList.push(t("calculator.fb.rFellowships"));
     }
 
     if (
@@ -384,22 +612,16 @@ const ScholarshipPossibilityCalculator = () => {
       country === "netherlands" ||
       country === "sweden"
     ) {
-      recommendationsList.push(
-        "Check for tuition-free or low-cost public universities",
-      );
+      recommendationsList.push(t("calculator.fb.rTuitionFree"));
     }
 
     if (financialNeed >= 2) {
-      recommendationsList.push("Apply to need-based scholarship programs");
-      recommendationsList.push(
-        "Consider crowdfunding or sponsorship opportunities",
-      );
+      recommendationsList.push(t("calculator.fb.rNeedBased"));
+      recommendationsList.push(t("calculator.fb.rCrowdfund"));
     }
 
     if (country === "usa" && finalScore >= 60) {
-      recommendationsList.push(
-        "Explore Fulbright, Commonwealth, and university-specific scholarships",
-      );
+      recommendationsList.push(t("calculator.fb.rUsa"));
     }
 
     setFeedback(feedbackText.join("\n"));
@@ -425,6 +647,10 @@ const ScholarshipPossibilityCalculator = () => {
     }
 
     setIsModalVisible(true);
+    } catch (error) {
+      console.error("Error calculating possibility:", error);
+      setCalculationError(t("calculator.calcError"));
+    }
   };
 
   // Save calculator result to database
@@ -465,12 +691,7 @@ const ScholarshipPossibilityCalculator = () => {
         feedback: feedbackMessage || null,
       };
 
-      console.log(
-        "Saving calculator result:",
-        JSON.stringify(resultData, null, 2),
-      );
       await calculatorAPI.saveResult(resultData);
-      console.log("Calculator result saved successfully!");
     } catch (error) {
       console.error("Error saving calculator result:", error);
       if (error.message) {
@@ -483,23 +704,17 @@ const ScholarshipPossibilityCalculator = () => {
   };
 
   const fetchPastResults = async () => {
-    if (!user?.username) {
-      showAlert(
-        "Error",
-        "Please login to view your calculation history",
-        "error",
-      );
-      return;
-    }
+    if (!user?.username) return;
 
     try {
       setLoadingHistory(true);
+      setHistoryError("");
       const results = await calculatorAPI.getUserResults(user.username);
       setPastResults(results || []);
       setIsHistoryModalVisible(true);
     } catch (error) {
       console.error("Error fetching past results:", error);
-      showAlert("Error", "Failed to load calculation history", "error");
+      setHistoryError(t("calculator.historyLoadFailed"));
     } finally {
       setLoadingHistory(false);
     }
@@ -507,7 +722,7 @@ const ScholarshipPossibilityCalculator = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(getLocale(language), {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -516,18 +731,55 @@ const ScholarshipPossibilityCalculator = () => {
     });
   };
 
+  const levelInfo = (score) =>
+    score >= 85
+      ? { label: t("calculator.levelExcellent"), color: "#15803d" }
+      : score >= 70
+        ? { label: t("calculator.levelGood"), color: "#004aad" }
+        : score >= 50
+          ? { label: t("calculator.levelModerate"), color: "#eb6834" }
+          : { label: t("calculator.levelLow"), color: "#ef4444" };
+
+  // Re-open a saved result in the full report sheet; closing it returns to the list.
+  const openHistoryResult = (result) => {
+    setPossibility(Math.round(result.totalScore || 0));
+    setFeedback(result.feedback || "");
+    setScoreBreakdown({
+      gpaScore: result.gpaScore || 0,
+      ieltsScore: result.ieltsScore || 0,
+      researchScore: result.researchScore || 0,
+      extracurricularScore: result.extracurricularScore || 0,
+      financialScore: result.financialScore || 0,
+      fieldBonus: result.fieldBonus || 0,
+    });
+    setStrengths(result.strengths || []);
+    setImprovements(result.improvements || []);
+    setRecommendations(result.recommendations || []);
+    reportFromHistory.current = true;
+    setIsHistoryModalVisible(false);
+    setTimeout(() => setIsModalVisible(true), 300);
+  };
+
+  const closeReport = () => {
+    setIsModalVisible(false);
+    if (reportFromHistory.current) {
+      reportFromHistory.current = false;
+      setTimeout(() => setIsHistoryModalVisible(true), 300);
+    }
+  };
+
   const deleteResult = async (resultId) => {
     showAlert(
-      "Delete Result",
-      "Are you sure you want to delete this calculation result?",
+      t("calculator.deleteTitle"),
+      t("calculator.deleteConfirm"),
       "warning",
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           onPress: () => {},
         },
         {
-          text: "Delete",
+          text: t("common.delete"),
           destructive: true,
           onPress: async () => {
             try {
@@ -538,7 +790,7 @@ const ScholarshipPossibilityCalculator = () => {
               );
             } catch (error) {
               console.error("Error deleting result:", error);
-              showAlert("Error", "Failed to delete result", "error");
+              showAlert(t("common.error"), t("calculator.deleteFailed"), "error");
             }
           },
         },
@@ -547,278 +799,336 @@ const ScholarshipPossibilityCalculator = () => {
   };
 
   // Score Bar Component
-  const ScoreBar = ({ label, score, maxScore, icon }) => {
-    const percentage = (score / maxScore) * 100;
-    return (
-      <View style={styles.scoreBarContainer}>
-        <View style={styles.scoreBarHeader}>
-          <View style={styles.scoreBarLabelContainer}>
-            <MaterialIcons name={icon} size={16} color="#64748b" />
-            <Text style={styles.scoreBarLabel}>{label}</Text>
-          </View>
-          <Text style={styles.scoreBarValue}>
-            {score}/{maxScore}
-          </Text>
-        </View>
-        <View style={styles.progressBarBackground}>
-          <LinearGradient
-            colors={
-              percentage >= 80
-                ? ["#004aad", "#1A237E"]
-                : percentage >= 60
-                  ? ["#004aad", "#1A237E"]
-                  : ["#94a3b8", "#cbd5e1"]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.progressBarFill, { width: `${percentage}%` }]}
-          />
-        </View>
-      </View>
-    );
-  };
-
   return (
     <PaperProvider>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+        <StatusBar
+          barStyle={colors.statusBarStyle === "light" ? "light-content" : "dark-content"}
+          backgroundColor={colors.screenBackground}
+        />
         <View style={styles.headerContainer}>
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={handleBackPress}
-            >
-              <Ionicons
-                name="arrow-back"
-                size={moderateScale(24)}
-                color="#a5a4a4"
-              />
-            </TouchableOpacity>
-            <Image
-              source={require("../assets/images/OPPORTUNITIES.png")}
-              style={styles.logo}
-            />
-            <View style={styles.headerIcons}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => router.push("/CustomMail")}
-              >
-                <Ionicons
-                  name="create"
-                  size={moderateScale(24)}
-                  color="#a5a4a4"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => setMenuVisible(true)}
-              >
-                <Ionicons
-                  name="menu"
-                  size={moderateScale(26)}
-                  color="#a5a4a4"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <ScreenHeader
+            onBack={handleBackPress}
+            onMenuPress={() => setMenuVisible(true)}
+          />
         </View>
         <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
-        <LinearGradient colors={["#f5f5f5", "#f5f5f5"]} style={styles.gradient}>
+        <View style={styles.gradient}>
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={true}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
             bounces={true}
           >
-            <Text style={styles.subtitle}>
-              Assess your scholarship eligibility
-            </Text>
-
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select GPA"
-              data={gpaOptions}
-              labelField="label"
-              valueField="value"
-              value={gpa}
-              onChange={(item) => setGpa(item.value)}
-            />
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select IELTS Score"
-              data={ieltsOptions}
-              labelField="label"
-              valueField="value"
-              value={ielts}
-              onChange={(item) => setIelts(item.value)}
-            />
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select Country"
-              data={countryOptions}
-              labelField="label"
-              valueField="value"
-              value={country}
-              onChange={(item) => setCountry(item.value)}
-            />
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select Research Experience"
-              data={researchOptions}
-              labelField="label"
-              valueField="value"
-              value={researchInterest}
-              onChange={(item) => setResearchInterest(item.value)}
-            />
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select Study Field"
-              data={fieldOptions}
-              labelField="label"
-              valueField="value"
-              value={studyField}
-              onChange={(item) => setStudyField(item.value)}
-            />
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select Extracurricular Activities"
-              data={extracurricularOptions}
-              labelField="label"
-              valueField="value"
-              value={extracurriculars}
-              onChange={(item) => setExtracurriculars(item.value)}
-            />
-            <Dropdown
-              style={styles.dropdown}
-              placeholder="Select Financial Need"
-              data={financialNeedOptions}
-              labelField="label"
-              valueField="value"
-              value={financialNeed}
-              onChange={(item) => setFinancialNeed(item.value)}
-            />
-
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={calculatePossibility}
-              >
-                <Text style={styles.buttonText}>Calculate Possibility</Text>
-              </TouchableOpacity>
-
+            <View style={styles.titleRow}>
+              <View style={styles.titleTexts}>
+                <Text style={styles.pageTitle}>{t("calculator.title")}</Text>
+                <Text style={styles.pageSubtitle}>{t("calculator.introSubtitle")}</Text>
+              </View>
               {user && (
                 <TouchableOpacity
-                  style={styles.historyButton}
+                  style={styles.historyChip}
                   onPress={fetchPastResults}
                   disabled={loadingHistory}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("calculator.viewPast")}
                 >
-                  <MaterialIcons name="history" size={20} color="#004aad" />
-                  <Text style={styles.historyButtonText}>
-                    {loadingHistory ? "Loading..." : "View Past Results"}
+                  {loadingHistory ? (
+                    <ActivityIndicator size="small" color={colors.accent} />
+                  ) : (
+                    <MaterialIcons name="history" size={18} color={colors.accent} />
+                  )}
+                  <Text style={styles.historyChipText} numberOfLines={1}>
+                    {t("calculator.pastShort")}
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
-          </ScrollView>
-        </LinearGradient>
 
-        <Modal visible={isModalVisible} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <ScrollView
-                style={{ flex: 1 }}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.modalScrollContent}
+            <View style={styles.formProgressCard}>
+              <View style={styles.formProgressMeta}>
+                <Text style={styles.formProgressText}>
+                  {t("calculator.answeredOf", { done: answeredCount, total: requiredKeys.length })}
+                </Text>
+                <Text style={styles.formProgressPct}>
+                  {Math.round((answeredCount / requiredKeys.length) * 100)}%
+                </Text>
+              </View>
+              <View style={styles.formTrack}>
+                <View
+                  style={[
+                    styles.formTrackFill,
+                    { width: `${(answeredCount / requiredKeys.length) * 100}%` },
+                  ]}
+                />
+              </View>
+            </View>
+
+            {Object.keys(fieldErrors).length > 0 && (
+              <View style={styles.formBanner} accessibilityLiveRegion="polite">
+                <Ionicons name="alert-circle" size={18} color={colors.danger} />
+                <Text style={styles.formBannerText}>{t("calculator.fixErrors")}</Text>
+              </View>
+            )}
+
+            {formSections.map((section) => (
+              <View
+                key={section.id}
+                style={styles.formCard}
+                onLayout={(e) => {
+                  sectionY.current[section.id] = e.nativeEvent.layout.y;
+                }}
               >
-                <LinearGradient
-                  colors={["#ffffff", "#f8f9ff"]}
-                  style={styles.modalContent}
-                >
-                  {/* Header */}
-                  <View style={styles.modalHeader}>
-                    <MaterialIcons
-                      name="assessment"
-                      size={32}
-                      color="#004aad"
-                    />
-                    <Text style={styles.modalTitle}>
-                      Scholarship Eligibility Report
+                <View style={styles.formCardHead}>
+                  <Ionicons name={section.icon} size={16} color={colors.accent} />
+                  <Text style={styles.formCardTitle}>{section.title}</Text>
+                </View>
+                {section.keys.map((key) => {
+                  const question = baseQuestions[key];
+                  const error = fieldErrors[key];
+                  const answered = !!answeredKeys[key];
+                  return (
+                    <View
+                      key={key}
+                      style={styles.formField}
+                      onLayout={(e) => {
+                        fieldY.current[key] = e.nativeEvent.layout.y;
+                      }}
+                    >
+                      <Text style={styles.formLabel}>{question.label}</Text>
+                      <PickerField
+                        value={answered ? optionKey(answerMap[key]) : ""}
+                        options={question.options.map((o) => ({ value: optionKey(o.value), label: o.label }))}
+                        onChange={(picked) => {
+                          const option = question.options.find((o) => optionKey(o.value) === picked);
+                          if (option) handleSelectOption(key, option.value);
+                        }}
+                        placeholder={t("calculator.selectPlaceholder")}
+                        title={question.label}
+                        invalid={!!error}
+                        leadingIcon={<Ionicons name={question.icon} size={20} color={colors.textMuted} />}
+                      />
+                      {error ? (
+                        <View style={styles.formMessageRow} accessibilityLiveRegion="polite">
+                          <Ionicons name="alert-circle" size={15} color={colors.danger} />
+                          <Text style={[styles.formMessageText, { color: colors.danger }]}>{error}</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.formHint}>{question.hint}</Text>
+                      )}
+                    </View>
+                  );
+                })}
+                {section.id === "academics" && country === "japan" && (
+                  <View style={styles.formMessageRow}>
+                    <Ionicons name="information-circle-outline" size={15} color={colors.textMuted} />
+                    <Text style={[styles.formMessageText, { color: colors.textSecondary }]}>
+                      {t("calculator.q.ieltsSub")}
                     </Text>
                   </View>
+                )}
+              </View>
+            ))}
 
-                  {/* Score Circle */}
-                  <LinearGradient
-                    colors={
-                      possibility >= 85
-                        ? ["#004aad", "#1A237E"]
-                        : possibility >= 70
-                          ? ["#004aad", "#1A237E"]
-                          : possibility >= 50
-                            ? ["#f59e0b", "#fbbf24"]
-                            : ["#ef4444", "#f87171"]
-                    }
-                    style={styles.resultCircle}
-                  >
-                    <Text style={styles.resultText}>{possibility}%</Text>
-                    <Text style={styles.resultLabel}>
+            {!!calculationError && (
+              <Text style={styles.historyErrorText}>{calculationError}</Text>
+            )}
+            {!!historyError && (
+              <Text style={styles.historyErrorText}>{historyError}</Text>
+            )}
+          </ScrollView>
+
+          <View style={[styles.actionBar, { paddingBottom: insets.bottom + 20 }]}>
+            <TouchableOpacity
+              style={styles.primaryAction}
+              onPress={calculatePossibility}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+            >
+              <Text style={styles.primaryActionText} numberOfLines={1}>
+                {t("calculator.calculate")}
+              </Text>
+              <Ionicons name="sparkles" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Processing overlay */}
+        <Modal
+          visible={isCalculating}
+          transparent
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={() => {}}
+        >
+          <View style={styles.processingOverlay}>
+            <View style={styles.processingCard}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.processingTitle}>{t("calculator.calculating")}</Text>
+              <Text style={styles.processingSubtitle}>{t("calculator.calculatingSub")}</Text>
+              <View style={styles.processingBarTrack}>
+                <View
+                  style={[
+                    styles.processingBarFill,
+                    {
+                      width: `${((processingStep + 1) / PROCESSING_STEPS.length) * 100}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <View style={styles.processingSteps}>
+                {PROCESSING_STEPS.map((step, index) => {
+                  const done = index < processingStep;
+                  const active = index === processingStep;
+                  return (
+                    <View key={step.labelKey} style={styles.processingStepRow}>
+                      <Ionicons
+                        name={done ? "checkmark-circle" : step.icon}
+                        size={18}
+                        color={
+                          done ? "#1baf7a" : active ? colors.accent : colors.border
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.processingStepText,
+                          done && styles.processingStepTextDone,
+                          active && styles.processingStepTextActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {t(step.labelKey)}
+                      </Text>
+                      {active && (
+                        <ActivityIndicator size="small" color={colors.accent} />
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={isModalVisible}
+          transparent
+          animationType="slide"
+          statusBarTranslucent
+          onRequestClose={closeReport}
+        >
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={closeReport}
+            />
+            <View style={styles.modalSheet}>
+              <View style={styles.sheetHandle} />
+
+              {/* Header */}
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeaderLeft}>
+                  <View style={styles.sheetHeaderIcon}>
+                    <MaterialIcons
+                      name="assessment"
+                      size={18}
+                      color={colors.accent}
+                    />
+                  </View>
+                  <Text style={styles.sheetTitle}>{t("calculator.reportTitle")}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.sheetCloseBtn}
+                  onPress={closeReport}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("calculator.closeReportA11y")}
+                >
+                  <Ionicons name="close" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.sheetDivider} />
+
+              <ScrollView
+                style={styles.sheetScroll}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.sheetScrollContent}
+              >
+                <View>
+                  {/* Score + feedback */}
+                  <View style={styles.heroCard}>
+                    <LinearGradient
+                      colors={
+                        possibility >= 85
+                          ? ["#15803d", "#22c55e"]
+                          : possibility >= 70
+                            ? ["#004aad", "#0d64c8"]
+                            : possibility >= 50
+                              ? ["#eb6834", "#f0885c"]
+                              : ["#ef4444", "#f87171"]
+                      }
+                      style={styles.resultCircle}
+                    >
+                      <Text style={styles.resultText}>{animatedPossibility}%</Text>
+                    </LinearGradient>
+                    <Text style={styles.resultLevel}>
                       {possibility >= 85
-                        ? "Excellent"
+                        ? t("calculator.levelExcellent")
                         : possibility >= 70
-                          ? "Good"
+                          ? t("calculator.levelGood")
                           : possibility >= 50
-                            ? "Moderate"
-                            : "Low"}
+                            ? t("calculator.levelModerate")
+                            : t("calculator.levelLow")}
                     </Text>
-                  </LinearGradient>
-
-                  {/* Main Feedback */}
-                  <View style={styles.feedbackCard}>
                     <Text style={styles.feedbackText}>{feedback}</Text>
                   </View>
 
                   {/* Score Breakdown */}
                   <View style={styles.breakdownSection}>
                     <View style={styles.sectionHeader}>
-                      <FontAwesome5
-                        name="chart-bar"
-                        size={18}
-                        color="#004aad"
+                      <Ionicons
+                        name="stats-chart"
+                        size={20}
+                        color={colors.accent}
                       />
-                      <Text style={styles.sectionTitle}>Score Breakdown</Text>
+                      <Text style={styles.sectionTitle}>{t("calculator.scoreBreakdown")}</Text>
                     </View>
 
                     <ScoreBar
-                      label="Academic (GPA)"
+                      label={t("calculator.barGpa")}
                       score={scoreBreakdown.gpaScore}
                       maxScore={40}
                       icon="school"
                     />
                     <ScoreBar
-                      label="Language (IELTS)"
+                      label={t("calculator.barIelts")}
                       score={scoreBreakdown.ieltsScore}
                       maxScore={20}
                       icon="translate"
                     />
                     <ScoreBar
-                      label="Research Experience"
+                      label={t("calculator.barResearch")}
                       score={scoreBreakdown.researchScore}
                       maxScore={15}
                       icon="science"
                     />
                     <ScoreBar
-                      label="Extracurricular"
+                      label={t("calculator.barExtracurricular")}
                       score={scoreBreakdown.extracurricularScore}
                       maxScore={10}
                       icon="groups"
                     />
                     <ScoreBar
-                      label="Financial Need"
+                      label={t("calculator.barFinancial")}
                       score={scoreBreakdown.financialScore}
                       maxScore={10}
                       icon="account-balance-wallet"
                     />
                     <ScoreBar
-                      label="Field Bonus"
+                      label={t("calculator.barField")}
                       score={scoreBreakdown.fieldBonus}
                       maxScore={5}
                       icon="star"
@@ -832,12 +1142,12 @@ const ScholarshipPossibilityCalculator = () => {
                         <Ionicons
                           name="checkmark-circle"
                           size={20}
-                          color="#004aad"
+                          color={colors.success}
                         />
                         <Text
-                          style={[styles.sectionTitle, { color: "#004aad" }]}
+                          style={[styles.sectionTitle, { color: colors.success }]}
                         >
-                          Your Strengths
+                          {t("calculator.strengthsTitle")}
                         </Text>
                       </View>
                       {strengths.map((strength, index) => (
@@ -845,7 +1155,7 @@ const ScholarshipPossibilityCalculator = () => {
                           <Ionicons
                             name="checkmark"
                             size={16}
-                            color="#004aad"
+                            color={colors.success}
                           />
                           <Text style={styles.listItemText}>{strength}</Text>
                         </View>
@@ -860,12 +1170,12 @@ const ScholarshipPossibilityCalculator = () => {
                         <MaterialIcons
                           name="trending-up"
                           size={20}
-                          color="#f59e0b"
+                          color="#eb6834"
                         />
                         <Text
-                          style={[styles.sectionTitle, { color: "#f59e0b" }]}
+                          style={[styles.sectionTitle, { color: "#eb6834" }]}
                         >
-                          Areas to Improve
+                          {t("calculator.improveTitle")}
                         </Text>
                       </View>
                       {improvements.map((improvement, index) => (
@@ -873,7 +1183,7 @@ const ScholarshipPossibilityCalculator = () => {
                           <MaterialIcons
                             name="arrow-forward"
                             size={16}
-                            color="#f59e0b"
+                            color="#eb6834"
                           />
                           <Text style={styles.listItemText}>{improvement}</Text>
                         </View>
@@ -885,15 +1195,15 @@ const ScholarshipPossibilityCalculator = () => {
                   {recommendations.length > 0 && (
                     <View style={styles.recommendationsSection}>
                       <View style={styles.sectionHeader}>
-                        <FontAwesome5
-                          name="lightbulb"
-                          size={18}
-                          color="#004aad"
+                        <Ionicons
+                          name="bulb"
+                          size={20}
+                          color={colors.accent}
                         />
                         <Text
-                          style={[styles.sectionTitle, { color: "#004aad" }]}
+                          style={[styles.sectionTitle, { color: colors.accent }]}
                         >
-                          Next Steps
+                          {t("calculator.nextSteps")}
                         </Text>
                       </View>
                       {recommendations.map((recommendation, index) => (
@@ -909,20 +1219,9 @@ const ScholarshipPossibilityCalculator = () => {
                     </View>
                   )}
 
-                  {/* Close Button */}
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setIsModalVisible(false)}
-                  >
-                    <LinearGradient
-                      colors={["#004aad", "#357abd"]}
-                      style={styles.closeButtonGradient}
-                    >
-                      <Text style={styles.closeButtonText}>Close Report</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </LinearGradient>
+                </View>
               </ScrollView>
+
             </View>
           </View>
         </Modal>
@@ -932,139 +1231,120 @@ const ScholarshipPossibilityCalculator = () => {
           visible={isHistoryModalVisible}
           transparent
           animationType="slide"
+          statusBarTranslucent
+          onRequestClose={() => setIsHistoryModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <ScrollView
-                style={{ flex: 1 }}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.modalScrollContent}
-              >
-                <LinearGradient
-                  colors={["#ffffff", "#f8f9ff"]}
-                  style={styles.modalContent}
-                >
-                  {/* Header */}
-                  <View style={styles.modalHeader}>
-                    <View style={styles.modalHeaderLeft}>
-                      <MaterialIcons name="history" size={26} color="#004aad" />
-                      <Text style={styles.modalTitle}>Calculation History</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => setIsHistoryModalVisible(false)}
-                      style={styles.modalCloseBtn}
-                    >
-                      <MaterialIcons name="close" size={22} color="#64748b" />
-                    </TouchableOpacity>
-                  </View>
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={() => setIsHistoryModalVisible(false)}
+            />
+            <View style={styles.modalSheet}>
+              <View style={styles.sheetHandle} />
 
-                  {pastResults.length === 0 ? (
-                    <View style={styles.emptyHistoryContainer}>
-                      <MaterialIcons name="inbox" size={64} color="#cbd5e1" />
-                      <Text style={styles.emptyHistoryText}>
-                        No past calculations found
-                      </Text>
-                      <Text style={styles.emptyHistorySubtext}>
-                        Your calculation history will appear here
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeaderLeft}>
+                  <View style={styles.sheetHeaderIcon}>
+                    <MaterialIcons name="history" size={18} color={colors.accent} />
+                  </View>
+                  <Text style={styles.sheetTitle}>{t("calculator.historyTitle")}</Text>
+                  {pastResults.length > 0 && (
+                    <View style={styles.sheetCountBadge}>
+                      <Text style={styles.sheetCountBadgeText}>
+                        {pastResults.length}
                       </Text>
                     </View>
-                  ) : (
+                  )}
+                </View>
+                <TouchableOpacity
+                  onPress={() => setIsHistoryModalVisible(false)}
+                  style={styles.sheetCloseBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("calculator.closeHistoryA11y")}
+                >
+                  <Ionicons name="close" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                style={styles.sheetScroll}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.historyScrollContent}
+              >
+                {pastResults.length === 0 ? (
+                  <View style={styles.emptyHistoryContainer}>
+                    <View style={styles.emptyHistoryIcon}>
+                      <MaterialIcons name="history" size={36} color={colors.accent} />
+                    </View>
+                    <Text style={styles.emptyHistoryText}>
+                      {t("calculator.noHistory")}
+                    </Text>
+                    <Text style={styles.emptyHistorySubtext}>
+                      {t("calculator.noHistorySub")}
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.historyHint}>{t("calculator.historyHint")}</Text>
                     <View style={styles.historyList}>
-                      {pastResults.map((result, index) => (
-                        <View
-                          key={result.id || index}
-                          style={styles.historyCard}
-                        >
-                          {/* Card Header Row */}
-                          <View style={styles.historyCardHeader}>
-                            <View style={styles.historyScoreCircle}>
-                              <Text style={styles.historyScoreText}>
-                                {Math.round(result.totalScore)}
-                              </Text>
-                              <Text style={styles.historyScoreLabel}>Score</Text>
-                            </View>
-                            <View style={styles.historyCardInfo}>
-                              <Text style={styles.historyDate}>
-                                {formatDate(result.calculatedAt)}
-                              </Text>
-                              <View style={styles.historyDetails}>
-                                <View style={styles.historyDetailItem}>
-                                  <MaterialIcons name="school" size={14} color="#64748b" />
-                                  <Text style={styles.historyDetailText}>GPA: {result.gpa}</Text>
-                                </View>
-                                {result.ielts && (
-                                  <View style={styles.historyDetailItem}>
-                                    <MaterialIcons name="language" size={14} color="#64748b" />
-                                    <Text style={styles.historyDetailText}>IELTS: {result.ielts}</Text>
-                                  </View>
-                                )}
-                                {result.country && (
-                                  <View style={styles.historyDetailItem}>
-                                    <MaterialIcons name="place" size={14} color="#64748b" />
-                                    <Text style={styles.historyDetailText}>{result.country.toUpperCase()}</Text>
-                                  </View>
-                                )}
-                                {result.studyField && (
-                                  <View style={styles.historyDetailItem}>
-                                    <MaterialIcons name="book" size={14} color="#64748b" />
-                                    <Text style={styles.historyDetailText}>{result.studyField}</Text>
-                                  </View>
-                                )}
+                      {pastResults.map((result, index) => {
+                        const score = Math.round(result.totalScore || 0);
+                        const level = levelInfo(score);
+                        const summary = [
+                          t("calculator.gpaValue", { value: result.gpa }),
+                          result.ielts ? t("calculator.ieltsValue", { value: result.ielts }) : null,
+                          result.country ? countryLabel(result.country) : null,
+                          result.studyField || null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ");
+                        return (
+                          <View key={result.id || index} style={styles.historyCard}>
+                            <TouchableOpacity
+                              style={styles.historyMain}
+                              onPress={() => openHistoryResult(result)}
+                              activeOpacity={0.7}
+                              accessibilityRole="button"
+                              accessibilityLabel={`${score}% ${level.label}, ${formatDate(result.calculatedAt)}`}
+                            >
+                              <View style={[styles.historyScoreCircle, { backgroundColor: level.color }]}>
+                                <Text style={styles.historyScoreText}>{score}%</Text>
                               </View>
-                            </View>
+                              <View style={styles.historyCardInfo}>
+                                <View style={styles.historyTitleRow}>
+                                  <Text style={[styles.historyLevel, { color: level.color }]}>
+                                    {level.label}
+                                  </Text>
+                                  <Text style={styles.historyDate} numberOfLines={1}>
+                                    {formatDate(result.calculatedAt)}
+                                  </Text>
+                                </View>
+                                <Text style={styles.historySummary} numberOfLines={2}>
+                                  {summary}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
                             <TouchableOpacity
                               style={styles.deleteButton}
                               onPress={() => deleteResult(result.id)}
+                              accessibilityRole="button"
+                              accessibilityLabel={t("calculator.deleteA11y")}
                             >
-                              <MaterialIcons name="delete-outline" size={22} color="#ef4444" />
+                              <MaterialIcons name="delete-outline" size={22} color={colors.textMuted} />
                             </TouchableOpacity>
                           </View>
-
-                          {/* Divider */}
-                          {(result.feedback || (result.strengths && result.strengths.length > 0)) && (
-                            <View style={styles.historyDivider} />
-                          )}
-
-                          {/* Feedback */}
-                          {result.feedback && (
-                            <View style={styles.historyFeedback}>
-                              <Text style={styles.historyFeedbackText}>
-                                {result.feedback}
-                              </Text>
-                            </View>
-                          )}
-
-                          {/* Strengths Preview */}
-                          {result.strengths && result.strengths.length > 0 && (
-                            <View style={styles.historyStrengthsPreview}>
-                              <Text style={styles.historyStrengthsTitle}>
-                                ✅ {result.strengths.length} Strength
-                                {result.strengths.length > 1 ? "s" : ""}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      ))}
+                        );
+                      })}
                     </View>
-                  )}
-
-                  {/* Close Button */}
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setIsHistoryModalVisible(false)}
-                  >
-                    <LinearGradient
-                      colors={["#004aad", "#357abd"]}
-                      style={styles.closeButtonGradient}
-                    >
-                      <Text style={styles.closeButtonText}>Close</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </LinearGradient>
+                  </>
+                )}
               </ScrollView>
             </View>
           </View>
         </Modal>
+
+        <LoaderModal visible={loadingHistory} />
 
         {/* Alert Modal */}
         <AlertModal
@@ -1080,24 +1360,17 @@ const ScholarshipPossibilityCalculator = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.screenBackground,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.screenBackground,
   },
   headerContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    backgroundColor: "#f5f5f5",
-    paddingTop: StatusBar.currentHeight || verticalScale(20),
-    paddingHorizontal: scale(10),
+    paddingHorizontal: 16,
   },
   headerRow: {
     flexDirection: "row",
@@ -1111,7 +1384,7 @@ const styles = StyleSheet.create({
     height: moderateScale(40),
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceAlt,
     elevation: 2,
   },
   headerIcons: {
@@ -1128,53 +1401,209 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    marginTop: verticalScale(80),
   },
   scrollContent: {
-    paddingHorizontal: scale(15),
-    paddingVertical: verticalScale(20),
-    alignItems: "center",
-    minHeight: SCREEN_HEIGHT * 0.9,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
-  subtitle: {
-    fontSize: moderateScale(16),
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 14,
+  },
+  titleTexts: {
+    flex: 1,
+  },
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "800",
     fontFamily: "Roboto",
+    color: colors.textPrimary,
     textBreakStrategy: "simple",
-    color: "#666",
-    textAlign: "center",
-    marginBottom: verticalScale(20),
-    fontWeight: "500",
   },
-  dropdown: {
-    backgroundColor: "#fff",
-    borderRadius: moderateScale(12),
-    padding: moderateScale(12),
-    marginBottom: verticalScale(15),
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+  pageSubtitle: {
+    fontSize: 13,
+    fontFamily: "Roboto",
+    color: colors.textSecondary,
+    marginTop: 3,
+    lineHeight: 18,
+    textBreakStrategy: "simple",
+  },
+  historyChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 44,
+    maxWidth: "45%",
+    paddingHorizontal: 14,
+    borderRadius: 22,
+    backgroundColor: colors.accentLight,
+  },
+  historyChipText: {
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: colors.accent,
+  },
+  actionBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: colors.screenBackground,
+  },
+  formProgressCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 2,
-    width: "90%",
-    maxWidth: scale(400),
   },
-  buttonContainer: {
-    width: "100%",
+  formProgressMeta: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: verticalScale(20),
-    marginBottom: verticalScale(30),
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  formProgressText: {
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "Roboto",
+    color: colors.textSecondary,
+  },
+  formProgressPct: {
+    fontSize: 13,
+    fontWeight: "800",
+    fontFamily: "Roboto",
+    color: colors.accent,
+  },
+  formTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.divider,
+    overflow: "hidden",
+  },
+  formTrackFill: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.accent,
+  },
+  formBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    backgroundColor: colors.surface,
+  },
+  formBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "Roboto",
+    color: colors.danger,
+    textBreakStrategy: "simple",
+  },
+  formCard: {
+    marginTop: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  formCardHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  formCardTitle: {
+    fontSize: 12.5,
+    fontWeight: "800",
+    fontFamily: "Roboto",
+    color: colors.accent,
+  },
+  formField: {
+    marginTop: 14,
+  },
+  formLabel: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: colors.textPrimary,
+    marginBottom: 8,
+  },
+  formHint: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: "Roboto",
+    color: colors.textMuted,
+    marginTop: 6,
+    textBreakStrategy: "simple",
+  },
+  formMessageRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 5,
+    marginTop: 8,
+  },
+  formMessageText: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 17,
+    fontFamily: "Roboto",
+    textBreakStrategy: "simple",
+  },
+  primaryAction: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: 26,
+    backgroundColor: colors.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 20,
+  },
+  primaryActionText: {
+    flexShrink: 1,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: "#fff",
+    textBreakStrategy: "simple",
+  },
+  historyErrorText: {
+    color: colors.danger,
+    fontSize: moderateScale(12),
+    fontFamily: "Roboto",
+    textAlign: "center",
+    marginTop: verticalScale(8),
   },
   button: {
     backgroundColor: "#004aad",
     paddingVertical: moderateScale(14),
     paddingHorizontal: moderateScale(30),
-    borderRadius: moderateScale(30),
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    width: "70%",
-    maxWidth: scale(300),
+    width: "100%",
     shadowColor: "#004aad",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -1190,103 +1619,143 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: scale(15),
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
   },
-  modalContainer: {
+  modalSheet: {
     width: "100%",
-    maxWidth: scale(500),
-    maxHeight: SCREEN_HEIGHT * 0.85,
-    borderRadius: moderateScale(20),
-    overflow: "hidden",
+    maxHeight: SCREEN_HEIGHT * 0.88,
+    backgroundColor: colors.surfaceAlt,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    elevation: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
-  modalScrollContent: {
-    flexGrow: 1,
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 14,
   },
-  modalContent: {
-    padding: moderateScale(20),
-    borderRadius: moderateScale(20),
-  },
-  modalHeader: {
+  sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: verticalScale(20),
-    paddingBottom: verticalScale(14),
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
-  modalHeaderLeft: {
+  sheetHeaderLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flexShrink: 1,
   },
-  modalCloseBtn: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(16),
-    backgroundColor: "#f1f5f9",
+  sheetHeaderIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accentLight,
     justifyContent: "center",
     alignItems: "center",
   },
-  modalTitle: {
-    fontSize: moderateScale(18),
+  sheetTitle: {
+    fontSize: 18,
     fontWeight: "700",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#111827",
+    color: colors.textPrimary,
   },
-  resultCircle: {
-    width: moderateScale(140),
-    height: moderateScale(140),
-    borderRadius: moderateScale(70),
+  sheetCountBadge: {
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    minWidth: 22,
+    height: 22,
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "center",
-    marginBottom: verticalScale(20),
-    elevation: 8,
+    paddingHorizontal: 6,
+  },
+  sheetCountBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+  },
+  sheetCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sheetDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginHorizontal: 20,
+  },
+  sheetScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  sheetScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  heroCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    marginBottom: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  resultCircle: {
+    width: 116,
+    height: 116,
+    borderRadius: 58,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
   },
   resultText: {
-    fontSize: moderateScale(42),
-    fontWeight: "bold",
+    fontSize: 34,
+    fontWeight: "800",
     fontFamily: "Roboto",
-    textBreakStrategy: "simple",
     color: "#fff",
   },
-  resultLabel: {
-    fontSize: moderateScale(16),
+  resultLevel: {
+    fontSize: 18,
+    fontWeight: "800",
     fontFamily: "Roboto",
+    color: colors.textPrimary,
+    marginBottom: 6,
     textBreakStrategy: "simple",
-    color: "#fff",
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  feedbackCard: {
-    backgroundColor: "#f8fafc",
-    borderRadius: moderateScale(12),
-    padding: moderateScale(15),
-    marginBottom: verticalScale(20),
-    borderLeftWidth: 4,
-    borderLeftColor: "#004aad",
   },
   feedbackText: {
-    fontSize: moderateScale(15),
+    fontSize: 14,
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#666",
-    lineHeight: moderateScale(22),
+    color: colors.textSecondary,
+    lineHeight: 21,
+    textAlign: "center",
   },
   breakdownSection: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: moderateScale(12),
-    padding: moderateScale(15),
-    marginBottom: verticalScale(15),
+    padding: 16,
+    marginBottom: 12,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -1296,7 +1765,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: verticalScale(12),
+    marginBottom: 12,
     gap: 8,
   },
   sectionTitle: {
@@ -1304,7 +1773,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#111827",
+    color: colors.textPrimary,
   },
   scoreBarContainer: {
     marginBottom: verticalScale(12),
@@ -1324,19 +1793,19 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(13),
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#666",
+    color: colors.textSecondary,
     fontWeight: "500",
   },
   scoreBarValue: {
     fontSize: moderateScale(13),
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#111827",
+    color: colors.textPrimary,
     fontWeight: "600",
   },
   progressBarBackground: {
     height: 8,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: colors.divider,
     borderRadius: 4,
     overflow: "hidden",
   },
@@ -1345,20 +1814,26 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   strengthsSection: {
-    backgroundColor: "#f0fdf4",
-    borderRadius: moderateScale(12),
-    padding: moderateScale(15),
-    marginBottom: verticalScale(15),
-    borderWidth: 1,
-    borderColor: "#86efac",
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   improvementsSection: {
-    backgroundColor: "#fffbeb",
-    borderRadius: moderateScale(12),
-    padding: moderateScale(15),
-    marginBottom: verticalScale(15),
-    borderWidth: 1,
-    borderColor: "#fcd34d",
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   listItem: {
     flexDirection: "row",
@@ -1367,222 +1842,240 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   listItemText: {
-    fontSize: moderateScale(13),
+    fontSize: 14,
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#334155",
+    color: colors.textPrimary,
     flex: 1,
-    lineHeight: moderateScale(18),
+    lineHeight: 20,
   },
   recommendationsSection: {
-    backgroundColor: "#faf5ff",
-    borderRadius: moderateScale(12),
-    padding: moderateScale(15),
-    marginBottom: verticalScale(20),
-    borderWidth: 1,
-    borderColor: "#d8b4fe",
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   recommendationCard: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#fff",
-    borderRadius: moderateScale(8),
-    padding: moderateScale(12),
-    marginBottom: verticalScale(8),
-    gap: 10,
-    elevation: 1,
+    marginBottom: 12,
+    gap: 12,
   },
   recommendationNumber: {
-    width: moderateScale(24),
-    height: moderateScale(24),
-    borderRadius: moderateScale(12),
-    backgroundColor: "#004aad",
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    overflow: "hidden",
+    backgroundColor: colors.accent,
     color: "#fff",
     textAlign: "center",
-    lineHeight: moderateScale(24),
-    fontSize: moderateScale(12),
+    lineHeight: 26,
+    fontSize: 13,
     fontWeight: "bold",
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
   },
   recommendationText: {
     flex: 1,
-    fontSize: moderateScale(13),
+    fontSize: 14,
     fontFamily: "Roboto",
     textBreakStrategy: "simple",
-    color: "#334155",
-    lineHeight: moderateScale(18),
+    color: colors.textPrimary,
+    lineHeight: 20,
   },
-  closeButton: {
-    borderRadius: moderateScale(30),
-    overflow: "hidden",
-    alignSelf: "center",
-    width: "60%",
-    maxWidth: scale(220),
-    marginTop: verticalScale(20),
-    marginBottom: verticalScale(4),
-    elevation: 4,
-    shadowColor: "#004aad",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  closeButtonGradient: {
-    paddingVertical: moderateScale(12),
-    paddingHorizontal: moderateScale(24),
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#fff",
-    fontSize: moderateScale(16),
-    fontWeight: "bold",
-    fontFamily: "Roboto",
-    textBreakStrategy: "simple",
-  },
-  historyButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-    paddingVertical: moderateScale(12),
-    paddingHorizontal: moderateScale(20),
-    borderRadius: moderateScale(30),
-    marginTop: verticalScale(12),
-    borderWidth: 1.5,
-    borderColor: "#004aad",
-    gap: 8,
-    width: "70%",
-    maxWidth: scale(300),
-  },
-  historyButtonText: {
-    fontSize: moderateScale(14),
-    fontWeight: "600",
-    fontFamily: "Roboto",
-    color: "#004aad",
+  historyScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 28,
   },
   emptyHistoryContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: verticalScale(60),
+    paddingVertical: 40,
+    paddingHorizontal: 24,
+  },
+  emptyHistoryIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.accentLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyHistoryText: {
-    fontSize: moderateScale(18),
-    fontWeight: "600",
+    fontSize: 17,
+    fontWeight: "700",
     fontFamily: "Roboto",
-    color: "#666",
-    marginTop: verticalScale(16),
-  },
-  emptyHistorySubtext: {
-    fontSize: moderateScale(14),
-    fontFamily: "Roboto",
-    color: "#94a3b8",
-    marginTop: verticalScale(8),
+    color: colors.textPrimary,
+    marginTop: 16,
     textAlign: "center",
   },
+  emptyHistorySubtext: {
+    fontSize: 13.5,
+    fontFamily: "Roboto",
+    color: colors.textMuted,
+    marginTop: 6,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  historyHint: {
+    fontSize: 12.5,
+    fontFamily: "Roboto",
+    color: colors.textMuted,
+    marginBottom: 10,
+    marginHorizontal: 4,
+  },
   historyList: {
-    gap: verticalScale(12),
+    gap: 10,
   },
   historyCard: {
-    backgroundColor: "#fff",
-    borderRadius: moderateScale(14),
-    padding: moderateScale(14),
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
-  historyCardHeader: {
+  historyMain: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    padding: 12,
+    minHeight: 72,
   },
   historyScoreCircle: {
-    width: moderateScale(56),
-    height: moderateScale(56),
-    borderRadius: moderateScale(28),
-    backgroundColor: "#004aad",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: "center",
     alignItems: "center",
     flexShrink: 0,
   },
   historyScoreText: {
-    fontSize: moderateScale(18),
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "800",
     fontFamily: "Roboto",
     color: "#fff",
-  },
-  historyScoreLabel: {
-    fontSize: moderateScale(9),
-    fontFamily: "Roboto",
-    color: "#fff",
-    opacity: 0.85,
   },
   historyCardInfo: {
     flex: 1,
   },
+  historyTitleRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  historyLevel: {
+    fontSize: 15,
+    fontWeight: "800",
+    fontFamily: "Roboto",
+    flexShrink: 0,
+  },
   historyDate: {
-    fontSize: moderateScale(11),
+    flexShrink: 1,
+    fontSize: 11.5,
     fontFamily: "Roboto",
-    color: "#94a3b8",
-    marginBottom: verticalScale(5),
+    color: colors.textMuted,
   },
-  historyDetails: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  historyDetailItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: "#f1f5f9",
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  historyDetailText: {
-    fontSize: moderateScale(11),
+  historySummary: {
+    fontSize: 12.5,
     fontFamily: "Roboto",
-    color: "#666",
-  },
-  historyDivider: {
-    height: 1,
-    backgroundColor: "#e2e8f0",
-    marginVertical: verticalScale(10),
-  },
-  historyFeedback: {
-    backgroundColor: "#f8fafc",
-    borderRadius: moderateScale(8),
-    padding: moderateScale(10),
-    marginBottom: verticalScale(8),
-  },
-  historyFeedbackText: {
-    fontSize: moderateScale(12),
-    fontFamily: "Roboto",
-    color: "#666",
-    lineHeight: moderateScale(18),
-  },
-  historyStrengthsPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  historyStrengthsTitle: {
-    fontSize: moderateScale(12),
-    fontFamily: "Roboto",
-    color: "#004aad",
-    fontWeight: "600",
+    color: colors.textSecondary,
+    marginTop: 3,
+    lineHeight: 17,
   },
   deleteButton: {
-    width: moderateScale(34),
-    height: moderateScale(34),
-    borderRadius: moderateScale(8),
-    backgroundColor: "#fff0f0",
+    width: 44,
+    height: 44,
+    marginRight: 4,
     justifyContent: "center",
     alignItems: "center",
     flexShrink: 0,
+  },
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  processingCard: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+  },
+  processingTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    fontFamily: "Roboto",
+    color: colors.textPrimary,
+    marginTop: 14,
+    textBreakStrategy: "simple",
+  },
+  processingSubtitle: {
+    fontSize: 12.5,
+    fontFamily: "Roboto",
+    color: colors.textSecondary,
+    marginTop: 4,
+    textAlign: "center",
+    lineHeight: 18,
+    textBreakStrategy: "simple",
+  },
+  processingBarTrack: {
+    width: "100%",
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.divider,
+    marginTop: 18,
+    overflow: "hidden",
+  },
+  processingBarFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: colors.accent,
+  },
+  processingSteps: {
+    width: "100%",
+    marginTop: 16,
+    gap: 11,
+  },
+  processingStepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    minHeight: 20,
+  },
+  processingStepText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: "Roboto",
+    color: colors.textMuted,
+    textBreakStrategy: "simple",
+  },
+  processingStepTextDone: {
+    color: colors.textPrimary,
+  },
+  processingStepTextActive: {
+    color: colors.textPrimary,
+    fontWeight: "600",
   },
 });
 

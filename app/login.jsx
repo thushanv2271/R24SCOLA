@@ -1,33 +1,41 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo } from "react";
 import {
+  Image,
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
-  useColorScheme,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Checkbox } from "react-native-paper";
-import { styles, getDynamicStyles } from "./styles/styles";
+import { Ionicons } from "@expo/vector-icons";
+import { createStyles } from "./styles/styles";
 import { AuthContext } from "../components/AuthContext";
+import { LanguageContext } from "../components/LanguageContext";
+import { useTheme } from "../components/ThemeContext";
 import { authAPI } from "../services/apiService";
 import { IconSymbol } from "../components/ui/IconSymbol";
+import AlertModal from "../components/AlertModal";
+import KeyboardSafe from "../components/blocks/KeyboardSafe";
+import Animated from "react-native-reanimated";
+import { useShake } from "../components/ui/motion";
+import { secureSetItem, secureGetItem, secureRemoveItem } from "../services/secureStorage";
 
-const LoginSchema = Yup.object().shape({
-  username: Yup.string()
-    .trim()
-    .matches(/^[a-zA-Z0-9_]{3,20}$/, "Username must be 3-20 characters")
-    .required("Username is required"),
-  password: Yup.string()
-    .required("Password is required")
-    .min(6, "Password must be at least 6 characters"),
-});
+// Login only checks presence — accounts created under the older, looser
+// password rules must still be able to sign in.
+const buildLoginSchema = (t) =>
+  Yup.object().shape({
+    username: Yup.string()
+      .trim()
+      .matches(/^[a-zA-Z0-9_]{3,20}$/, t("auth.usernameInvalid"))
+      .required(t("auth.usernameRequired")),
+    password: Yup.string().required(t("auth.passwordRequired")),
+  });
 
 export default function LoginForm() {
   const router = useRouter();
@@ -38,17 +46,25 @@ export default function LoginForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false); // New state for login button loading
   const [showPassword, setShowPassword] = useState(false);
-  const colorScheme = useColorScheme();
-  const dynamicStyles = getDynamicStyles(colorScheme);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { login } = useContext(AuthContext);
+  const { t, language, languageConfigured } = useContext(LanguageContext);
+  const loginSchema = useMemo(() => buildLoginSchema(t), [t]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReturningUser, setIsReturningUser] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "" });
+  const closeAlert = () => setAlertConfig((prev) => ({ ...prev, visible: false }));
 
   // Load saved credentials and remember me state
   useEffect(() => {
     const loadSavedState = async () => {
       try {
-        // Check if user is already logged in first
-        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+        // "Welcome Back" only makes sense for someone who has logged in
+        // on this device before — new users get a neutral greeting.
+        const hasLoggedInBefore =
+          await AsyncStorage.getItem("hasLoggedInBefore");
+        setIsReturningUser(hasLoggedInBefore === "true");
 
         // Get remember me preference
         const savedRememberMe = await AsyncStorage.getItem("rememberMe");
@@ -58,7 +74,7 @@ export default function LoginForm() {
         // If remember me was true, get the credentials
         if (rememberMeValue) {
           const savedUsername = await AsyncStorage.getItem("username");
-          const savedPassword = await AsyncStorage.getItem("password");
+          const savedPassword = await secureGetItem("password");
 
           if (savedUsername) {
             // Set initial values for the form
@@ -78,6 +94,8 @@ export default function LoginForm() {
 
     loadSavedState();
   }, []);
+
+  const { shakeStyle, shake } = useShake();
 
   const handleLogin = async (values) => {
     try {
@@ -99,44 +117,63 @@ export default function LoginForm() {
 
       await login(userDataWithUsername);
 
-      // Set login status in AsyncStorage
-      await AsyncStorage.setItem("isLoggedIn", "true");
-      if (data?.id) {
-        await AsyncStorage.setItem("userID", data.id);
+      // A language picked before signing in should follow the account.
+      if (languageConfigured) {
+        authAPI.updateLanguage(normalizedUsername, language).catch(() => {});
       }
 
-      if (data?.token) {
-        await AsyncStorage.setItem("userToken", data.token);
+      // Set login status in AsyncStorage
+      await AsyncStorage.setItem("isLoggedIn", "true");
+      // Survives logout on purpose — marks this device as a returning user.
+      await AsyncStorage.setItem("hasLoggedInBefore", "true");
+      if (data?.id) {
+        await AsyncStorage.setItem("userID", data.id);
       }
 
       // Store username in AsyncStorage for easy access
       await AsyncStorage.setItem("username", normalizedUsername);
 
-      // Save credentials only if remember me is checked
+      // Save credentials only if remember me is checked. The password is
+      // the one credential worth protecting here — it goes to SecureStore
+      // (Keychain/Keystore), not a plain AsyncStorage file.
       if (rememberMe) {
         await AsyncStorage.setItem("username", normalizedUsername);
-        await AsyncStorage.setItem("password", values.password);
+        await secureSetItem("password", values.password);
         await AsyncStorage.setItem("rememberMe", "true");
       } else {
         // Clear remembered identity if remember me is unchecked
         await AsyncStorage.removeItem("username");
-        await AsyncStorage.removeItem("password");
+        await secureRemoveItem("password");
         await AsyncStorage.removeItem("rememberMe");
       }
 
-      router.push("/(tabs)/");
+      router.replace("/(tabs)");
     } catch (error) {
       // Clear login status and saved credentials on failure
       await AsyncStorage.removeItem("isLoggedIn");
       await AsyncStorage.removeItem("username");
-      await AsyncStorage.removeItem("password");
+      await secureRemoveItem("password");
       await AsyncStorage.removeItem("rememberMe");
       await AsyncStorage.removeItem("userID");
-      await AsyncStorage.removeItem("userToken");
+      await secureRemoveItem("userToken");
 
-      // Display user-friendly error message
-      const errorMsg = error.message || "Login failed";
-      alert(errorMsg.replace(/^HTTP \d+$/, "Invalid username or password"));
+      // Display a user-friendly, styled alert instead of the raw native
+      // alert() this used to call — a network failure (no connectivity)
+      // now gets its own clear title/message rather than showing whatever
+      // technical string the fetch layer happened to throw.
+      const rawMsg = error.message || "";
+      const errorMsg = error.isNetworkError
+        ? t("auth.noInternetMessage")
+        : !rawMsg || /^HTTP \d+$/.test(rawMsg) || error.status === 401
+          ? t("auth.invalidCredentials")
+          : rawMsg;
+      shake();
+      setAlertConfig({
+        visible: true,
+        title: error.isNetworkError ? t("auth.noInternetTitle") : t("auth.loginFailedTitle"),
+        message: errorMsg,
+        type: error.isNetworkError ? "warning" : "error",
+      });
     } finally {
       setIsSubmitting(false); // Hide loader
     }
@@ -148,16 +185,17 @@ export default function LoginForm() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, dynamicStyles.container]}>
-        <Text style={[styles.title, dynamicStyles.title]}>Loading...</Text>
+      <View style={[styles.container, { flex: 1 }]}>
+        <Text style={styles.title}>{t("common.loading")}</Text>
       </View>
     );
   }
 
   return (
+    <>
     <Formik
       initialValues={initialValues}
-      validationSchema={LoginSchema}
+      validationSchema={loginSchema}
       onSubmit={handleLogin}
       enableReinitialize={true}
     >
@@ -169,16 +207,32 @@ export default function LoginForm() {
         errors,
         touched,
       }) => (
-        <View style={[styles.container, dynamicStyles.container]}>
+        <KeyboardSafe style={{ backgroundColor: colors.screenBackground }}>
+<ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+        <View style={styles.container}>
           <Image
-            source={require("../assets/images/OPPORTUNITIES.png")}
-            style={styles.logo}
-          />
-          <Text style={[styles.title, dynamicStyles.title]}> Login </Text>
+              source={require("../assets/images/OPPORTUNITIES.png")}
+              style={styles.logo}
+            />
+          <Animated.View style={[styles.formCard, shakeStyle]}>
+          <Text style={styles.title}>
+            {isReturningUser ? t("auth.welcomeBack") : t("auth.welcome")}
+          </Text>
+          <Text style={styles.subtitle}>
+            {isReturningUser
+              ? t("auth.signInDescReturning")
+              : t("auth.signInDescNew")}
+          </Text>
 
+          <Text style={styles.fieldLabel}>{t("auth.username")}</Text>
           <TextInput
-            style={[styles.input, dynamicStyles.input]}
-            placeholder="Username"
+            style={styles.input}
+            placeholder={t("auth.usernamePlaceholder")}
+            placeholderTextColor={colors.textMuted}
             onChangeText={handleChange("username")}
             onBlur={handleBlur("username")}
             value={values.username}
@@ -191,10 +245,12 @@ export default function LoginForm() {
             <Text style={styles.errorText}>{errors.username}</Text>
           )}
 
+          <Text style={styles.fieldLabel}>{t("auth.password")}</Text>
           <View style={styles.passwordContainer}>
             <TextInput
-              style={[styles.input, dynamicStyles.input, styles.passwordInput]}
-              placeholder="Password"
+              style={[styles.input, styles.passwordInput]}
+              placeholder={t("auth.passwordPlaceholder")}
+              placeholderTextColor={colors.textMuted}
               secureTextEntry={!showPassword}
               onChangeText={handleChange("password")}
               onBlur={handleBlur("password")}
@@ -207,13 +263,13 @@ export default function LoginForm() {
               style={styles.passwordToggle}
               onPress={() => setShowPassword((prev) => !prev)}
               accessibilityLabel={
-                showPassword ? "Hide password" : "Show password"
+                showPassword ? t("auth.hidePassword") : t("auth.showPassword")
               }
             >
               <IconSymbol
                 name={showPassword ? "eye.slash.fill" : "eye.fill"}
                 size={22}
-                color="#333"
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
@@ -221,15 +277,36 @@ export default function LoginForm() {
             <Text style={styles.errorText}>{errors.password}</Text>
           )}
 
-          <TouchableOpacity
-            onPress={toggleRememberMe}
-            style={styles.rememberMeContainer}
-          >
-            <Checkbox status={rememberMe ? "checked" : "unchecked"} />
-            <Text style={[styles.rememberMeText, dynamicStyles.switchText]}>
-              Remember Me
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.optionsRow}>
+            <TouchableOpacity
+              onPress={toggleRememberMe}
+              style={styles.rememberMeContainer}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: rememberMe }}
+            >
+              <View
+                style={[
+                  styles.rememberCircle,
+                  rememberMe
+                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                    : { borderColor: colors.textMuted },
+                ]}
+              >
+                {rememberMe && <Ionicons name="checkmark" size={14} color="#fff" />}
+              </View>
+              <Text style={styles.rememberMeText}>
+                {t("auth.rememberMe")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/ForgotPassword")}
+              style={styles.linkRow}
+              accessibilityRole="link"
+            >
+              <Text style={styles.linkText}>{t("ui.auth.forgotPassword")}</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
@@ -239,17 +316,30 @@ export default function LoginForm() {
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Text style={styles.buttonText}> Login </Text>
+              <Text style={styles.buttonText}>{t("auth.login")}</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push("/RegisterForm")}>
-            <Text style={[styles.switchText, dynamicStyles.switchText]}>
-              Don't have an account? Create Account
-            </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/RegisterForm")}
+            style={styles.switchRow}
+          >
+            <Text style={styles.switchPrompt}>{t("auth.dontHaveAccount")}</Text>
+            <Text style={styles.switchCTA}>{t("auth.createAccount")}</Text>
           </TouchableOpacity>
+          </Animated.View>
         </View>
+        </ScrollView>
+</KeyboardSafe>
       )}
     </Formik>
+    <AlertModal
+      visible={alertConfig.visible}
+      title={alertConfig.title}
+      message={alertConfig.message}
+      type={alertConfig.type}
+      onClose={closeAlert}
+    />
+    </>
   );
 }

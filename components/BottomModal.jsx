@@ -1,4 +1,4 @@
-import React, { useState, memo } from "react";
+import React, { useContext, memo } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,16 @@ import {
   Dimensions,
 } from "react-native";
 import Swiper from "react-native-swiper";
+import { useTheme } from "./ThemeContext";
+import { LanguageContext } from "./LanguageContext";
 import { INSTRUCTION_SLIDES } from "../constants/modalConstants";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const INSTRUCTION_IMAGE = require("../assets/images/OPPORTUNITIES.png");
 
 const BottomModal = memo(({ visible, onClose }) => {
+  const { colors } = useTheme();
+  const { t } = useContext(LanguageContext);
   return (
     <Modal
       animationType="slide"
@@ -29,26 +33,28 @@ const BottomModal = memo(({ visible, onClose }) => {
       </Pressable>
 
       {/* Modal Content */}
-      <View style={styles.modalContent}>
+      <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
         {/* Swipeable Pages */}
         <Swiper
           style={styles.swiper}
           showsButtons={false} // Hide default buttons
           loop={false} // Disable looping
-          dot={<View style={styles.dot} />}
-          activeDot={<View style={styles.activeDot} />}
+          dot={<View style={[styles.dot, { backgroundColor: colors.border }]} />}
+          activeDot={<View style={[styles.activeDot, { backgroundColor: colors.accent }]} />}
         >
           {INSTRUCTION_SLIDES.map((instruction, index) => (
             <View key={instruction.id} style={styles.slide}>
               <Image source={INSTRUCTION_IMAGE} style={styles.image} />
-              <Text style={styles.title}>{instruction.title}</Text>
-              <Text style={styles.description}>{instruction.description}</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>{instruction.title}</Text>
+              <Text style={[styles.description, { color: colors.textSecondary }]}>{instruction.description}</Text>
               {index === INSTRUCTION_SLIDES.length - 1 && (
                 <TouchableOpacity
                   style={styles.button}
-                  onPress={onClose} // Close the modal on button press
+                  onPress={onClose}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("home.getStarted")}
                 >
-                  <Text style={styles.buttonText}>Get Started</Text>
+                  <Text style={styles.buttonText}>{t("home.getStarted")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -88,7 +94,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.94)",
   },
   image: {
     width: 300,

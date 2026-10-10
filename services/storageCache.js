@@ -59,7 +59,12 @@ class StorageCache {
       };
 
       this.memoryCache.set(key, cacheData);
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      // Serialising a large payload is slow; do it after the caller has its data.
+      setTimeout(() => {
+        try {
+          AsyncStorage.setItem(cacheKey, JSON.stringify(cacheData)).catch(() => {});
+        } catch {}
+      }, 0);
 
       return data;
     } catch (error) {

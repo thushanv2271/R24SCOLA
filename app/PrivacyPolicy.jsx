@@ -1,94 +1,72 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import React, { useContext, useState } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import ScolaMenu from "../components/ScolaMenu";
+import ScreenHeader from "../components/blocks/ScreenHeader";
+import { LanguageContext } from "../components/LanguageContext";
+import { useTheme } from "../components/ThemeContext";
 
-const { width } = Dimensions.get("window");
+const SUPPORT_EMAIL = "support@scola.app";
 
 export default function PrivacyPolicy() {
+  const { t } = useContext(LanguageContext);
+  const { colors } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#111827" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Privacy Policy</Text>
-        <TouchableOpacity
-          onPress={() => setMenuVisible(true)}
-          style={styles.backBtn}
-        >
-          <Ionicons name="menu" size={24} color="#111827" />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.screenBackground }]}>
+      <ScreenHeader
+        onBack={() => router.back()}
+        showLogo={false}
+        title={t("legal.privacyPolicyTitle")}
+        onMenuPress={() => setMenuVisible(true)}
+      />
       <ScolaMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.lastUpdated}>Last updated: June 2026</Text>
+        <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>{t("privacy.lastUpdated")}</Text>
 
-        <Text style={styles.intro}>
-          Scola ("we", "our", or "us") is committed to protecting your privacy.
-          This policy explains what information we collect, how we use it, and
-          your rights regarding your data.
-        </Text>
+        <Text style={[styles.intro, { color: colors.textSecondary }]}>{t("privacy.intro")}</Text>
 
-        <Section title="1. Information We Collect">
-          <BulletItem text="Account information: username and password (password is never stored on your device)" />
-          <BulletItem text="Profile data: name, email address, and academic details you provide" />
-          <BulletItem text="Usage data: scholarships and jobs you save to favourites" />
-          <BulletItem text="Session tokens: stored locally to keep you logged in" />
+        <Section title={t("privacy.s1Title")}>
+          <BulletItem text={t("privacy.s1b1")} />
+          <BulletItem text={t("privacy.s1b2")} />
+          <BulletItem text={t("privacy.s1b3")} />
+          <BulletItem text={t("privacy.s1b4")} />
         </Section>
 
-        <Section title="2. How We Use Your Information">
-          <BulletItem text="To provide and personalise the Scola service" />
-          <BulletItem text="To save your favourite scholarships and jobs" />
-          <BulletItem text="To send scholarship notification emails (only if you opt in)" />
-          <BulletItem text="To improve app performance and fix issues" />
+        <Section title={t("privacy.s2Title")}>
+          <BulletItem text={t("privacy.s2b1")} />
+          <BulletItem text={t("privacy.s2b2")} />
+          <BulletItem text={t("privacy.s2b3")} />
+          <BulletItem text={t("privacy.s2b4")} />
         </Section>
 
-        <Section title="3. Data Storage">
-          <Text style={styles.body}>
-            Your account data is stored securely on our servers. Session tokens
-            and preferences are stored locally on your device using AsyncStorage
-            and are cleared when you log out.
-          </Text>
+        <Section title={t("privacy.s3Title")}>
+          <BodyText>{t("privacy.s3Body")}</BodyText>
         </Section>
 
-        <Section title="4. Data Sharing">
-          <Text style={styles.body}>
-            We do not sell, trade, or share your personal information with third
-            parties, except as required by law.
-          </Text>
+        <Section title={t("privacy.s4Title")}>
+          <BodyText>{t("privacy.s4Body")}</BodyText>
         </Section>
 
-        <Section title="5. Your Rights">
-          <BulletItem text="Access or update your profile at any time from the Profile screen" />
-          <BulletItem text="Delete your account by contacting us" />
-          <BulletItem text="Opt out of email notifications via the Custom Mail settings" />
+        <Section title={t("privacy.s5Title")}>
+          <BulletItem text={t("privacy.s5b1")} />
+          <BulletItem text={t("privacy.s5b2")} />
+          <BulletItem text={t("privacy.s5b3")} />
         </Section>
 
-        <Section title="6. Children's Privacy">
-          <Text style={styles.body}>
-            Scola is intended for users aged 16 and above. We do not knowingly
-            collect data from children under 16.
-          </Text>
+        <Section title={t("privacy.s6Title")}>
+          <BodyText>{t("privacy.s6Body")}</BodyText>
         </Section>
 
-        <Section title="7. Contact Us">
-          <Text style={styles.body}>
-            If you have any questions about this policy, please contact us at:
-            {"\n"}support@scola.app
-          </Text>
+        <Section title={t("privacy.s7Title")}>
+          <BodyText>
+            {t("privacy.s7Body")}
+            {"\n"}
+            {SUPPORT_EMAIL}
+          </BodyText>
         </Section>
       </ScrollView>
     </SafeAreaView>
@@ -96,42 +74,32 @@ export default function PrivacyPolicy() {
 }
 
 function Section({ title, children }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
       {children}
     </View>
   );
 }
 
+function BodyText({ children }) {
+  const { colors } = useTheme();
+  return <Text style={[styles.body, { color: colors.textSecondary }]}>{children}</Text>;
+}
+
 function BulletItem({ text }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.bulletRow}>
-      <Text style={styles.bullet}>•</Text>
-      <Text style={styles.bulletText}>{text}</Text>
+      <Text style={[styles.bullet, { color: colors.textSecondary }]}>•</Text>
+      <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9fafb" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-  backBtn: { padding: 4 },
-  headerTitle: {
-    fontSize: width * 0.045,
-    fontWeight: "700",
-    color: "#111827",
-    fontFamily: "Roboto",
-  },
   content: { padding: 20, paddingBottom: 40 },
   lastUpdated: {
     fontSize: 12,

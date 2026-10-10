@@ -3,17 +3,6 @@
  * Extracted from components to prevent recreation on every render
  */
 
-export const MAJORS = [
-  "Chemistry",
-  "Computer Science",
-  "Physics",
-  "Engineering",
-  "Natural Sciences",
-  "Mathematics & Statistics",
-  "Business & Economics",
-  "Health Sciences",
-];
-
 export const COUNTRIES = [
   { name: "Australia", flag: "🇦🇺" },
   { name: "Austria", flag: "🇦🇹" },

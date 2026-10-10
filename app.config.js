@@ -1,8 +1,15 @@
+const fs = require("fs");
+
+// Firebase config for Android push (FCM). Supplied as an EAS file secret in the
+// cloud build, or as a local file when building on this machine.
+const googleServicesFile =
+  process.env.GOOGLE_SERVICES_JSON || (fs.existsSync("./google-services.json") ? "./google-services.json" : undefined);
+
 module.exports = {
   expo: {
     name: "Scola",
     slug: "scholarships",
-    version: "2.4.0",
+    version: "2.5.0",
     icon: "./assets/images/icon.png",
     scheme: "scholarships",
     userInterfaceStyle: "automatic",
@@ -13,10 +20,13 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#ffffff",
+        backgroundImage: "./assets/images/adaptive-icon-background.png",
+        monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
+        backgroundColor: "#1457c4",
       },
       package: "com.thusha2271.scholarships",
-      versionCode: 6, // Incremented for new release
+      ...(googleServicesFile ? { googleServicesFile } : {}),
+      allowBackup: false,
     },
     web: {
       bundler: "metro",
@@ -28,6 +38,15 @@ module.exports = {
       "expo-font",
       "expo-image",
       "expo-web-browser",
+      "expo-mail-composer",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/notification-icon.png",
+          color: "#004AAD",
+          defaultChannel: "default",
+        },
+      ],
       [
         "expo-splash-screen",
         {

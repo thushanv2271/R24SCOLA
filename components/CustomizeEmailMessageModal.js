@@ -51,7 +51,7 @@ const CustomizeEmailMessageModal = ({
     >
       <KeyboardAvoidingView
         style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
       >
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
         <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
@@ -83,9 +83,6 @@ const CustomizeEmailMessageModal = ({
 
           {/* Buttons */}
           <View style={styles.buttons}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.saveBtn} onPress={onSave} activeOpacity={0.85}>
               <Text style={styles.saveBtnText}>Save Message</Text>
             </TouchableOpacity>
@@ -176,19 +173,6 @@ const styles = StyleSheet.create({
   buttons: {
     flexDirection: "row",
     gap: 12,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 12,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-  },
-  cancelBtnText: {
-    color: "#666",
-    fontWeight: "600",
-    fontSize: 15,
-    fontFamily: "Roboto",
   },
   saveBtn: {
     flex: 2,

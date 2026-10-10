@@ -1,16 +1,5 @@
 // Constants for scholarship screens to prevent recreation on render
 
-export const MAJORS = [
-  "Chemistry",
-  "Computer Science",
-  "Physics",
-  "Engineering",
-  "Natural Sciences",
-  "Mathematics & Statistics",
-  "Business & Economics",
-  "Health Sciences",
-];
-
 export const COUNTRIES = [
   { name: "Canada", flag: "🇨🇦" },
   { name: "United States", flag: "🇺🇸" },
